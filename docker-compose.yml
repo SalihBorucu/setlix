@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: ./docker/app
+      dockerfile: Dockerfile
+    image: ai-setlist/app
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/ai-setlist-dev
+    networks:
+      - ai-setlist-net
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:${DB_PORT}"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - ai_setlist_mysql:/var/lib/mysql
+    networks:
+      - ai-setlist-net
+  redis:
+    image: redis:alpine
+    volumes:
+      - ai_setlist_redis:/data
+    networks:
+      - ai-setlist-net
+networks:
+  ai-setlist-net:
+    driver: "bridge"
+volumes:
+  ai_setlist_redis:
+    driver: "local"
+  ai_setlist_mysql:
+      driver: "local"
