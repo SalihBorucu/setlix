@@ -27,6 +27,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            // All test users will have password 'password' for easy testing
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
