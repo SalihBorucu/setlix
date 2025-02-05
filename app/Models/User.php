@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -38,11 +39,34 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Get all bands that the user is a member of
+     */
+    public function bands(): BelongsToMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsToMany(Band::class)
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get bands where the user is an admin
+     */
+    public function adminBands(): BelongsToMany
+    {
+        return $this->bands()->wherePivot('role', 'admin');
+    }
+
+    /**
+     * Check if user is admin of a specific band
+     */
+    public function isAdminOf(Band $band): bool
+    {
+        return $this->adminBands()->where('band_id', $band->id)->exists();
     }
 }
