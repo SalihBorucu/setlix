@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 
 class Song extends Model
 {
@@ -22,6 +24,11 @@ class Song extends Model
         'document_type',
     ];
 
+    protected $appends = [
+        'formatted_duration',
+        'formatted_created_at'
+    ];
+
     /**
      * Get formatted duration (MM:SS)
      */
@@ -30,6 +37,14 @@ class Song extends Model
         $minutes = floor($this->duration_seconds / 60);
         $seconds = $this->duration_seconds % 60;
         return sprintf('%02d:%02d', $minutes, $seconds);
+    }
+
+    /**
+     * Format the created_at date in a human-readable format
+     */
+    public function getFormattedCreatedAtAttribute(): string
+    {
+        return Carbon::parse($this->created_at)->diffForHumans();
     }
 
     /**
@@ -68,5 +83,15 @@ class Song extends Model
                 'document_type' => null,
             ]);
         }
+    }
+
+    /**
+     * Get the setlists that contain this song.
+     */
+    public function setlists(): BelongsToMany
+    {
+        return $this->belongsToMany(Setlist::class)
+            ->withPivot('order', 'notes')
+            ->orderBy('pivot_order');
     }
 }

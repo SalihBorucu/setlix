@@ -1,68 +1,93 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-
-defineProps({
-    status: {
-        type: String,
-    },
-});
+import { ref } from 'vue'
+import { Head, Link, useForm } from '@inertiajs/vue3'
+import { DSButton, DSInput, DSForm, DSAlert } from '@/Components/UI'
 
 const form = useForm({
     email: '',
-});
+})
+
+const status = ref(null)
 
 const submit = () => {
-    form.post(route('password.email'));
-};
+    form.post(route('password.email'), {
+        onSuccess: (response) => {
+            status.value = response?.props?.status
+            form.reset('email')
+        },
+    })
+}
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Forgot Password" />
+    <Head title="Forgot Password" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
-        </div>
-
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
-        >
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+    <main class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Logo and Header -->
+            <div class="text-center">
+                <img class="mx-auto h-12 w-auto" src="/logo.svg" alt="AI Setlist" />
+                <h2 class="mt-6 text-3xl font-display font-bold text-neutral-900">
+                    Reset your password
+                </h2>
+                <p class="mt-2 text-sm text-neutral-600">
+                    Remember your password?
+                    <Link :href="route('login')" class="font-medium text-primary-500 hover:text-primary-600">
+                        Sign in
+                    </Link>
+                </p>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
-                </PrimaryButton>
+            <!-- Success Message -->
+            <DSAlert v-if="status" type="success">
+                {{ status }}
+            </DSAlert>
+
+            <!-- Reset Form -->
+            <DSForm @submit="submit" class="mt-8">
+                <div class="space-y-6">
+                    <p class="text-sm text-neutral-600">
+                        Enter your email address and we'll send you a link to reset your password.
+                    </p>
+
+                    <!-- Error Message -->
+                    <DSAlert v-if="form.errors.email" type="error">
+                        {{ form.errors.email }}
+                    </DSAlert>
+
+                    <!-- Email Input -->
+                    <DSInput
+                        type="email"
+                        label="Email address"
+                        v-model="form.email"
+                        :error="form.errors.email"
+                        required
+                        autocomplete="email"
+                    />
+
+                    <!-- Submit Button -->
+                    <DSButton
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        class="w-full"
+                        :disabled="form.processing"
+                    >
+                        <span v-if="form.processing">Sending reset link...</span>
+                        <span v-else>Send password reset link</span>
+                    </DSButton>
+                </div>
+            </DSForm>
+
+            <!-- Help Section -->
+            <div class="text-center mt-8">
+                <p class="text-sm text-neutral-600">
+                    Need help?
+                    <a href="#" class="font-medium text-primary-500 hover:text-primary-600">
+                        Contact support
+                    </a>
+                </p>
             </div>
-        </form>
-    </GuestLayout>
+        </div>
+    </main>
 </template>

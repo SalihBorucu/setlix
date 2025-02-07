@@ -1,100 +1,136 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-
-defineProps({
-    canResetPassword: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
-});
+import { ref } from 'vue'
+import { Head, Link, useForm } from '@inertiajs/vue3'
+import { DSButton, DSInput, DSForm, DSAlert } from '@/Components/UI'
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
-});
+})
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
-    });
-};
+    })
+}
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Log in" />
+    <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+    <main class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Logo and Header -->
+            <div class="text-center">
+                <img class="mx-auto h-12 w-auto" src="/logo.svg" alt="AI Setlist" />
+                <h2 class="mt-6 text-3xl font-display font-bold text-neutral-900">
+                    Welcome back
+                </h2>
+                <p class="mt-2 text-sm text-neutral-600">
+                    Or
+                    <Link :href="route('register')" class="font-medium text-primary-500 hover:text-primary-600">
+                        start your 14-day free trial
+                    </Link>
+                </p>
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <!-- Login Form -->
+            <DSForm @submit="submit" class="mt-8">
+                <div class="space-y-6">
+                    <!-- Error Message -->
+                    <DSAlert v-if="form.errors.email || form.errors.password" type="error">
+                        <p v-if="form.errors.email">{{ form.errors.email }}</p>
+                        <p v-if="form.errors.password">{{ form.errors.password }}</p>
+                    </DSAlert>
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
+                    <!-- Email Input -->
+                    <DSInput
+                        type="email"
+                        label="Email address"
+                        v-model="form.email"
+                        :error="form.errors.email"
+                        required
+                        autocomplete="email"
+                    />
 
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+                    <!-- Password Input -->
+                    <DSInput
+                        type="password"
+                        label="Password"
+                        v-model="form.password"
+                        :error="form.errors.password"
+                        required
+                        autocomplete="current-password"
+                    />
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
+                    <!-- Remember Me -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input
+                                id="remember"
+                                v-model="form.remember"
+                                type="checkbox"
+                                class="h-4 w-4 text-primary-500 focus:ring-primary-500 border-neutral-300 rounded"
+                            />
+                            <label for="remember" class="ml-2 block text-sm text-neutral-700">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <Link
+                            :href="route('password.request')"
+                            class="text-sm font-medium text-primary-500 hover:text-primary-600"
+                        >
+                            Forgot your password?
+                        </Link>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <DSButton
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        class="w-full"
+                        :disabled="form.processing"
                     >
-                </label>
-            </div>
+                        <span v-if="form.processing">Signing in...</span>
+                        <span v-else>Sign in</span>
+                    </DSButton>
+                </div>
+            </DSForm>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
-                </Link>
+            <!-- Social Login -->
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-neutral-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-neutral-50 text-neutral-500">
+                            Or continue with
+                        </span>
+                    </div>
+                </div>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
-                </PrimaryButton>
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <DSButton variant="outline" size="lg" class="w-full">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Google Icon -->
+                            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+                        </svg>
+                        Google
+                    </DSButton>
+
+                    <DSButton variant="outline" size="lg" class="w-full">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- GitHub Icon -->
+                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                        </svg>
+                        GitHub
+                    </DSButton>
+                </div>
             </div>
-        </form>
-    </GuestLayout>
+        </div>
+    </main>
 </template>

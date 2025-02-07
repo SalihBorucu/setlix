@@ -1,12 +1,9 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { ref, computed } from 'vue';
-import draggable from 'vuedraggable';
+import { Head, useForm, Link } from '@inertiajs/vue3'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { DSButton, DSCard, DSInput } from '@/Components/UI'
+import { ref, computed } from 'vue'
+import draggable from 'vuedraggable'
 
 const props = defineProps({
     band: {
@@ -21,7 +18,7 @@ const props = defineProps({
         type: Array,
         required: true
     }
-});
+})
 
 const form = useForm({
     band_id: props.band.id,
@@ -29,37 +26,69 @@ const form = useForm({
     description: props.setlist.description,
     song_order: [],
     total_duration: props.setlist.total_duration
-});
+})
 
 // Initialize available and selected songs
-const selectedSongs = ref(props.setlist.songs.sort((a, b) => a.pivot.order - b.pivot.order));
+const selectedSongs = ref(props.setlist.songs.sort((a, b) => a.pivot.order - b.pivot.order))
 const availableSongs = ref(
     props.availableSongs.filter(song => 
         !selectedSongs.value.some(selected => selected.id === song.id)
     )
-);
+)
 
 // Update total duration whenever songs are reordered
 const updateTotalDuration = () => {
-    form.total_duration = selectedSongs.value.reduce((total, song) => total + song.duration_seconds, 0);
-};
+    form.total_duration = selectedSongs.value.reduce((total, song) => total + song.duration_seconds, 0)
+}
+
+// Handle changes in the selected songs list
+const handleSelectedChange = (event) => {
+    if (event.added) {
+        const newSong = event.added.element
+        // Initialize pivot data for new songs
+        if (!newSong.pivot) {
+            newSong.pivot = {
+                notes: '',
+                order: selectedSongs.value.length
+            }
+        }
+        // Remove the song from available songs
+        const index = availableSongs.value.findIndex(song => song.id === newSong.id)
+        if (index !== -1) {
+            availableSongs.value.splice(index, 1)
+        }
+    } else if (event.removed) {
+        // Add the song back to available songs if it was removed from setlist
+        const removedSong = event.removed.element
+        // Remove pivot data before adding back to available songs
+        const cleanSong = { ...removedSong }
+        delete cleanSong.pivot
+        availableSongs.value.push(cleanSong)
+    }
+    updateTotalDuration()
+}
 
 // Format duration for display
 const formatDuration = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const remainingSeconds = seconds % 60
+
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+    }
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
 
 // Computed total duration formatted
-const totalDurationFormatted = computed(() => formatDuration(form.total_duration));
+const totalDurationFormatted = computed(() => formatDuration(form.total_duration))
 
 const submit = () => {
-    form.song_order = selectedSongs.value.map(song => song.id);
+    form.song_order = selectedSongs.value.map(song => song.id)
     form.patch(route('setlists.update', [props.band.id, props.setlist.id]), {
         preserveScroll: true
-    });
-};
+    })
+}
 </script>
 
 <template>
@@ -67,120 +96,183 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Edit Setlist - {{ band.name }}
-                </h2>
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center">
+                        <Link 
+                            :href="route('bands.show', band.id)"
+                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                        >
+                            {{ band.name }}
+                        </Link>
+                        <svg class="mx-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <Link 
+                            :href="route('setlists.show', [band.id, setlist.id])"
+                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                        >
+                            {{ setlist.name }}
+                        </Link>
+                    </div>
+                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                        Edit Setlist
+                    </h2>
+                </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="submit">
-                            <!-- Basic Information -->
-                            <div class="mb-6">
-                                <InputLabel for="name" value="Setlist Name" />
-                                <TextInput
-                                    id="name"
-                                    v-model="form.name"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                    autofocus
-                                />
-                                <InputError :message="form.errors.name" class="mt-2" />
-                            </div>
+        <DSCard class="max-w-5xl mx-auto">
+            <form @submit.prevent="submit" class="space-y-6 p-6">
+                <!-- Basic Information -->
+                <div class="space-y-6 max-w-2xl">
+                    <DSInput
+                        v-model="form.name"
+                        type="text"
+                        label="Setlist Name"
+                        :error="form.errors.name"
+                        required
+                    />
 
-                            <div class="mb-6">
-                                <InputLabel for="description" value="Description (Optional)" />
-                                <textarea
-                                    id="description"
-                                    v-model="form.description"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    rows="3"
-                                ></textarea>
-                                <InputError :message="form.errors.description" class="mt-2" />
-                            </div>
-
-                            <!-- Song Selection -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Available Songs -->
-                                <div>
-                                    <h3 class="text-lg font-medium mb-4">Available Songs</h3>
-                                    <draggable
-                                        v-model="availableSongs"
-                                        :group="{ name: 'songs', pull: 'clone', put: true }"
-                                        item-key="id"
-                                        class="min-h-[200px] border-2 border-dashed border-gray-200 rounded-lg p-4"
-                                        @change="updateTotalDuration"
-                                    >
-                                        <template #item="{ element }">
-                                            <div class="flex justify-between items-center p-3 mb-2 bg-gray-50 rounded-lg cursor-move hover:bg-gray-100">
-                                                <span>{{ element.name }}</span>
-                                                <span class="text-sm text-gray-500">{{ formatDuration(element.duration_seconds) }}</span>
-                                            </div>
-                                        </template>
-                                    </draggable>
-                                </div>
-
-                                <!-- Selected Songs -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-lg font-medium">Setlist</h3>
-                                        <span class="text-sm text-gray-500">
-                                            Total Duration: {{ totalDurationFormatted }}
-                                        </span>
-                                    </div>
-                                    <draggable
-                                        v-model="selectedSongs"
-                                        :group="{ name: 'songs' }"
-                                        item-key="id"
-                                        class="min-h-[200px] border-2 border-dashed border-gray-200 rounded-lg p-4"
-                                        @change="updateTotalDuration"
-                                    >
-                                        <template #item="{ element }">
-                                            <div class="flex justify-between items-center p-3 mb-2 bg-white border rounded-lg cursor-move hover:bg-gray-50">
-                                                <div>
-                                                    <span>{{ element.name }}</span>
-                                                    <input
-                                                        type="text"
-                                                        v-model="element.pivot.notes"
-                                                        placeholder="Add notes..."
-                                                        class="mt-2 block w-full text-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                                    />
-                                                </div>
-                                                <span class="text-sm text-gray-500">{{ formatDuration(element.duration_seconds) }}</span>
-                                            </div>
-                                        </template>
-                                        <template #footer>
-                                            <div v-if="selectedSongs.length === 0" class="text-center text-gray-500 py-4">
-                                                Drag songs here to add them to the setlist
-                                            </div>
-                                        </template>
-                                    </draggable>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 flex justify-end gap-4">
-                                <Link
-                                    :href="route('setlists.show', [band.id, setlist.id])"
-                                    class="px-4 py-2 text-gray-700 rounded-md border hover:bg-gray-50 transition"
-                                >
-                                    Cancel
-                                </Link>
-                                <PrimaryButton
-                                    :class="{ 'opacity-25': form.processing }"
-                                    :disabled="form.processing || selectedSongs.length === 0"
-                                >
-                                    Update Setlist
-                                </PrimaryButton>
-                            </div>
-                        </form>
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700">
+                            Description (Optional)
+                        </label>
+                        <div class="mt-1">
+                            <textarea
+                                v-model="form.description"
+                                rows="3"
+                                :class="[
+                                    'block w-full rounded-lg shadow-sm transition-colors duration-200',
+                                    'border-neutral-300 focus:border-primary-500 focus:ring-primary-500',
+                                    { 'border-error-500 focus:border-error-500 focus:ring-error-500': form.errors.description }
+                                ]"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <!-- Song Selection -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Available Songs -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-neutral-900">Available Songs</h3>
+                            <span class="text-sm text-neutral-500">
+                                {{ availableSongs.length }} songs
+                            </span>
+                        </div>
+                        <draggable
+                            v-model="availableSongs"
+                            :group="{ name: 'songs', pull: 'clone', put: false }"
+                            item-key="id"
+                            class="min-h-[400px] rounded-lg border-2 border-dashed border-neutral-200 p-4 bg-neutral-50"
+                        >
+                            <template #item="{ element }">
+                                <div class="flex items-center justify-between p-3 mb-2 bg-white rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow duration-200">
+                                    <div class="flex items-center">
+                                        <svg class="h-5 w-5 text-neutral-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                        <span class="font-medium text-neutral-900">{{ element.name }}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm text-neutral-500">
+                                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {{ formatDuration(element.duration_seconds) }}
+                                    </div>
+                                </div>
+                            </template>
+                            <template #footer v-if="availableSongs.length === 0">
+                                <div class="text-center py-12">
+                                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                    </svg>
+                                    <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs available</h3>
+                                    <p class="mt-1 text-sm text-neutral-500">All songs are in the setlist.</p>
+                                </div>
+                            </template>
+                        </draggable>
+                    </div>
+
+                    <!-- Selected Songs -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-neutral-900">Setlist</h3>
+                            <div class="flex items-center text-sm text-neutral-500">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Total Duration: {{ totalDurationFormatted }}
+                            </div>
+                        </div>
+                        <draggable
+                            v-model="selectedSongs"
+                            :group="{ name: 'songs' }"
+                            item-key="id"
+                            class="min-h-[400px] rounded-lg border-2 border-dashed border-neutral-200 p-4"
+                            @change="handleSelectedChange"
+                        >
+                            <template #item="{ element, index }">
+                                <div class="p-3 mb-2 bg-white rounded-lg shadow-sm cursor-move hover:shadow-md transition-shadow duration-200">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center">
+                                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mr-2">
+                                                {{ index + 1 }}
+                                            </span>
+                                            <span class="font-medium text-neutral-900">{{ element.name }}</span>
+                                        </div>
+                                        <div class="flex items-center text-sm text-neutral-500">
+                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {{ formatDuration(element.duration_seconds) }}
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input
+                                            type="text"
+                                            v-model="element.pivot.notes"
+                                            placeholder="Add performance notes..."
+                                            class="block w-full text-sm rounded-lg border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+                                        />
+                                    </div>
+                                </div>
+                            </template>
+                            <template #footer v-if="selectedSongs.length === 0">
+                                <div class="text-center py-12">
+                                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                    <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs in setlist</h3>
+                                    <p class="mt-1 text-sm text-neutral-500">Drag songs from the left to add them to your setlist.</p>
+                                </div>
+                            </template>
+                        </draggable>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end space-x-4">
+                    <Link :href="route('setlists.show', [band.id, setlist.id])">
+                        <DSButton
+                            type="button"
+                            variant="outline"
+                        >
+                            Cancel
+                        </DSButton>
+                    </Link>
+                    <DSButton
+                        type="submit"
+                        variant="primary"
+                        :disabled="form.processing || selectedSongs.length === 0"
+                    >
+                        <span v-if="form.processing">Saving changes...</span>
+                        <span v-else>Save changes</span>
+                    </DSButton>
+                </div>
+            </form>
+        </DSCard>
     </AuthenticatedLayout>
-</template> 
+</template>

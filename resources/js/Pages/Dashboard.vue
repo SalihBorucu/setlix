@@ -1,13 +1,34 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { DSCard, DSButton } from '@/Components/UI'
 
-defineProps({
+const props = defineProps({
     bands: {
         type: Array,
         default: () => []
+    },
+    stats: {
+        type: Object,
+        default: () => ({
+            totalSongs: 0,
+            activeSetlists: 0,
+            totalDuration: '0h',
+            totalMembers: 0
+        })
+    },
+    recentActivity: {
+        type: Array,
+        default: () => []
     }
-});
+})
+
+const stats = [
+    { name: 'Total Songs', value: props.stats.totalSongs, change: '+12%', changeType: 'increase' },
+    { name: 'Active Setlists', value: props.stats.activeSetlists, change: '+3%', changeType: 'increase' },
+    { name: 'Total Duration', value: props.stats.totalDuration, change: '+2.3%', changeType: 'increase' },
+    { name: 'Band Members', value: props.stats.totalMembers, change: '0%', changeType: 'neutral' },
+]
 </script>
 
 <template>
@@ -15,108 +36,126 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Dashboard
-                </h2>
-                <Link
-                    :href="route('bands.create')"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-                >
-                    Create New Band
-                </Link>
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                        Dashboard
+                    </h2>
+                </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Quick Actions -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
-                        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <Link
-                                :href="route('bands.index')"
-                                class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-                            >
-                                <div>
-                                    <h4 class="font-medium">My Bands</h4>
-                                    <p class="text-sm text-gray-600">View and manage your bands</p>
-                                </div>
-                            </Link>
-                            <Link
-                                :href="route('bands.create')"
-                                class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-                            >
-                                <div>
-                                    <h4 class="font-medium">Create Band</h4>
-                                    <p class="text-sm text-gray-600">Start a new band</p>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
+        <!-- No Bands State -->
+        <div v-if="bands.length === 0" class="text-center">
+            <DSCard class="px-6 py-12">
+                <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+                <h3 class="mt-2 text-lg font-medium text-neutral-900">No bands yet</h3>
+                <p class="mt-1 text-sm text-neutral-500">Get started by creating your first band.</p>
+                <div class="mt-6">
+                    <Link :href="route('bands.create')">
+                        <DSButton variant="primary" size="lg">
+                            Create Your First Band
+                        </DSButton>
+                    </Link>
                 </div>
+            </DSCard>
+        </div>
 
-                <!-- Recent Bands -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold">Your Bands</h3>
-                            <Link
-                                :href="route('bands.index')"
-                                class="text-sm text-indigo-600 hover:text-indigo-800"
-                            >
-                                View All →
-                            </Link>
+        <template v-else>
+            <!-- Stats -->
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <DSCard v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-neutral-500 truncate">{{ item.name }}</dt>
+                    <dd class="mt-1 flex items-baseline justify-between md:block lg:flex">
+                        <div class="flex items-baseline text-2xl font-semibold text-neutral-900">
+                            {{ item.value }}
+                            <span class="ml-2 text-sm font-medium text-neutral-500">from last month</span>
                         </div>
-                        <div v-if="bands.length === 0" class="text-center py-8">
-                            <p class="text-gray-500">You haven't joined any bands yet.</p>
-                            <Link
-                                :href="route('bands.create')"
-                                class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-                            >
-                                Create Your First Band
-                            </Link>
+
+                        <div :class="[
+                            item.changeType === 'increase' ? 'bg-success-50 text-success-700' : 'bg-neutral-50 text-neutral-700',
+                            'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0'
+                        ]">
+                            <svg v-if="item.changeType === 'increase'" class="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" />
+                            </svg>
+                            {{ item.change }}
                         </div>
-                        <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            <div
-                                v-for="band in bands"
-                                :key="band.id"
-                                class="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition"
-                            >
-                                <div class="p-6">
-                                    <div class="flex items-start justify-between mb-2">
-                                        <h3 class="text-xl font-semibold">{{ band.name }}</h3>
-                                        <span
-                                            v-if="band.pivot.role === 'admin'"
-                                            class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
-                                        >
-                                            Admin
-                                        </span>
-                                    </div>
-                                    <p class="text-gray-600 mb-4 line-clamp-2">{{ band.description }}</p>
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm text-gray-500">
-                                                {{ band.members?.length || 0 }} members
-                                            </span>
-                                            <span class="text-xs text-gray-400">
-                                                You are a {{ band.pivot.role }}
-                                            </span>
-                                        </div>
-                                        <Link
-                                            :href="route('bands.show', band.id)"
-                                            class="text-sm text-indigo-600 hover:text-indigo-800"
-                                        >
-                                            View Details →
-                                        </Link>
-                                    </div>
+                    </dd>
+                </DSCard>
+            </div>
+
+            <!-- Recent Activity -->
+            <DSCard class="mt-6">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-neutral-900">Recent Activity</h3>
+                </div>
+                <div class="border-t border-neutral-200">
+                    <ul v-if="recentActivity.length > 0" role="list" class="divide-y divide-neutral-200">
+                        <li v-for="item in recentActivity" :key="item.id" class="px-4 py-4 sm:px-6 hover:bg-neutral-50">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0 text-2xl">{{ item.icon }}</div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-sm font-medium text-neutral-900">
+                                        <span class="font-semibold">{{ item.name }}</span>
+                                        <span class="text-neutral-500"> {{ item.action }} </span>
+                                        <span v-if="item.target" class="font-semibold">{{ item.target }}</span>
+                                    </p>
+                                    <p class="text-sm text-neutral-500">{{ item.date }}</p>
                                 </div>
                             </div>
-                        </div>
+                        </li>
+                    </ul>
+                    <div v-else class="px-4 py-8 text-center text-sm text-neutral-500">
+                        No recent activity
                     </div>
                 </div>
-            </div>
-        </div>
+            </DSCard>
+
+            <!-- Your Bands -->
+            <DSCard class="mt-6">
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                    <h3 class="text-lg font-medium leading-6 text-neutral-900">Your Bands</h3>
+                    <Link :href="route('bands.create')">
+                        <DSButton variant="primary" size="sm">
+                            Create New Band
+                        </DSButton>
+                    </Link>
+                </div>
+                <div class="border-t border-neutral-200">
+                    <ul role="list" class="divide-y divide-neutral-200">
+                        <li v-for="band in bands" :key="band.id" class="px-4 py-4 sm:px-6 hover:bg-neutral-50">
+                            <div class="flex items-center justify-between">
+                                <div class="min-w-0 flex-1">
+                                    <Link 
+                                        :href="route('bands.show', band.id)"
+                                        class="text-sm font-medium text-neutral-900 hover:text-primary-600"
+                                    >
+                                        {{ band.name }}
+                                    </Link>
+                                    <p class="text-sm text-neutral-500">{{ band.members_count }} members</p>
+                                </div>
+                                <div class="ml-4 flex items-center space-x-4">
+                                    <Link 
+                                        :href="route('songs.index', { band: band.id })"
+                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                    >
+                                        View Songs
+                                    </Link>
+                                    <Link 
+                                        :href="route('setlists.index', { band: band.id })"
+                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                    >
+                                        View Setlists
+                                    </Link>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </DSCard>
+        </template>
     </AuthenticatedLayout>
 </template>

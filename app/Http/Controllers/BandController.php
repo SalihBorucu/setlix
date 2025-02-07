@@ -25,7 +25,22 @@ class BandController extends Controller
     public function index(): Response
     {
         return Inertia::render('Bands/Index', [
-            'bands' => Auth::user()->bands()->with('members')->get()
+            'bands' => Auth::user()->bands()
+                ->with('members')
+                ->withCount(['songs', 'setlists', 'members'])
+                ->paginate(9)
+                ->through(function ($band) {
+                    return [
+                        'id' => $band->id,
+                        'name' => $band->name,
+                        'description' => $band->description,
+                        'cover_image' => $band->cover_image,
+                        'role' => $band->members->where('id', Auth::id())->first()->pivot->role,
+                        'members_count' => $band->members_count,
+                        'songs_count' => $band->songs_count,
+                        'setlists_count' => $band->setlists_count,
+                    ];
+                })
         ]);
     }
 
@@ -58,9 +73,14 @@ class BandController extends Controller
         $this->authorize('view', $band);
 
         $band->load('members');
+        $band->loadCount(['songs', 'setlists', 'members']);
 
         return Inertia::render('Bands/Show', [
-            'band' => $band,
+            'band' => array_merge($band->toArray(), [
+                'songs_count' => $band->songs_count,
+                'setlists_count' => $band->setlists_count,
+                'members_count' => $band->members_count
+            ]),
             'isAdmin' => $band->isAdmin(Auth::user())
         ]);
     }

@@ -1,6 +1,7 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { DSButton, DSCard } from '@/Components/UI'
 
 const props = defineProps({
     band: {
@@ -15,13 +16,13 @@ const props = defineProps({
         type: Boolean,
         required: true
     }
-});
+})
 
 const deleteSong = (songId) => {
     if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
-        router.delete(route('songs.destroy', [props.band.id, songId]));
+        router.delete(route('songs.destroy', [props.band.id, songId]))
     }
-};
+}
 </script>
 
 <template>
@@ -29,131 +30,162 @@ const deleteSong = (songId) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                        {{ band.name }} - Songs
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center">
+                        <Link 
+                            :href="route('bands.show', band.id)"
+                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                        >
+                            {{ band.name }}
+                        </Link>
+                        <svg class="mx-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                        Songs
                     </h2>
-                    <p class="text-sm text-gray-600">Manage your band's song library</p>
+                    <p class="mt-1 text-sm text-neutral-500">
+                        Manage your band's song library
+                    </p>
                 </div>
-                <div class="flex gap-4">
-                    <Link
-                        :href="route('bands.show', band.id)"
-                        class="px-4 py-2 text-gray-700 rounded-md border hover:bg-gray-50 transition"
-                    >
-                        Back to Band
+                <div class="mt-4 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 md:ml-4 md:mt-0">
+                    <Link :href="route('bands.show', band.id)">
+                        <DSButton variant="secondary" class="w-full sm:w-auto">
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Band
+                        </DSButton>
                     </Link>
-                    <Link
-                        v-if="isAdmin"
-                        :href="route('songs.create', band.id)"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-                    >
-                        Add New Song
+                    <Link v-if="isAdmin" :href="route('songs.create', band.id)">
+                        <DSButton variant="primary" class="w-full sm:w-auto">
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add New Song
+                        </DSButton>
                     </Link>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div v-if="songs.length === 0" class="text-center py-8">
-                            <p class="text-gray-500">No songs have been added yet.</p>
-                            <Link
-                                v-if="isAdmin"
-                                :href="route('songs.create', band.id)"
-                                class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-                            >
+        <DSCard>
+            <div class="p-6">
+                <div v-if="songs.length === 0" class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs</h3>
+                    <p class="mt-1 text-sm text-neutral-500">Get started by creating your first song.</p>
+                    <div class="mt-6">
+                        <Link v-if="isAdmin" :href="route('songs.create', band.id)">
+                            <DSButton variant="primary">
                                 Add Your First Song
-                            </Link>
-                        </div>
-                        <div v-else>
-                            <!-- Songs List -->
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Name
-                                            </th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Duration
-                                            </th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Resources
-                                            </th>
-                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr v-for="song in songs" :key="song.id">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <Link
-                                                    :href="route('songs.show', [band.id, song.id])"
-                                                    class="text-indigo-600 hover:text-indigo-900"
-                                                >
-                                                    {{ song.name }}
-                                                </Link>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                {{ song.formatted_duration }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center space-x-2">
-                                                    <a
-                                                        v-if="song.url"
-                                                        :href="song.url"
-                                                        target="_blank"
-                                                        class="text-gray-600 hover:text-gray-900"
-                                                    >
-                                                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">URL</span>
-                                                    </a>
-                                                    <Link
-                                                        v-if="song.document_path"
-                                                        :href="route('songs.document', [band.id, song.id])"
-                                                        class="text-gray-600 hover:text-gray-900"
-                                                    >
-                                                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                            {{ song.document_type?.toUpperCase() }}
-                                                        </span>
-                                                    </Link>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div class="flex justify-end space-x-2">
-                                                    <Link
-                                                        :href="route('songs.show', [band.id, song.id])"
-                                                        class="text-indigo-600 hover:text-indigo-900"
-                                                    >
-                                                        View
-                                                    </Link>
-                                                    <Link
-                                                        v-if="isAdmin"
-                                                        :href="route('songs.edit', [band.id, song.id])"
-                                                        class="text-gray-600 hover:text-gray-900"
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                    <button
-                                                        v-if="isAdmin"
-                                                        @click="deleteSong(song.id)"
-                                                        class="text-red-600 hover:text-red-900"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                            </DSButton>
+                        </Link>
+                    </div>
+                </div>
+                <div v-else>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-neutral-200">
+                            <thead class="bg-neutral-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                                        Name
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                                        Duration
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                                        Resources
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-neutral-200">
+                                <tr v-for="song in songs" :key="song.id" class="hover:bg-neutral-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <Link
+                                            :href="route('songs.show', [band.id, song.id])"
+                                            class="text-sm font-medium text-neutral-900 hover:text-primary-600"
+                                        >
+                                            {{ song.name }}
+                                        </Link>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center text-sm text-neutral-500">
+                                            <svg class="mr-1.5 h-4 w-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {{ song.formatted_duration }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center space-x-2">
+                                            <a
+                                                v-if="song.url"
+                                                :href="song.url"
+                                                target="_blank"
+                                                class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 hover:bg-primary-100"
+                                            >
+                                                <svg class="-ml-0.5 mr-1.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                                URL
+                                            </a>
+                                            <Link
+                                                v-if="song.document_path"
+                                                :href="route('songs.document', [band.id, song.id])"
+                                                class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 hover:bg-primary-100"
+                                            >
+                                                <svg class="-ml-0.5 mr-1.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                                {{ song.document_type?.toUpperCase() }}
+                                            </Link>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                        <div class="flex justify-end items-center space-x-3">
+                                            <Link
+                                                :href="route('songs.show', [band.id, song.id])"
+                                                class="text-neutral-400 hover:text-neutral-500"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </Link>
+                                            <Link
+                                                v-if="isAdmin"
+                                                :href="route('songs.edit', [band.id, song.id])"
+                                                class="text-neutral-400 hover:text-neutral-500"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                            </Link>
+                                            <button
+                                                v-if="isAdmin"
+                                                @click="deleteSong(song.id)"
+                                                class="text-danger-400 hover:text-danger-500"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
+        </DSCard>
     </AuthenticatedLayout>
 </template> 
