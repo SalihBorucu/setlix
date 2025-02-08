@@ -44,6 +44,8 @@ Route::middleware('auth')->group(function () {
     // Song routes (nested under bands)
     Route::get('/bands/{band}/songs', [SongController::class, 'index'])->name('songs.index');
     Route::get('/bands/{band}/songs/create', [SongController::class, 'create'])->name('songs.create');
+    Route::get('/bands/{band}/songs/bulk-create', [SongController::class, 'bulkCreate'])->name('songs.bulk-create');
+    Route::post('/bands/{band}/songs/bulk-store', [SongController::class, 'bulkStore'])->name('songs.bulk-store');
     Route::post('/bands/{band}/songs', [SongController::class, 'store'])->name('songs.store');
     Route::get('/bands/{band}/songs/{song}', [SongController::class, 'show'])->name('songs.show');
     Route::get('/bands/{band}/songs/{song}/edit', [SongController::class, 'edit'])->name('songs.edit');

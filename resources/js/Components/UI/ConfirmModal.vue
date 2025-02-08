@@ -44,7 +44,7 @@ const confirm = () => {
 
 <template>
     <Modal :show="modelValue" @close="close">
-        <div class="p-6">
+        <div>
             <h2 class="text-lg font-medium text-neutral-900">
                 {{ title }}
             </h2>

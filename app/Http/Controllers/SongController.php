@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Song\StoreSongRequest;
+use App\Http\Requests\Song\BulkStoreSongRequest;
 use App\Models\Band;
 use App\Models\Song;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 
 class SongController extends Controller
 {
@@ -150,5 +152,35 @@ class SongController extends Controller
             $song->document_path,
             $song->name . '.' . $song->document_type
         );
+    }
+
+    /**
+     * Show the form for bulk creating songs.
+     */
+    public function bulkCreate(Band $band): Response
+    {
+        $this->authorize('create', [Song::class, $band]);
+
+        return Inertia::render('Songs/BulkCreate', [
+            'band' => $band
+        ]);
+    }
+
+    /**
+     * Store multiple songs in storage.
+     */
+    public function bulkStore(BulkStoreSongRequest $request, Band $band): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $songs = collect($validated['songs'])->map(function ($song) use ($band) {
+            return $band->songs()->create([
+                'name' => $song['name'],
+                'duration_seconds' => $song['duration_seconds'],
+            ]);
+        });
+
+        return redirect()->route('songs.index', $band)
+            ->with('success', count($songs) . ' songs added successfully.');
     }
 }
