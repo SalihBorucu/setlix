@@ -1,8 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard } from '@/Components/UI'
-import DeleteConfirmationModal from '@/Components/DeleteConfirmationModal.vue'
+import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -176,10 +175,13 @@ const formatDuration = (seconds) => {
             </div>
         </DSCard>
 
-        <DeleteConfirmationModal
+        <DSAlertModal
             ref="deleteModal"
             :title="`Delete ${setlistToDelete?.name || 'Setlist'}`"
-            :message="'Are you sure you want to delete this setlist? This action cannot be undone.'"
+            message="Are you sure you want to delete this setlist? This action cannot be undone."
+            type="error"
+            confirm-text="Delete"
+            :show-cancel="true"
             @confirm="handleDelete"
         />
     </AuthenticatedLayout>

@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSAlert } from '@/Components/UI'
+import AlertModal from '@/Components/UI/AlertModal.vue'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -19,10 +20,14 @@ const props = defineProps({
     }
 })
 
+const deleteModal = ref(null)
+
 const confirmDelete = () => {
-    if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
-        router.delete(route('songs.destroy', [props.band.id, props.song.id]))
-    }
+    deleteModal.value.open()
+}
+
+const handleDelete = () => {
+    router.delete(route('songs.destroy', [props.band.id, props.song.id]))
 }
 </script>
 
@@ -207,5 +212,16 @@ const confirmDelete = () => {
                 </div>
             </DSCard>
         </div>
+
+        <!-- Delete Confirmation Modal -->
+        <AlertModal
+            ref="deleteModal"
+            title="Delete Song"
+            message="Are you sure you want to delete this song? This action cannot be undone."
+            type="error"
+            confirm-text="Delete"
+            :show-cancel="true"
+            @confirm="handleDelete"
+        />
     </AuthenticatedLayout>
 </template> 

@@ -8,41 +8,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ImageService;
 
 class BandController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     */
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
-
-    /**
-     * Display a listing of the bands.
-     */
-    public function index(): Response
-    {
-        return Inertia::render('Bands/Index', [
-            'bands' => Auth::user()->bands()
-                ->with('members')
-                ->withCount(['songs', 'setlists', 'members'])
-                ->paginate(9)
-                ->through(function ($band) {
-                    return [
-                        'id' => $band->id,
-                        'name' => $band->name,
-                        'description' => $band->description,
-                        'cover_image' => $band->cover_image,
-                        'role' => $band->members->where('id', Auth::id())->first()->pivot->role,
-                        'members_count' => $band->members_count,
-                        'songs_count' => $band->songs_count,
-                        'setlists_count' => $band->setlists_count,
-                    ];
-                })
-        ]);
-    }
+    public function __construct(
+        private ImageService $imageService
+    ) {}
 
     /**
      * Show the form for creating a new band.
@@ -57,12 +29,25 @@ class BandController extends Controller
      */
     public function store(StoreBandRequest $request): RedirectResponse
     {
-        $band = Band::create($request->validated());
+        $validated = $request->validated();
         
-        // Add the creator as an admin
-        $band->members()->attach(Auth::id(), ['role' => 'admin']);
-
-        return redirect()->route('bands.show', $band);
+        // Create band with basic info
+        $band = Band::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+        ]);
+        
+        // Process cover image if provided
+        if ($request->hasFile('cover_image')) {
+            $imagePaths = $this->imageService->processBandCoverImage($request->file('cover_image'));
+            $band->update($imagePaths);
+        }
+        
+        // Attach the creator as an admin
+        $band->members()->attach($request->user(), ['role' => 'admin']);
+        
+        return redirect()->route('bands.show', $band)
+            ->with('success', 'Band created successfully.');
     }
 
     /**
@@ -72,16 +57,34 @@ class BandController extends Controller
     {
         $this->authorize('view', $band);
 
-        $band->load('members');
+        // Load members with pivot data
+        $band->load(['members' => function ($query) {
+            $query->select('users.*', 'band_user.role');
+        }]);
         $band->loadCount(['songs', 'setlists', 'members']);
+
+        $currentUser = Auth::user();
+        $currentUserRole = $band->members->where('id', $currentUser->id)->first()->pivot->role;
 
         return Inertia::render('Bands/Show', [
             'band' => array_merge($band->toArray(), [
                 'songs_count' => $band->songs_count,
                 'setlists_count' => $band->setlists_count,
-                'members_count' => $band->members_count
+                'members_count' => $band->members_count,
+                'members' => $band->members->map(function ($member) {
+                    return [
+                        'id' => $member->id,
+                        'name' => $member->name,
+                        'email' => $member->email,
+                        'avatar' => $member->avatar,
+                        'pivot' => [
+                            'role' => $member->pivot->role
+                        ]
+                    ];
+                })
             ]),
-            'isAdmin' => $band->isAdmin(Auth::user())
+            'isAdmin' => $band->isAdmin($currentUser),
+            'currentUserRole' => $currentUserRole
         ]);
     }
 
@@ -103,10 +106,30 @@ class BandController extends Controller
     public function update(StoreBandRequest $request, Band $band): RedirectResponse
     {
         $this->authorize('update', $band);
-
-        $band->update($request->validated());
-
-        return redirect()->route('bands.show', $band);
+        
+        $validated = $request->validated();
+        
+        // Update basic info
+        $band->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+        ]);
+        
+        // Process new cover image if provided
+        if ($request->hasFile('cover_image')) {
+            // Delete old images
+            $this->imageService->deleteBandCoverImages(
+                $band->cover_image_path,
+                $band->cover_image_thumbnail_path,
+                $band->cover_image_small_path
+            );
+            
+            // Process and store new images
+            $imagePaths = $this->imageService->processBandCoverImage($request->file('cover_image'));
+            $band->update($imagePaths);
+        }
+        
+        return back()->with('success', 'Band updated successfully.');
     }
 
     /**
@@ -115,9 +138,40 @@ class BandController extends Controller
     public function destroy(Band $band): RedirectResponse
     {
         $this->authorize('delete', $band);
-
+        
+        // Delete cover images if they exist
+        $this->imageService->deleteBandCoverImages(
+            $band->cover_image_path,
+            $band->cover_image_thumbnail_path,
+            $band->cover_image_small_path
+        );
+        
         $band->delete();
+        
+        return redirect()->route('dashboard')
+            ->with('success', 'Band deleted successfully.');
+    }
 
-        return redirect()->route('bands.index');
+    /**
+     * Allow a member to leave the band.
+     */
+    public function leave(Band $band): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Check if user is a member and not an admin
+        if (!$band->hasMember($user)) {
+            abort(403, 'You are not a member of this band.');
+        }
+        
+        if ($band->isAdmin($user)) {
+            abort(403, 'Admins cannot leave the band. Transfer admin role first.');
+        }
+        
+        // Remove the user from the band
+        $band->members()->detach($user->id);
+        
+        return redirect()->route('dashboard')
+            ->with('success', 'You have left the band successfully.');
     }
 }

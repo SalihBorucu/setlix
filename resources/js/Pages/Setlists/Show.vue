@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard } from '@/Components/UI'
+import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -20,11 +20,14 @@ const props = defineProps({
 })
 
 const performanceMode = ref(false)
+const deleteModal = ref(null)
 
 const confirmDelete = () => {
-    if (confirm('Are you sure you want to delete this setlist? This action cannot be undone.')) {
-        router.delete(route('setlists.destroy', [props.band.id, props.setlist.id]))
-    }
+    deleteModal.value.open()
+}
+
+const handleDelete = () => {
+    router.delete(route('setlists.destroy', [props.band.id, props.setlist.id]))
 }
 
 const formatDuration = (seconds) => {
@@ -221,6 +224,16 @@ const sortedSongs = computed(() => {
                 </div>
             </DSCard>
         </div>
+
+        <DSAlertModal
+            ref="deleteModal"
+            title="Delete Setlist"
+            message="Are you sure you want to delete this setlist? This action cannot be undone."
+            type="error"
+            confirm-text="Delete"
+            :show-cancel="true"
+            @confirm="handleDelete"
+        />
     </AuthenticatedLayout>
 
      <!-- Performance Mode -->

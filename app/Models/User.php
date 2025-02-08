@@ -49,7 +49,7 @@ class User extends Authenticatable
      */
     public function bands(): BelongsToMany
     {
-        return $this->belongsToMany(Band::class)
+        return $this->belongsToMany(Band::class, 'band_user')
             ->withPivot('role')
             ->withTimestamps();
     }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Band extends Model
 {
@@ -15,6 +16,9 @@ class Band extends Model
     protected $fillable = [
         'name',
         'description',
+        'cover_image_path',
+        'cover_image_thumbnail_path',
+        'cover_image_small_path',
     ];
 
     /**
@@ -22,7 +26,7 @@ class Band extends Model
      */
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)
+        return $this->belongsToMany(User::class, 'band_user')
             ->withPivot('role')
             ->withTimestamps();
     }
@@ -73,5 +77,40 @@ class Band extends Model
     public function setlists(): HasMany
     {
         return $this->hasMany(Setlist::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(BandInvitation::class);
+    }
+
+    /**
+     * Get the URL for the original cover image
+     */
+    public function getCoverImageUrlAttribute(): ?string
+    {
+        return $this->cover_image_path
+            ? Storage::disk('public')->url($this->cover_image_path)
+            : null;
+    }
+
+    /**
+     * Get the URL for the thumbnail cover image
+     */
+    public function getCoverImageThumbnailUrlAttribute(): ?string
+    {
+        return $this->cover_image_thumbnail_path
+            ? Storage::disk('public')->url($this->cover_image_thumbnail_path)
+            : null;
+    }
+
+    /**
+     * Get the URL for the small cover image
+     */
+    public function getCoverImageSmallUrlAttribute(): ?string
+    {
+        return $this->cover_image_small_path
+            ? Storage::disk('public')->url($this->cover_image_small_path)
+            : null;
     }
 }

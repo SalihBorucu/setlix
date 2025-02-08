@@ -2,6 +2,7 @@
 import { Head, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI'
+import ImageUpload from '@/Components/UI/ImageUpload.vue'
 
 const form = useForm({
     name: '',
@@ -13,13 +14,6 @@ const submit = () => {
     form.post(route('bands.store'), {
         preserveScroll: true,
     })
-}
-
-const handleImageUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-        form.cover_image = file
-    }
 }
 </script>
 
@@ -92,33 +86,10 @@ const handleImageUpload = (e) => {
                     <label class="block text-sm font-medium text-neutral-700">
                         Cover Image
                     </label>
-                    <div class="mt-1 flex justify-center rounded-lg border border-dashed border-neutral-300 px-6 py-10">
-                        <div class="text-center">
-                            <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <div class="mt-4 flex text-sm text-neutral-600">
-                                <label
-                                    for="cover-image"
-                                    class="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500"
-                                >
-                                    <span>Upload a file</span>
-                                    <input 
-                                        id="cover-image" 
-                                        type="file" 
-                                        class="sr-only"
-                                        accept="image/*"
-                                        @change="handleImageUpload"
-                                    >
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
-                            </div>
-                            <p class="text-xs text-neutral-500">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                    </div>
-                    <p v-if="form.errors.cover_image" class="mt-1 text-sm text-error-500">
-                        {{ form.errors.cover_image }}
-                    </p>
+                    <ImageUpload
+                        v-model="form.cover_image"
+                        :error="form.errors.cover_image"
+                    />
                 </div>
 
                 <!-- Submit Button -->
@@ -126,7 +97,7 @@ const handleImageUpload = (e) => {
                     <DSButton
                         type="button"
                         variant="outline"
-                        :href="route('bands.index')"
+                        :href="route('dashboard')"
                     >
                         Cancel
                     </DSButton>

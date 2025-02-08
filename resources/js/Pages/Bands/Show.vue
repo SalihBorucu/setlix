@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard } from '@/Components/UI'
+import ConfirmModal from '@/Components/UI/ConfirmModal.vue'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -12,13 +13,22 @@ const props = defineProps({
     isAdmin: {
         type: Boolean,
         required: true
+    },
+    currentUserRole: {
+        type: String,
+        required: true
     }
 })
 
+const showDeleteModal = ref(false)
+const showLeaveModal = ref(false)
+
 const deleteBand = () => {
-    if (confirm('Are you sure you want to delete this band? This action cannot be undone.')) {
-        router.delete(route('bands.destroy', props.band.id))
-    }
+    router.delete(route('bands.destroy', props.band.id))
+}
+
+const leaveBand = () => {
+    router.delete(route('bands.leave', props.band.id))
 }
 </script>
 
@@ -36,24 +46,39 @@ const deleteBand = () => {
                         {{ band.members_count }} members
                     </p>
                 </div>
-                <div v-if="isAdmin" class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
-                    <Link :href="route('bands.edit', band.id)">
-                        <DSButton variant="secondary">
-                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                            Edit Band
-                        </DSButton>
-                    </Link>
+                <div class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+                    <!-- Leave Band Button (for non-admin members) -->
                     <DSButton
+                        v-if="!isAdmin && currentUserRole === 'member'"
                         variant="danger"
-                        @click="deleteBand"
+                        @click="showLeaveModal = true"
                     >
                         <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        Delete Band
+                        Leave Band
                     </DSButton>
+
+                    <!-- Admin Actions -->
+                    <template v-if="isAdmin">
+                        <Link :href="route('bands.edit', band.id)">
+                            <DSButton variant="secondary">
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                Edit Band
+                            </DSButton>
+                        </Link>
+                        <DSButton
+                            variant="danger"
+                            @click="showDeleteModal = true"
+                        >
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Band
+                        </DSButton>
+                    </template>
                 </div>
             </div>
         </template>
@@ -88,9 +113,11 @@ const deleteBand = () => {
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-neutral-900">Members</h3>
-                        <DSButton v-if="isAdmin" variant="secondary" size="sm">
-                            Manage Members
-                        </DSButton>
+                        <Link v-if="isAdmin" :href="route('bands.members.index', band.id)">
+                            <DSButton variant="secondary" size="sm">
+                                Manage Members
+                            </DSButton>
+                        </Link>
                     </div>
                     <div class="divide-y divide-neutral-200">
                         <div
@@ -198,5 +225,23 @@ const deleteBand = () => {
                 </div>
             </DSCard>
         </div>
+
+        <!-- Delete Band Modal -->
+        <ConfirmModal
+            v-model="showDeleteModal"
+            title="Delete Band"
+            description="Are you sure you want to delete this band? This action cannot be undone and all associated data will be permanently deleted."
+            confirm-text="Delete Band"
+            @confirm="deleteBand"
+        />
+
+        <!-- Leave Band Modal -->
+        <ConfirmModal
+            v-model="showLeaveModal"
+            title="Leave Band"
+            description="Are you sure you want to leave this band? You will lose access to all band content and will need to be invited back to rejoin."
+            confirm-text="Leave Band"
+            @confirm="leaveBand"
+        />
     </AuthenticatedLayout>
 </template> 
