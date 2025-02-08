@@ -7,28 +7,19 @@ const props = defineProps({
     bands: {
         type: Array,
         default: () => []
-    },
-    stats: {
-        type: Object,
-        default: () => ({
-            totalSongs: 0,
-            activeSetlists: 0,
-            totalDuration: '0h',
-            totalMembers: 0
-        })
-    },
-    recentActivity: {
-        type: Array,
-        default: () => []
     }
 })
 
-const stats = [
-    { name: 'Total Songs', value: props.stats.totalSongs, change: '+12%', changeType: 'increase' },
-    { name: 'Active Setlists', value: props.stats.activeSetlists, change: '+3%', changeType: 'increase' },
-    { name: 'Total Duration', value: props.stats.totalDuration, change: '+2.3%', changeType: 'increase' },
-    { name: 'Band Members', value: props.stats.totalMembers, change: '0%', changeType: 'neutral' },
-]
+// Add debug output
+console.log('Bands data:', props.bands)
+
+// Helper function to check admin status
+const hasAdminRole = (band) => {
+    // Check both is_admin and roles/pivot data since Laravel might send it in different ways
+    return band.is_admin || 
+           (band.pivot && band.pivot.role === 'admin') || 
+           (band.roles && band.roles.includes('admin'))
+}
 </script>
 
 <template>
@@ -39,8 +30,15 @@ const stats = [
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <h2 class="text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                        Dashboard
+                        My Bands
                     </h2>
+                </div>
+                <div class="mt-4 flex md:ml-4 md:mt-0">
+                    <Link :href="route('bands.create')">
+                        <DSButton variant="primary">
+                            Create New Band
+                        </DSButton>
+                    </Link>
                 </div>
             </div>
         </template>
@@ -64,98 +62,58 @@ const stats = [
         </div>
 
         <template v-else>
-            <!-- Stats -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <DSCard v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
-                    <dt class="text-sm font-medium text-neutral-500 truncate">{{ item.name }}</dt>
-                    <dd class="mt-1 flex items-baseline justify-between md:block lg:flex">
-                        <div class="flex items-baseline text-2xl font-semibold text-neutral-900">
-                            {{ item.value }}
-                            <span class="ml-2 text-sm font-medium text-neutral-500">from last month</span>
+            <!-- Bands Grid -->
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <Link 
+                    v-for="band in bands" 
+                    :key="band.id" 
+                    :href="route('bands.show', band.id)"
+                    class="group"
+                >
+                    <DSCard class="h-full transition-shadow hover:shadow-lg">
+                        <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
+                            <img
+                                :src="band.image || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
+                                class="object-cover transition-transform group-hover:scale-105"
+                                :alt="band.name"
+                            />
                         </div>
-
-                        <div :class="[
-                            item.changeType === 'increase' ? 'bg-success-50 text-success-700' : 'bg-neutral-50 text-neutral-700',
-                            'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0'
-                        ]">
-                            <svg v-if="item.changeType === 'increase'" class="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" />
-                            </svg>
-                            {{ item.change }}
-                        </div>
-                    </dd>
-                </DSCard>
-            </div>
-
-            <!-- Recent Activity -->
-            <DSCard class="mt-6">
-                <div class="px-4 py-5 sm:px-6">
-                    <h3 class="text-lg font-medium leading-6 text-neutral-900">Recent Activity</h3>
-                </div>
-                <div class="border-t border-neutral-200">
-                    <ul v-if="recentActivity.length > 0" role="list" class="divide-y divide-neutral-200">
-                        <li v-for="item in recentActivity" :key="item.id" class="px-4 py-4 sm:px-6 hover:bg-neutral-50">
-                            <div class="flex items-center space-x-4">
-                                <div class="flex-shrink-0 text-2xl">{{ item.icon }}</div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-medium text-neutral-900">
-                                        <span class="font-semibold">{{ item.name }}</span>
-                                        <span class="text-neutral-500"> {{ item.action }} </span>
-                                        <span v-if="item.target" class="font-semibold">{{ item.target }}</span>
-                                    </p>
-                                    <p class="text-sm text-neutral-500">{{ item.date }}</p>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                    <div v-else class="px-4 py-8 text-center text-sm text-neutral-500">
-                        No recent activity
-                    </div>
-                </div>
-            </DSCard>
-
-            <!-- Your Bands -->
-            <DSCard class="mt-6">
-                <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-                    <h3 class="text-lg font-medium leading-6 text-neutral-900">Your Bands</h3>
-                    <Link :href="route('bands.create')">
-                        <DSButton variant="primary" size="sm">
-                            Create New Band
-                        </DSButton>
-                    </Link>
-                </div>
-                <div class="border-t border-neutral-200">
-                    <ul role="list" class="divide-y divide-neutral-200">
-                        <li v-for="band in bands" :key="band.id" class="px-4 py-4 sm:px-6 hover:bg-neutral-50">
+                        <div class="p-4">
                             <div class="flex items-center justify-between">
-                                <div class="min-w-0 flex-1">
-                                    <Link 
-                                        :href="route('bands.show', band.id)"
-                                        class="text-sm font-medium text-neutral-900 hover:text-primary-600"
-                                    >
-                                        {{ band.name }}
-                                    </Link>
-                                    <p class="text-sm text-neutral-500">{{ band.members_count }} members</p>
-                                </div>
-                                <div class="ml-4 flex items-center space-x-4">
-                                    <Link 
-                                        :href="route('songs.index', { band: band.id })"
-                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        View Songs
-                                    </Link>
-                                    <Link 
-                                        :href="route('setlists.index', { band: band.id })"
-                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        View Setlists
-                                    </Link>
+                                <h3 class="text-lg font-medium text-neutral-900 group-hover:text-primary-600">
+                                    {{ band.name }}
+                                </h3>
+                                <div v-if="hasAdminRole(band)" class="flex items-center text-primary-600">
+                                    <svg class="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    <span class="text-sm font-medium">Admin</span>
                                 </div>
                             </div>
-                        </li>
-                    </ul>
-                </div>
-            </DSCard>
+                            <div class="mt-2 flex items-center text-sm text-neutral-500">
+                                <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
+                                </svg>
+                                {{ band.members_count }} members
+                            </div>
+                            <div class="mt-4 flex space-x-3">
+                                <Link 
+                                    :href="route('songs.index', { band: band.id })"
+                                    class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                >
+                                    View Songs
+                                </Link>
+                                <Link 
+                                    :href="route('setlists.index', { band: band.id })"
+                                    class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                >
+                                    View Setlists
+                                </Link>
+                            </div>
+                        </div>
+                    </DSCard>
+                </Link>
+            </div>
         </template>
     </AuthenticatedLayout>
 </template>

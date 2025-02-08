@@ -9,7 +9,6 @@ const { auth } = usePage().props
 // Basic routes that don't require band context
 const navigation = [
     { name: 'Dashboard', href: route('dashboard'), icon: 'HomeIcon' },
-    { name: 'Bands', href: route('bands.index'), icon: 'UsersIcon' },
 ]
 
 // Routes that require band context - we'll show these only when a band is selected
@@ -81,18 +80,6 @@ const currentBandId = route().params.band
 
                     <!-- Right Navigation -->
                     <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
-                        <!-- Create New Button -->
-                        <DSButton
-                            variant="primary"
-                            size="sm"
-                            @click="$emit('create')"
-                        >
-                            <svg class="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Create New
-                        </DSButton>
-
                         <!-- Profile Dropdown -->
                         <div class="relative">
                             <button

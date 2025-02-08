@@ -47,10 +47,10 @@ const sortedSongs = computed(() => {
 <template>
     <Head :title="`${setlist.name} - ${band.name}`" />
 
-    <AuthenticatedLayout>
+    <AuthenticatedLayout v-if="!performanceMode">
         <template #header>
             <div class="md:flex md:items-center md:justify-between">
-                <div class="min-w-0 flex-1">
+                <div class="min-w-0 flex-1" v-if="!performanceMode">
                     <div class="flex items-center">
                         <Link 
                             :href="route('bands.show', band.id)"
@@ -83,7 +83,7 @@ const sortedSongs = computed(() => {
                     </DSButton>
                     <template v-if="isAdmin">
                         <Link :href="route('setlists.edit', [band.id, setlist.id])" class="w-full sm:w-auto">
-                            <DSButton variant="secondary" class="w-full sm:w-auto">
+                            <DSButton variant="secondary" class="w-full sm:w-auto" v-if="!performanceMode">
                                 <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
@@ -91,6 +91,7 @@ const sortedSongs = computed(() => {
                             </DSButton>
                         </Link>
                         <DSButton
+                            v-if="!performanceMode"
                             variant="danger"
                             @click="confirmDelete"
                             class="w-full sm:w-auto"
@@ -105,68 +106,8 @@ const sortedSongs = computed(() => {
             </div>
         </template>
 
-        <!-- Performance Mode -->
-        <div v-if="performanceMode" class="space-y-6">
-            <DSCard class="bg-neutral-900">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white">{{ setlist.name }}</h3>
-                            <p class="mt-1 text-neutral-400">
-                                {{ setlist.songs?.length || 0 }} songs · {{ formatDuration(setlist.total_duration) }}
-                            </p>
-                        </div>
-                        <div class="text-xl text-white">
-                            {{ formatDuration(setlist.total_duration) }}
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <div
-                            v-for="(song, index) in sortedSongs"
-                            :key="song.id"
-                            class="rounded-lg border border-neutral-700 bg-neutral-800/50 p-6"
-                        >
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center">
-                                        <span class="text-xl font-semibold text-white">{{ index + 1 }}. {{ song.name }}</span>
-                                    </div>
-                                    <div class="mt-1 text-neutral-400">{{ song.formatted_duration }}</div>
-                                    <div v-if="song.pivot.notes" class="mt-4 text-sm text-neutral-300 whitespace-pre-line">
-                                        {{ song.pivot.notes }}
-                                    </div>
-                                </div>
-                                <div class="flex space-x-3">
-                                    <a
-                                        v-if="song.url"
-                                        :href="song.url"
-                                        target="_blank"
-                                        class="text-primary-400 hover:text-primary-300"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
-                                    <Link
-                                        v-if="song.document_path"
-                                        :href="route('songs.document', [band.id, song.id])"
-                                        class="text-primary-400 hover:text-primary-300"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </DSCard>
-        </div>
-
         <!-- Normal Mode -->
-        <div v-else class="grid gap-6 md:grid-cols-2">
-            <!-- Setlist Info -->
+        <div v-if="!performanceMode" class="grid gap-6 md:grid-cols-2">
             <DSCard>
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -281,4 +222,74 @@ const sortedSongs = computed(() => {
             </DSCard>
         </div>
     </AuthenticatedLayout>
+
+     <!-- Performance Mode -->
+     <div v-if="performanceMode" class="space-y-6">
+            <DSCard class="bg-gray-900">
+                <div class="p-6">
+                    <DSButton
+                        :variant="performanceMode ? 'primary' : 'secondary'"
+                        @click="performanceMode = !performanceMode"
+                        class="w-full sm:w-auto mb-4"
+                    >
+                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path v-if="!performanceMode" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        'Exit Performance Mode'
+                </DSButton>
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">{{ setlist.name }}</h3>
+                            <p class="mt-1 text-neutral-400">
+                                {{ setlist.songs?.length || 0 }} songs · {{ formatDuration(setlist.total_duration) }}
+                            </p>
+                        </div>
+                        <div class="text-xl text-white">
+                            {{ formatDuration(setlist.total_duration) }}
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div
+                            v-for="(song, index) in sortedSongs"
+                            :key="song.id"
+                            class="rounded-lg border border-neutral-700 bg-neutral-800/50 p-6"
+                        >
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center">
+                                        <span class="text-xl font-semibold text-white">{{ index + 1 }}. {{ song.name }}</span>
+                                    </div>
+                                    <div class="mt-1 text-neutral-400">{{ song.formatted_duration }}</div>
+                                    <div v-if="song.pivot.notes" class="mt-4 text-sm text-neutral-300 whitespace-pre-line">
+                                        {{ song.pivot.notes }}
+                                    </div>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <a
+                                        v-if="song.url"
+                                        :href="song.url"
+                                        target="_blank"
+                                        class="text-primary-400 hover:text-primary-300"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                    <Link
+                                        v-if="song.document_path"
+                                        :href="route('songs.document', [band.id, song.id])"
+                                        class="text-primary-400 hover:text-primary-300"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </DSCard>
+        </div>
 </template> 
