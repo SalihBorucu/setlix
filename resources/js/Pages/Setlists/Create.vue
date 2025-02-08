@@ -152,7 +152,7 @@ const submit = () => {
                             </div>
                             <draggable
                                 v-model="availableSongs"
-                                :group="{ name: 'songs', pull: 'clone', put: true }"
+                                :group="{ name: 'songs' }"
                                 item-key="id"
                                 class="min-h-[400px] border-2 border-dashed border-neutral-200 rounded-lg"
                                 @change="updateTotalDuration"
@@ -171,6 +171,14 @@ const submit = () => {
                                             </svg>
                                             {{ formatDuration(element.duration_seconds) }}
                                         </div>
+                                    </div>
+                                </template>
+                                <template #footer v-if="availableSongs.length === 0">
+                                    <div class="flex flex-col items-center justify-center h-40 text-neutral-500">
+                                        <svg class="h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <p class="text-sm">All songs have been added to the setlist</p>
                                     </div>
                                 </template>
                             </draggable>
