@@ -9,7 +9,8 @@ import { Link } from '@inertiajs/vue3';
     >
         <div>
             <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
+                <img class="h-8 w-auto" src="/images/logo.svg" alt="Setlix Logo" />
+                <img class="h-8 w-auto" src="/images/logo_text.svg" alt="Setlix" />
             </Link>
         </div>
 

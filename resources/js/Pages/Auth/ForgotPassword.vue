@@ -26,7 +26,7 @@ const submit = () => {
         <div class="max-w-md w-full space-y-8">
             <!-- Logo and Header -->
             <div class="text-center">
-                <img class="mx-auto h-12 w-auto" src="/logo.svg" alt="AI Setlist" />
+                <ApplicationLogo />
                 <h2 class="mt-6 text-3xl font-display font-bold text-neutral-900">
                     Reset your password
                 </h2>

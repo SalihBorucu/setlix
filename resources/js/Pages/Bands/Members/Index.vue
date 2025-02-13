@@ -37,7 +37,7 @@ const confirmRemoveMember = (member) => {
 
 const handleRemoveMember = () => {
     if (memberToRemove.value) {
-        router.delete(route('bands.members.destroy', [props.band.id, memberToRemove.value.id]), {
+        router.delete(route('bands.members.remove', [props.band.id, memberToRemove.value.id]), {
             preserveScroll: true,
             onSuccess: () => {
                 memberToRemove.value = null
@@ -53,7 +53,7 @@ const confirmCancelInvitation = (invitation) => {
 
 const handleCancelInvitation = () => {
     if (invitationToCancel.value) {
-        router.delete(route('bands.invitations.destroy', [props.band.id, invitationToCancel.value.id]), {
+        router.delete(route('bands.members.cancel-invitation', [props.band.id, invitationToCancel.value.id]), {
             preserveScroll: true,
             onSuccess: () => {
                 invitationToCancel.value = null
@@ -71,7 +71,7 @@ const handleCancelInvitation = () => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -89,7 +89,7 @@ const handleCancelInvitation = () => {
                     </p>
                 </div>
                 <div class="mt-4 flex md:ml-4 md:mt-0">
-                    <DSButton 
+                    <DSButton
                         v-if="isAdmin"
                         variant="primary"
                         @click="showInviteModal = true"
@@ -113,8 +113,8 @@ const handleCancelInvitation = () => {
                     <li v-for="member in members" :key="member.id" class="px-4 py-5 sm:px-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center min-w-0">
-                                <img 
-                                    :src="member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}`" 
+                                <img
+                                    :src="member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}`"
                                     :alt="member.name"
                                     class="h-10 w-10 rounded-full"
                                 />
@@ -122,7 +122,7 @@ const handleCancelInvitation = () => {
                                     <p class="text-sm font-medium text-neutral-900 truncate">{{ member.name }}</p>
                                     <p class="text-sm text-neutral-500 truncate">{{ member.email }}</p>
                                 </div>
-                                <span 
+                                <span
                                     :class="[
                                         member.role === 'admin' ? 'bg-primary-100 text-primary-800' : 'bg-neutral-100 text-neutral-800',
                                         'ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
@@ -161,7 +161,7 @@ const handleCancelInvitation = () => {
                                     <p class="text-sm font-medium text-neutral-900 truncate">{{ invitation.email }}</p>
                                     <p class="text-sm text-neutral-500 truncate">Invited {{ invitation.created_at }}</p>
                                 </div>
-                                <span 
+                                <span
                                     :class="[
                                         invitation.role === 'admin' ? 'bg-primary-100 text-primary-800' : 'bg-neutral-100 text-neutral-800',
                                         'ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
@@ -214,4 +214,4 @@ const handleCancelInvitation = () => {
             @confirm="handleCancelInvitation"
         />
     </AuthenticatedLayout>
-</template> 
+</template>

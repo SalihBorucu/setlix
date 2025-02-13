@@ -5,18 +5,17 @@ use App\Http\Controllers\BandController;
 use App\Http\Controllers\SongController;
 use App\Http\Controllers\SetlistController;
 use App\Http\Controllers\BandMemberController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\ProfileSetupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+
+    return redirect('/login');
 });
 
 Route::get('/dashboard', function () {
@@ -40,7 +39,7 @@ Route::middleware('auth')->group(function () {
     // Band routes
     Route::resource('bands', BandController::class)->except(['index']);
     Route::delete('bands/{band}/leave', [BandController::class, 'leave'])->name('bands.leave');
-    
+
     // Song routes (nested under bands)
     Route::get('/bands/{band}/songs', [SongController::class, 'index'])->name('songs.index');
     Route::get('/bands/{band}/songs/create', [SongController::class, 'create'])->name('songs.create');
@@ -67,6 +66,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/bands/{band}/members/invite', [BandMemberController::class, 'invite'])->name('bands.members.invite');
     Route::delete('/bands/{band}/members/{member}', [BandMemberController::class, 'remove'])->name('bands.members.remove');
     Route::delete('/bands/{band}/invitations/{invitation}', [BandMemberController::class, 'cancelInvitation'])->name('bands.members.cancel-invitation');
+
+    // Profile setup routes
+    Route::get('/profile/complete', [ProfileSetupController::class, 'show'])->name('profile.complete');
+    Route::post('/profile/complete', [ProfileSetupController::class, 'update'])->name('profile.complete.update');
 });
 
 // Public route for accepting invitations

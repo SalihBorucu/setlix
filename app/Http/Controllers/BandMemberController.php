@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BandInvitationMail;
 use App\Models\Band;
 use App\Models\BandInvitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class BandMemberController extends Controller
@@ -52,9 +56,7 @@ class BandMemberController extends Controller
         ]);
 
         // Check if user is already a member
-        if ($band->members()->whereHas('users', function ($query) use ($validated) {
-            $query->where('email', $validated['email']);
-        })->exists()) {
+        if ($band->members()->where('email', $validated['email'])->exists()) {
             return back()->withErrors(['email' => 'This user is already a member of the band.']);
         }
 
@@ -65,8 +67,8 @@ class BandMemberController extends Controller
 
         $invitation = $band->invitations()->create($validated);
 
-        // TODO: Send invitation email
-        // Mail::to($validated['email'])->send(new BandInvitation($invitation));
+        // Send invitation email
+        Mail::to($validated['email'])->send(new BandInvitationMail($invitation));
 
         return back()->with('success', 'Invitation sent successfully.');
     }
@@ -76,7 +78,7 @@ class BandMemberController extends Controller
         $this->authorize('update', $band);
 
         // Prevent removing the last admin
-        if ($member->pivot->role === 'admin' && $band->members()->where('role', 'admin')->count() === 1) {
+        if ($member->isAdminOf($band) && $band->members()->where('role', 'admin')->count() === 1) {
             return back()->withErrors(['error' => 'Cannot remove the last admin.']);
         }
 
@@ -102,8 +104,25 @@ class BandMemberController extends Controller
             ->firstOrFail();
 
         if (!auth()->check()) {
-            session(['invitation_token' => $token]);
-            return redirect()->route('register');
+            // Create a new user with a temporary password
+            $tempPassword = Str::random(16);
+            $user = User::create([
+                'name' => explode('@', $invitation->email)[0], // Use email prefix as temporary name
+                'email' => $invitation->email,
+                'password' => Hash::make($tempPassword),
+                'password_set' => false, // Set this to false for new users
+            ]);
+
+            // Log the user in
+            Auth::login($user);
+
+            // Add them to the band
+            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
+            $invitation->update(['accepted_at' => now()]);
+
+            // Redirect to complete profile setup
+            return redirect()->route('profile.complete')
+                ->with('success', 'Welcome to ' . $invitation->band->name . '! Please complete your profile setup.');
         }
 
         if (auth()->user()->email !== $invitation->email) {
@@ -116,4 +135,4 @@ class BandMemberController extends Controller
         return redirect()->route('bands.show', $invitation->band)
             ->with('success', 'You have successfully joined the band.');
     }
-} 
+}
