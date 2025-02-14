@@ -15,7 +15,7 @@ const props = defineProps({
 
 const form = useForm({
     songs: [
-        { name: '', duration: '', duration_seconds: '' }
+        { name: '', duration: '', duration_seconds: '', url: '', artist: '' }
     ]
 })
 
@@ -28,7 +28,7 @@ const canAddMore = computed(() => {
 
 const addSong = () => {
     if (canAddMore.value) {
-        form.songs.push({ name: '', duration: '', duration_seconds: '' })
+        form.songs.push({ name: '', duration: '', duration_seconds: '', url: '', artist: '' })
     }
 }
 
@@ -84,7 +84,9 @@ const importFromSpotify = async () => {
         form.songs = tracks.map(track => ({
             name: track.name,
             duration: track.duration,
-            duration_seconds: track.duration_seconds
+            duration_seconds: track.duration_seconds,
+            url: track.url,
+            artist: track.artist
         }))
         
         showSpotifyModal.value = false
@@ -101,7 +103,7 @@ const submit = () => {
         preserveScroll: true,
         onSuccess: () => {
             form.reset()
-            form.songs = [{ name: '', duration: '', duration_seconds: '' }]
+            form.songs = [{ name: '', duration: '', duration_seconds: '', url: '', artist: '' }]
         }
     })
 }
@@ -177,6 +179,22 @@ const submit = () => {
                             placeholder="MM:SS"
                             @input="handleDurationInput(index, $event)"
                             required
+                        />
+                    </div>
+                    <div class="w-48">
+                        <DSInput
+                            v-model="song.artist"
+                            type="text"
+                            :label="index === 0 ? 'Artist' : ''"
+                            placeholder="Artist name"
+                        />
+                    </div>
+                    <div class="w-48">
+                        <DSInput
+                            v-model="song.url"
+                            type="url"
+                            :label="index === 0 ? 'URL' : ''"
+                            placeholder="https://"
                         />
                     </div>
                     <div class="flex items-end">

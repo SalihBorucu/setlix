@@ -27,6 +27,8 @@ class BulkStoreSongRequest extends FormRequest
             'songs' => ['required', 'array', 'min:1', 'max:200'],
             'songs.*.name' => ['required', 'string', 'max:255'],
             'songs.*.duration_seconds' => ['required', 'integer', 'min:1', 'max:7200'], // max 2 hours
+            'songs.*.url' => ['nullable', 'url', 'max:2048'],
+            'songs.*.artist' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -45,6 +47,9 @@ class BulkStoreSongRequest extends FormRequest
             'songs.*.duration_seconds.required' => 'Each song must have a duration.',
             'songs.*.duration_seconds.min' => 'Song duration must be at least 1 second.',
             'songs.*.duration_seconds.max' => 'Song duration cannot exceed 2 hours.',
+            'songs.*.url.url' => 'The URL must be a valid URL.',
+            'songs.*.url.max' => 'The URL cannot be longer than 2048 characters.',
+            'songs.*.artist.max' => 'Artist name cannot be longer than 255 characters.',
         ];
     }
 }

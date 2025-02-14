@@ -173,12 +173,18 @@ class SongController extends Controller
     {
         $validated = $request->validated();
 
-        $songs = collect($validated['songs'])->map(function ($song) use ($band) {
-            return $band->songs()->create([
+        $songs = [];
+        collect($validated['songs'])->map(function ($song) use ($band, &$songs) {
+            $songs[] = [
                 'name' => $song['name'],
                 'duration_seconds' => $song['duration_seconds'],
-            ]);
+                'artist' => $song['artist'],
+                'url' => $song['url'],
+                'band_id' => $band->id,
+            ];
         });
+
+        Song::insert($songs);
 
         return redirect()->route('songs.index', $band)
             ->with('success', count($songs) . ' songs added successfully.');
