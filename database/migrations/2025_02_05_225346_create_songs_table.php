@@ -18,6 +18,8 @@ return new class extends Migration
             $table->integer('duration_seconds'); // Duration in seconds for easier calculations
             $table->text('notes')->nullable();
             $table->string('url')->nullable();
+            $table->integer('bpm')->nullable();
+            $table->text('artist')->nullable();
             $table->string('document_path')->nullable(); // For attached files
             $table->string('document_type')->nullable(); // PDF or TXT
             $table->timestamps();

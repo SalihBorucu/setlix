@@ -77,6 +77,9 @@ class SetlistController extends Controller
     {
         $this->authorize('view', $band);
 
+        $setlist->load('songs');
+        $setlist->formatted_created_at = $setlist->created_at->format('d M Y');
+
         return Inertia::render('Setlists/Show', [
             'band' => $band,
             'setlist' => $setlist->load('songs'),
@@ -126,7 +129,7 @@ class SetlistController extends Controller
     public function destroy(Band $band, Setlist $setlist): RedirectResponse
     {
         $this->authorize('update', $band);
-        
+
         $setlist->songs()->detach();
         $setlist->delete();
 

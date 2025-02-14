@@ -24,7 +24,7 @@ class BulkStoreSongRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'songs' => ['required', 'array', 'min:1', 'max:30'],
+            'songs' => ['required', 'array', 'min:1', 'max:200'],
             'songs.*.name' => ['required', 'string', 'max:255'],
             'songs.*.duration_seconds' => ['required', 'integer', 'min:1', 'max:7200'], // max 2 hours
         ];
@@ -47,4 +47,4 @@ class BulkStoreSongRequest extends FormRequest
             'songs.*.duration_seconds.max' => 'Song duration cannot exceed 2 hours.',
         ];
     }
-} 
+}

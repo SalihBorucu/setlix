@@ -20,6 +20,8 @@ class Song extends Model
         'duration_seconds',
         'notes',
         'url',
+        'artist',
+        'bpm',
         'document_path',
         'document_type',
     ];

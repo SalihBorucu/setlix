@@ -55,7 +55,7 @@ const sortedSongs = computed(() => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1" v-if="!performanceMode">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -238,7 +238,7 @@ const sortedSongs = computed(() => {
 
      <!-- Performance Mode -->
      <div v-if="performanceMode" class="space-y-6">
-            <DSCard class="bg-gray-900">
+            <DSCard bg-color="bg-gray-900">
                 <div class="p-6">
                     <DSButton
                         :variant="performanceMode ? 'primary' : 'secondary'"
@@ -305,4 +305,4 @@ const sortedSongs = computed(() => {
                 </div>
             </DSCard>
         </div>
-</template> 
+</template>

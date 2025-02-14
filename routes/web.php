@@ -6,9 +6,17 @@ use App\Http\Controllers\SongController;
 use App\Http\Controllers\SetlistController;
 use App\Http\Controllers\BandMemberController;
 use App\Http\Controllers\ProfileSetupController;
+use App\Http\Controllers\SpotifyController;
+use App\Services\SpotifyService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+
+Route::get('/test', function () {
+    $spotifyService =new SpotifyService();
+    $x = $spotifyService->getPlaylistTracks('https://open.spotify.com/playlist/7ygoaEEzXOFWczNIT0UmKL?si=415d711385b04d6d');
+    dd($x);
+});
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -70,6 +78,9 @@ Route::middleware('auth')->group(function () {
     // Profile setup routes
     Route::get('/profile/complete', [ProfileSetupController::class, 'show'])->name('profile.complete');
     Route::post('/profile/complete', [ProfileSetupController::class, 'update'])->name('profile.complete.update');
+
+    Route::post('/spotify/playlist-tracks', [SpotifyController::class, 'getPlaylistTracks'])
+        ->name('spotify.playlist-tracks');
 });
 
 // Public route for accepting invitations

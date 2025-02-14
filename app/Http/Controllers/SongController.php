@@ -54,7 +54,7 @@ class SongController extends Controller
     public function store(StoreSongRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        
+
         // Handle document upload if present
         if ($request->hasFile('document')) {
             $path = $request->file('document')->store('documents', 'public');
@@ -108,7 +108,7 @@ class SongController extends Controller
         if ($request->hasFile('document')) {
             // Delete old document if exists
             $song->deleteDocument();
-            
+
             $path = $request->file('document')->store('documents', 'public');
             $validated['document_path'] = $path;
             $validated['document_type'] = $request->file('document')->getClientOriginalExtension();
@@ -131,7 +131,7 @@ class SongController extends Controller
 
         // Delete associated document if exists
         $song->deleteDocument();
-        
+
         $song->delete();
 
         return redirect()->route('songs.index', ['band' => $band->id]);

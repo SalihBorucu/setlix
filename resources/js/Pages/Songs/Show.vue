@@ -39,7 +39,7 @@ const handleDelete = () => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -113,6 +113,22 @@ const handleDelete = () => {
                                     {{ song.url }}
                                 </a>
                             </dd>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-x-4">
+                            <div class="py-4" v-if="song.artist">
+                                <dt class="text-sm font-medium text-neutral-500">Artist</dt>
+                                <dd class="mt-1 flex items-center text-sm text-neutral-900">
+                                    {{ song.artist }}
+                                </dd>
+                            </div>
+
+                            <div class="py-4" v-if="song.bpm">
+                                <dt class="text-sm font-medium text-neutral-500">BPM</dt>
+                                <dd class="mt-1 flex items-center text-sm text-neutral-900">
+                                    {{ song.bpm }}
+                                </dd>
+                            </div>
                         </div>
 
                         <!-- Document -->
@@ -224,4 +240,4 @@ const handleDelete = () => {
             @confirm="handleDelete"
         />
     </AuthenticatedLayout>
-</template> 
+</template>

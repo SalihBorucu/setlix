@@ -17,6 +17,8 @@ const form = useForm({
     duration_seconds: '',
     notes: '',
     url: '',
+    bpm: '',
+    artist: '',
     document: null
 })
 
@@ -47,7 +49,7 @@ const handleFileChange = (event) => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -56,7 +58,7 @@ const handleFileChange = (event) => {
                         <svg class="mx-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <Link 
+                        <Link
                             :href="route('songs.index', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -76,8 +78,8 @@ const handleFileChange = (event) => {
         <DSCard class="max-w-2xl">
             <form @submit.prevent="submit" class="space-y-6 p-6">
                 <!-- Error Message -->
-                <DSAlert 
-                    v-if="Object.keys(form.errors).length > 0" 
+                <DSAlert
+                    v-if="Object.keys(form.errors).length > 0"
                     type="error"
                 >
                     <ul class="list-disc list-inside">
@@ -85,34 +87,48 @@ const handleFileChange = (event) => {
                     </ul>
                 </DSAlert>
 
-                <!-- Song Name -->
-                <div>
-                    <DSInput
-                        v-model="form.name"
-                        type="text"
-                        label="Song Name"
-                        :error="form.errors.name"
-                        required
-                    />
-                    <p class="mt-1 text-sm text-neutral-500">
-                        The name of your song
-                    </p>
-                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Song Name -->
+                    <div>
+                        <DSInput
+                            v-model="form.name"
+                            type="text"
+                            label="Song Name"
+                            :error="form.errors.name"
+                            required
+                        />
+                    </div>
 
-                <!-- Duration -->
-                <div>
-                    <DSInput
-                        v-model="durationInput"
-                        type="text"
-                        label="Duration (MM:SS)"
-                        :error="form.errors.duration_seconds"
-                        required
-                        pattern="[0-9]{1,2}:[0-9]{2}"
-                        placeholder="03:30"
-                    />
-                    <p class="mt-1 text-sm text-neutral-500">
-                        The length of your song in minutes and seconds
-                    </p>
+                    <div>
+                        <DSInput
+                            v-model="form.artist"
+                            type="text"
+                            label="Artist (Optional)"
+                            :error="form.errors.artist"
+                            placeholder=""
+                        />
+                    </div>
+
+                    <div>
+                        <DSInput
+                            v-model="durationInput"
+                            type="text"
+                            label="Duration (MM:SS)"
+                            :error="form.errors.duration_seconds"
+                            required
+                            pattern="[0-9]{1,2}:[0-9]{2}"
+                            placeholder="03:30"
+                        />
+                    </div>
+
+                    <div>
+                        <DSInput
+                            v-model="form.bpm"
+                            type="number"
+                            label="BPM (Optional)"
+                            :error="form.errors.bpm"
+                        />
+                    </div>
                 </div>
 
                 <!-- Notes -->
@@ -166,9 +182,9 @@ const handleFileChange = (event) => {
                                     class="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500"
                                 >
                                     <span>Upload a file</span>
-                                    <input 
-                                        id="document" 
-                                        type="file" 
+                                    <input
+                                        id="document"
+                                        type="file"
                                         class="sr-only"
                                         accept=".pdf,.txt"
                                         @change="handleFileChange"
@@ -206,4 +222,4 @@ const handleFileChange = (event) => {
             </form>
         </DSCard>
     </AuthenticatedLayout>
-</template> 
+</template>

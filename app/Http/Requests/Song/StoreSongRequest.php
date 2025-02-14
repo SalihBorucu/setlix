@@ -29,6 +29,8 @@ class StoreSongRequest extends FormRequest
             'duration_seconds' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'url' => ['nullable', 'url', 'max:255'],
+            'bpm' => ['nullable', 'int'],
+            'artist' => ['nullable', 'string', 'max:255'],
             'document' => [
                 'nullable',
                 'file',
