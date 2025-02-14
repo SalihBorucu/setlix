@@ -58,7 +58,7 @@ class SpotifyService
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->getAccessToken()
         ])->get("https://api.spotify.com/v1/playlists/{$playlistId}/tracks", [
-            'fields' => 'items(track(name,duration_ms,artists,external_urls,tempo))'
+            'fields' => 'items(track(name,duration_ms,artists,external_urls,lyrics))'
         ]);
 
         if (!$response->successful()) {
@@ -67,6 +67,7 @@ class SpotifyService
 
         return collect($response->json()['items'])->map(function ($item) {
             $durationSeconds = floor($item['track']['duration_ms'] / 1000);
+
             return [
                 'name' => $item['track']['name'],
                 'url' => $item['track']['external_urls']['spotify'] ?? null,

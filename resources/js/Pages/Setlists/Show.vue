@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
 import { ref, computed } from 'vue'
+import visitExternalLink from "@/Utilities/visitExternalLink.js";
 
 const props = defineProps({
     band: {
@@ -39,6 +40,17 @@ const formatDuration = (seconds) => {
         return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
     }
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+const visitLyricsUrl = (song) => {
+    let url = "https://www.musixmatch.com/search?query="
+    url += encodeURIComponent(song.name)
+
+    if (song.artist) {
+        url += (' ' + encodeURIComponent(song.artist))
+    }
+
+    return visitExternalLink(url, true);
 }
 
 // Sort songs by their order in the setlist
@@ -245,11 +257,7 @@ const sortedSongs = computed(() => {
                         @click="performanceMode = !performanceMode"
                         class="w-full sm:w-auto mb-4"
                     >
-                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path v-if="!performanceMode" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        'Exit Performance Mode'
+                        Exit Performance Mode
                 </DSButton>
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -278,17 +286,20 @@ const sortedSongs = computed(() => {
                                         {{ song.pivot.notes }}
                                     </div>
                                 </div>
-                                <div class="flex space-x-3">
-                                    <a
-                                        v-if="song.url"
+                                <div class="flex flex-col justify-end">
+                                    <Link v-if="song.url"
                                         :href="song.url"
-                                        target="_blank"
-                                        class="text-primary-400 hover:text-primary-300"
+                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                     >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
+                                        Spotify
+                                    </Link>
+
+                                    <span
+                                        @click="visitLyricsUrl(song)"
+                                        class="cursor-pointer text-sm font-medium text-primary-600 hover:text-primary-700"
+                                    >
+                                        Lyrics
+                                    </span>
                                     <Link
                                         v-if="song.document_path"
                                         :href="route('songs.document', [band.id, song.id])"
