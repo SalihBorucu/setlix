@@ -3,7 +3,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "preprod": "printf \"prod\" > public/hot",
+        "prod": "vite build"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
