@@ -125,6 +125,17 @@ class BandMemberController extends Controller
                 ->with('success', 'Welcome to ' . $invitation->band->name . '! Please complete your profile setup.');
         }
 
+        if (!auth()->check() && User::exists(['email' => $invitation->email])) {
+            $user = User::find(['email' => $invitation->email]);
+            Auth::login($user);
+
+            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
+            $invitation->update(['accepted_at' => now()]);
+
+            return redirect()->route('bands.show', $invitation->band)
+                ->with('success', "You have successfully joined the $invitation->band.");
+        }
+
         if (auth()->user()->email !== $invitation->email) {
             return back()->withErrors(['error' => 'This invitation was sent to a different email address.']);
         }

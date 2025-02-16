@@ -51,7 +51,8 @@
             margin: 1rem 0;
         }
         .button:hover {
-            background-color: #4338ca;
+            background-color: #0ea5e9;
+            color: #ffffff;
         }
         .footer {
             text-align: center;
@@ -69,17 +70,17 @@
 <body style="background-color: #f3f4f6;">
     <div class="container">
         <div class="header">
-            <img src="{{ asset('images/logo.png') }}" alt="AI Setlist Manager" class="logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Setlix" class="logo">
             <h1 class="title">You're Invited to Join {{ $bandName }}</h1>
         </div>
 
         <div class="content">
             <p>Hello!</p>
-            
-            <p>You've been invited to join <strong>{{ $bandName }}</strong> as a <strong>{{ $role }}</strong>.</p>
-            
+
+            <p>You've been invited to join <strong>{{ $bandName }}</strong> as <strong>{{ $role }}</strong>.</p>
+
             <p>AI Setlist Manager is a modern platform for bands to manage their setlists, songs, and performances. As a {{ $role }}, you'll be able to:</p>
-            
+
             <ul style="margin: 1rem 0; padding-left: 1.5rem;">
                 @if($role === 'admin')
                     <li>Manage band members and settings</li>
@@ -94,7 +95,7 @@
             </ul>
 
             <p>Click the button below to accept the invitation and join the band:</p>
-            
+
             <div style="text-align: center;">
                 <a href="{{ $acceptUrl }}" class="button">Accept Invitation</a>
             </div>
@@ -104,8 +105,8 @@
 
         <div class="footer">
             <p>If you did not expect this invitation, you can safely ignore this email.</p>
-            <p>&copy; {{ date('Y') }} AI Setlist Manager. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Setlix. All rights reserved.</p>
         </div>
     </div>
 </body>
-</html> 
+</html>
