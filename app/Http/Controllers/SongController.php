@@ -181,6 +181,8 @@ class SongController extends Controller
                 'artist' => $song['artist'],
                 'url' => $song['url'],
                 'band_id' => $band->id,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         });
 

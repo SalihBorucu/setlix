@@ -50,7 +50,7 @@ A modern web application for bands to manage their setlists, songs, and performa
 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd ai-setlist
+cd setlix
 ```
 
 2. Install PHP dependencies

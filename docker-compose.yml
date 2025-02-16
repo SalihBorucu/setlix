@@ -3,13 +3,13 @@ services:
     build:
       context: ./docker/app
       dockerfile: Dockerfile
-    image: ai-setlist/app
+    image: setlix/app
     ports:
       - "80:80"
     volumes:
-      - .:/var/www/ai-setlist-dev
+      - .:/var/www/setlix-dev
     networks:
-      - ai-setlist-net
+      - setlix-net
   mysql:
     image: mysql:8.0
     ports:
@@ -20,20 +20,20 @@ services:
       MYSQL_PASSWORD: "${DB_PASSWORD}"
       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     volumes:
-      - ai_setlist_mysql:/var/lib/mysql
+      - setlix_mysql:/var/lib/mysql
     networks:
-      - ai-setlist-net
+      - setlix-net
   redis:
     image: redis:alpine
     volumes:
-      - ai_setlist_redis:/data
+      - setlix_redis:/data
     networks:
-      - ai-setlist-net
+      - setlix-net
 networks:
-  ai-setlist-net:
+  setlix-net:
     driver: "bridge"
 volumes:
-  ai_setlist_redis:
+  setlix_redis:
     driver: "local"
-  ai_setlist_mysql:
+  setlix_mysql:
       driver: "local"
