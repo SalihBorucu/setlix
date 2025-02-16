@@ -42,7 +42,7 @@
         }
         .button {
             display: inline-block;
-            background-color: #4f46e5;
+            background-color: #0ea5e9;
             color: #ffffff;
             padding: 0.75rem 1.5rem;
             border-radius: 0.375rem;
@@ -51,7 +51,7 @@
             margin: 1rem 0;
         }
         .button:hover {
-            background-color: #0ea5e9;
+            background-color: #0284c7;
             color: #ffffff;
         }
         .footer {
@@ -97,7 +97,9 @@
             <p>Click the button below to accept the invitation and join the band:</p>
 
             <div style="text-align: center;">
-                <a href="{{ $acceptUrl }}" class="button">Accept Invitation</a>
+                <a href="{{ $acceptUrl }}" class="button">
+                    <span :style="{ color: '#ffffff' }">Accept Invitation</span>
+                </a>
             </div>
 
             <p class="expires">This invitation will expire on {{ $expiresAt }}.</p>
