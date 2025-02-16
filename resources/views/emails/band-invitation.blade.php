@@ -70,7 +70,7 @@
 <body style="background-color: #f3f4f6;">
     <div class="container">
         <div class="header">
-            <img src="{{ asset('images/logo.png') }}" alt="Setlix" class="logo">
+            <h1>SETLIX</h1>
             <h1 class="title">You're Invited to Join {{ $bandName }}</h1>
         </div>
 
@@ -98,7 +98,7 @@
 
             <div style="text-align: center;">
                 <a href="{{ $acceptUrl }}" class="button">
-                    <span :style="{ color: '#ffffff' }">Accept Invitation</span>
+                    <span :style="{ color: '#ffffff !important' }">Accept Invitation</span>
                 </a>
             </div>
 
