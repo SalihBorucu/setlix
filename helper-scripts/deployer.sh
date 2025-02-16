@@ -47,7 +47,7 @@ git push -f origin deploy
 
 if [ $? -eq 0 ]; then
 
-ssh -t pi@192.168.1.8 << EOF
+ssh -t root@51.89.139.7 << EOF
   cd /var/www/setlix;
   ./helper-scripts/post-deployment.sh
 EOF
