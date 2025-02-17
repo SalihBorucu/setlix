@@ -103,9 +103,6 @@ class BandMemberController extends Controller
             ->where('expires_at', '>', now())
             ->firstOrFail();
 
-<<<<<<< HEAD
-        if (!auth()->check() && !User::exists(['email' => $invitation->email])) {
-=======
         $user = User::where('email', $invitation->email)->first();
 
         if (!auth()->check() && $user) {
@@ -119,7 +116,6 @@ class BandMemberController extends Controller
         }
 
         if (!auth()->check()) {
->>>>>>> 5a2e9c527a6dbd8bf9bb31a1de79677869543a4a
             // Create a new user with a temporary password
             $tempPassword = Str::random(16);
             $user = User::create([
@@ -128,7 +124,6 @@ class BandMemberController extends Controller
                 'password' => Hash::make($tempPassword),
                 'password_set' => false, // Set this to false for new users
             ]);
-
             // Log the user in
             Auth::login($user);
 
