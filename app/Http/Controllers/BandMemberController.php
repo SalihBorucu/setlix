@@ -103,6 +103,18 @@ class BandMemberController extends Controller
             ->where('expires_at', '>', now())
             ->firstOrFail();
 
+        $user = User::where('email', $invitation->email)->first();
+
+        if (!auth()->check() && $user) {
+            Auth::login($user);
+
+            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
+            $invitation->update(['accepted_at' => now()]);
+
+            return redirect()->route('bands.show', $invitation->band)
+                ->with('success', "You have successfully joined the $invitation->band.");
+        }
+
         if (!auth()->check()) {
             // Create a new user with a temporary password
             $tempPassword = Str::random(16);
@@ -123,17 +135,6 @@ class BandMemberController extends Controller
             // Redirect to complete profile setup
             return redirect()->route('profile.complete')
                 ->with('success', 'Welcome to ' . $invitation->band->name . '! Please complete your profile setup.');
-        }
-
-        if (!auth()->check() && User::exists(['email' => $invitation->email])) {
-            $user = User::find(['email' => $invitation->email]);
-            Auth::login($user);
-
-            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
-            $invitation->update(['accepted_at' => now()]);
-
-            return redirect()->route('bands.show', $invitation->band)
-                ->with('success', "You have successfully joined the $invitation->band.");
         }
 
         if (auth()->user()->email !== $invitation->email) {
