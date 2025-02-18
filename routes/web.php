@@ -23,6 +23,11 @@ Route::get('/', function () {
         return redirect('/dashboard');
     }
 
+    if (!auth()->user()->password_set) {
+        return redirect()->route('profile.complete')
+            ->with('success', 'Welcome to Setlix! Please complete your profile setup.');
+    }
+
     return redirect('/login');
 });
 

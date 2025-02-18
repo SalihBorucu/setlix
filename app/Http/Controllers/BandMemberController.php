@@ -108,6 +108,11 @@ class BandMemberController extends Controller
         if (!auth()->check() && $user) {
             Auth::login($user);
 
+            if ($invitation->band->members()->where('user_id', $user->id)->exists()) {
+                return redirect()->route('bands.show', $invitation->band)
+                    ->with('error', "You have already joined the $invitation->band.");
+            }
+
             $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
             $invitation->update(['accepted_at' => now()]);
 
