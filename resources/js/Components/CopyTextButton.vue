@@ -1,10 +1,8 @@
 <template>
   <div class="relative">
-    <span
-      v-bind="$attrs.class"
-      class="absolute -top-2 z-50 text-xs text-primary-600 animate-float-up"
-      :class="positionClass"
-      v-show="isCopying"
+    <span class="absolute z-50 text-xs text-primary-600 animate-float-up"
+          :class="positionClass"
+          v-show="isCopying"
     >
       Copied
     </span>
@@ -50,6 +48,10 @@ const positionClass = computed(() => {
   if (props.position === 'left') {
     return '-left-11 top-5'
   }
+
+    if (props.position === 'right') {
+        return 'right-2 top-0.5'
+    }
 })
 
 </script>
