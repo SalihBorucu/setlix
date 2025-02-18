@@ -24,7 +24,7 @@ const submit = () => {
     <GuestLayout>
         <DSCard class="p-6 w-full max-w-xl mx-auto">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-900">Welcome to AI Setlist Manager!</h2>
+                <h2 class="text-2xl font-bold text-gray-900">Welcome to Setlix!</h2>
                 <p class="mt-2 text-sm text-gray-600">
                     Please complete your profile to continue
                 </p>
@@ -76,4 +76,4 @@ const submit = () => {
             </form>
         </DSCard>
     </GuestLayout>
-</template> 
+</template>

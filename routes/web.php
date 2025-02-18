@@ -7,8 +7,10 @@ use App\Http\Controllers\SetlistController;
 use App\Http\Controllers\BandMemberController;
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
+use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Services\SpotifyService;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,16 +22,11 @@ Route::get('/test', function () {
 
 Route::get('/', function () {
     if (Auth::check()) {
-        if (!auth()->user()->password_set) {
-            return redirect()->route('profile.complete')
-                ->with('success', 'Welcome to Setlix! Please complete your profile setup.');
-        }
-
         return redirect('/dashboard');
     }
 
     return redirect('/login');
-});
+})->middleware(EnsureProfileIsComplete::class);
 
 Route::get('/dashboard', function () {
     $bands = Auth::user()->bands()->with('members')->get();
@@ -42,9 +39,9 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard', [
         'bands' => $bands
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', EnsureProfileIsComplete::class])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
