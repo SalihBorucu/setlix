@@ -162,12 +162,12 @@ const handleCancelInvitation = () => {
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-neutral-900 truncate">{{ invitation.email }}</p>
                                     <p class="text-sm text-neutral-500 truncate">Invited {{ invitation.created_at }}</p>
-                                    <CopyTextButton class="my-2" :text="invitation.url" v-slot:default="{copyText}">
-                                        <p class="text-sm text-primary-500 truncate hover:text-primary-600 cursor-pointer"
-                                           @click="copyText">
-                                            Copy Link
-                                        </p>
-                                    </CopyTextButton>
+<!--                                    <CopyTextButton class="my-2" :text="invitation.url" v-slot:default="{copyText}">-->
+<!--                                        <p class="text-sm text-primary-500 truncate hover:text-primary-600 cursor-pointer"-->
+<!--                                           @click="copyText">-->
+<!--                                            Copy Link-->
+<!--                                        </p>-->
+<!--                                    </CopyTextButton>-->
                                 </div>
                                 <span
                                     :class="[
