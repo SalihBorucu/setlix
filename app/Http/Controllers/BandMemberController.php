@@ -146,6 +146,11 @@ class BandMemberController extends Controller
             return back()->withErrors(['error' => 'This invitation was sent to a different email address.']);
         }
 
+        if ($invitation->band->members()->where('user_id', $user->id)->exists()) {
+            return redirect()->route('bands.show', $invitation->band)
+                ->with('error', "You have already joined the $invitation->band.");
+        }
+
         $invitation->band->members()->attach(auth()->id(), ['role' => $invitation->role]);
         $invitation->update(['accepted_at' => now()]);
 
