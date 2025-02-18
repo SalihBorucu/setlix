@@ -19,4 +19,4 @@ class EnsureProfileIsComplete
 
         return $next($request);
     }
-} 
+}
