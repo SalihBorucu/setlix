@@ -4,6 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
 import AddMemberModal from '@/Components/Bands/AddMemberModal.vue'
 import { ref } from 'vue'
+import copyToClipboard from "@/Utilities/copyToClipboard.js";
+import CopyTextButton from "@/Components/CopyTextButton.vue";
 
 const props = defineProps({
     band: {
@@ -160,6 +162,12 @@ const handleCancelInvitation = () => {
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-neutral-900 truncate">{{ invitation.email }}</p>
                                     <p class="text-sm text-neutral-500 truncate">Invited {{ invitation.created_at }}</p>
+                                    <CopyTextButton class="my-2" :text="invitation.url" v-slot:default="{copyText}">
+                                        <p class="text-sm text-primary-500 truncate hover:text-primary-600 cursor-pointer"
+                                           @click="copyText">
+                                            Copy Link
+                                        </p>
+                                    </CopyTextButton>
                                 </div>
                                 <span
                                     :class="[

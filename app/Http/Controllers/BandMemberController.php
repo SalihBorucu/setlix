@@ -40,6 +40,7 @@ class BandMemberController extends Controller
                         'email' => $invitation->email,
                         'role' => $invitation->role,
                         'created_at' => $invitation->created_at->diffForHumans(),
+                        'url' => route('invitations.accept', $invitation->token),
                     ];
                 }),
             'isAdmin' => $band->members()->where('user_id', auth()->id())->first()->pivot->role === 'admin',
