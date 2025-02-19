@@ -5,6 +5,7 @@ import { ref } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import {DSInput} from "@/Components/UI/index.js";
 
 const props = defineProps({
     band: {
@@ -20,6 +21,8 @@ const props = defineProps({
 const form = useForm({
     band_id: props.band.id,
     name: props.song.name,
+    artist: props.song.artist,
+    bpm: props.song.bpm,
     duration_seconds: props.song.duration_seconds,
     notes: props.song.notes,
     url: props.song.url,
@@ -47,7 +50,7 @@ const updateDuration = () => {
 };
 
 const submit = () => {
-    form.post(route('songs.update', [props.band.id, props.song.id]), {
+    form.patch(route('songs.update', [props.band.id, props.song.id]), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
@@ -77,56 +80,81 @@ const submit = () => {
                     <div class="p-6">
                         <form @submit.prevent="submit" class="space-y-6">
                             <!-- Song Name -->
-                            <div>
-                                <InputLabel for="name" value="Song Name" />
-                                <TextInput
-                                    id="name"
-                                    v-model="form.name"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    required
-                                />
-                                <InputError :message="form.errors.name" class="mt-2" />
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Song Name -->
+                                <div>
+                                    <DSInput
+                                        v-model="form.name"
+                                        type="text"
+                                        label="Song Name"
+                                        :error="form.errors.name"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <DSInput
+                                        v-model="form.artist"
+                                        type="text"
+                                        label="Artist (Optional)"
+                                        :error="form.errors.artist"
+                                        placeholder=""
+                                    />
+                                </div>
+
+                                <div>
+                                    <DSInput
+                                        v-model="durationInput"
+                                        type="text"
+                                        label="Duration (MM:SS)"
+                                        :error="form.errors.duration_seconds"
+                                        required
+                                        pattern="[0-9]{1,2}:[0-9]{2}"
+                                        placeholder="03:30"
+                                    />
+                                </div>
+
+                                <div>
+                                    <DSInput
+                                        v-model="form.bpm"
+                                        type="number"
+                                        label="BPM (Optional)"
+                                        :error="form.errors.bpm"
+                                    />
+                                </div>
                             </div>
 
-                            <!-- Duration -->
                             <div>
-                                <InputLabel for="duration" value="Duration (MM:SS)" />
-                                <TextInput
-                                    id="duration"
-                                    v-model="durationInput"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    placeholder="3:30"
-                                    pattern="\d+:\d{2}"
-                                    @input="updateDuration"
-                                    required
-                                />
-                                <InputError :message="form.errors.duration_seconds" class="mt-2" />
+                                <label class="block text-sm font-medium text-neutral-700">
+                                    Notes (Optional)
+                                </label>
+                                <div class="mt-1">
+                                    <textarea
+                                        v-model="form.notes"
+                                        rows="4"
+                                        :class="[
+                                'block w-full rounded-lg shadow-sm transition-colors duration-200',
+                                'border-neutral-300 focus:border-primary-500 focus:ring-primary-500',
+                                { 'border-error-500 focus:border-error-500 focus:ring-error-500': form.errors.notes }
+                            ]"
+                                    />
+                                </div>
+                                <p class="mt-1 text-sm text-neutral-500">
+                                    Add any notes about the song, such as key changes or special instructions
+                                </p>
                             </div>
 
-                            <!-- Notes -->
                             <div>
-                                <InputLabel for="notes" value="Notes (Optional)" />
-                                <textarea
-                                    id="notes"
-                                    v-model="form.notes"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    rows="4"
-                                ></textarea>
-                                <InputError :message="form.errors.notes" class="mt-2" />
-                            </div>
-
-                            <!-- URL -->
-                            <div>
-                                <InputLabel for="url" value="URL (Optional)" />
-                                <TextInput
-                                    id="url"
+                                <DSInput
                                     v-model="form.url"
                                     type="url"
-                                    class="mt-1 block w-full"
+                                    label="External Link (Optional)"
+                                    :error="form.errors.url"
+                                    placeholder="https://"
                                 />
-                                <InputError :message="form.errors.url" class="mt-2" />
+                                <p class="mt-1 text-sm text-neutral-500">
+                                    Link to an external resource (YouTube, Spotify, etc.)
+                                </p>
                             </div>
 
                             <!-- Document -->
@@ -167,4 +195,4 @@ const submit = () => {
             </div>
         </div>
     </AuthenticatedLayout>
-</template> 
+</template>
