@@ -28,7 +28,7 @@ const currentBandId = route().params.band
 </script>
 
 <template>
-    <div class="min-h-screen bg-neutral-50">
+    <div class="min-h-screen bg-neutral-50 test">
         <!-- Navigation -->
         <nav class="bg-white border-b border-neutral-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
