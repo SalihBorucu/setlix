@@ -1,0 +1,1 @@
+import{c as t,o,k as r,d as m}from"./app-DFfD3WuN.js";const p={__name:"Form",emits:["submit"],setup(n){return(e,s)=>(o(),t("form",{onSubmit:s[0]||(s[0]=m(a=>e.$emit("submit"),["prevent"])),class:"space-y-6"},[r(e.$slots,"default")],32))}};export{p as _};
