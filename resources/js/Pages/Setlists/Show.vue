@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
+import PerformanceMode from '@/Components/Setlist/PerformanceMode.vue'
 import { ref, computed } from 'vue'
 import visitExternalLink from "@/Utilities/visitExternalLink.js";
 
@@ -43,15 +44,25 @@ const formatDuration = (seconds) => {
 }
 
 const visitLyricsUrl = (song) => {
-    let url = "https://www.musixmatch.com/search?query="
+    let url = "https://www.google.com/search?q="
     url += encodeURIComponent(song.name)
 
     if (song.artist) {
         url += (' ' + encodeURIComponent(song.artist))
     }
 
+    url += "+lyrics"
+
     return visitExternalLink(url, true);
 }
+
+const handleFileDownload = (file, song) => {
+    visitExternalLink(
+        route('songs.files.download', [props.band.id, song.id, file.id]),
+        true,
+        true
+    );
+};
 
 // Sort songs by their order in the setlist
 const sortedSongs = computed(() => {
@@ -62,7 +73,15 @@ const sortedSongs = computed(() => {
 <template>
     <Head :title="`${setlist.name} - ${band.name}`" />
 
-    <AuthenticatedLayout v-if="!performanceMode">
+    <PerformanceMode
+        v-if="performanceMode"
+        :band="band"
+        :setlist="setlist"
+        :sortedSongs="sortedSongs"
+        @exit="performanceMode = false"
+    />
+
+    <AuthenticatedLayout v-else>
         <template #header>
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1" v-if="!performanceMode">
@@ -86,7 +105,7 @@ const sortedSongs = computed(() => {
                 </div>
                 <div class="mt-4 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 md:ml-4 md:mt-0">
                     <DSButton
-                        :variant="performanceMode ? 'primary' : 'secondary'"
+                        variant="primary"
                         @click="performanceMode = !performanceMode"
                         class="w-full sm:w-auto"
                     >
@@ -193,15 +212,19 @@ const sortedSongs = computed(() => {
                             <div class="flex items-start justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center">
-                                        <span class="text-sm font-medium text-neutral-900">{{ index + 1 }}. {{ song.name }}</span>
+                                        <span class="text-sm font-medium text-neutral-900">
+                                            {{ index + 1 }}. {{ song.name }}
+                                        </span>
+                                        <span class="ml-2 text-xs text-neutral-500">
+                                            {{ song.formatted_duration }}
+                                        </span>
                                     </div>
-                                    <div class="mt-1 text-xs text-neutral-500">{{ song.formatted_duration }}</div>
                                     <div v-if="song.pivot.notes" class="mt-2 text-sm text-neutral-600">
                                         {{ song.pivot.notes }}
                                     </div>
                                 </div>
                                 <div class="ml-4 flex items-center space-x-2">
-                                    <a
+                                    <Link
                                         v-if="song.url"
                                         :href="song.url"
                                         target="_blank"
@@ -210,25 +233,27 @@ const sortedSongs = computed(() => {
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                    </a>
-                                    <Link
-                                        v-if="song.document_path"
-                                        :href="route('songs.document', [band.id, song.id])"
+                                    </Link>
+
+                                    <button
+                                        @click="visitLyricsUrl(song)"
+                                        class="text-neutral-400 hover:text-neutral-500"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        v-for="file in song.files"
+                                        :key="file.id"
+                                        @click="handleFileDownload(file, song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                         </svg>
-                                    </Link>
-                                    <Link
-                                        :href="route('songs.show', [band.id, song.id])"
-                                        class="text-neutral-400 hover:text-neutral-500"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </Link>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -247,73 +272,4 @@ const sortedSongs = computed(() => {
             @confirm="handleDelete"
         />
     </AuthenticatedLayout>
-
-     <!-- Performance Mode -->
-     <div v-if="performanceMode" class="space-y-6">
-            <DSCard bg-color="bg-gray-900">
-                <div class="p-6">
-                    <DSButton
-                        :variant="performanceMode ? 'primary' : 'secondary'"
-                        @click="performanceMode = !performanceMode"
-                        class="w-full sm:w-auto mb-4"
-                    >
-                        Exit Performance Mode
-                </DSButton>
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white">{{ setlist.name }}</h3>
-                            <p class="mt-1 text-neutral-400">
-                                {{ setlist.songs?.length || 0 }} songs · {{ formatDuration(setlist.total_duration) }}
-                            </p>
-                        </div>
-                        <div class="text-xl text-white">
-                            {{ formatDuration(setlist.total_duration) }}
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <div
-                            v-for="(song, index) in sortedSongs"
-                            :key="song.id"
-                            class="rounded-lg border border-neutral-700 bg-neutral-800/50 p-6"
-                        >
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center">
-                                        <span class="text-xl font-semibold text-white">{{ index + 1 }}. {{ song.name }}</span>
-                                    </div>
-                                    <div class="mt-1 text-neutral-400">{{ song.formatted_duration }}</div>
-                                    <div v-if="song.pivot.notes" class="mt-4 text-sm text-neutral-300 whitespace-pre-line">
-                                        {{ song.pivot.notes }}
-                                    </div>
-                                </div>
-                                <div class="flex flex-col justify-end">
-                                    <Link v-if="song.url"
-                                        :href="song.url"
-                                        class="text-sm font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        Spotify
-                                    </Link>
-
-                                    <span
-                                        @click="visitLyricsUrl(song)"
-                                        class="cursor-pointer text-sm font-medium text-primary-600 hover:text-primary-700"
-                                    >
-                                        Lyrics
-                                    </span>
-                                    <Link
-                                        v-if="song.document_path"
-                                        :href="route('songs.document', [band.id, song.id])"
-                                        class="text-primary-400 hover:text-primary-300"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </DSCard>
-        </div>
 </template>
