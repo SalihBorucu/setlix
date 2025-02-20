@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Song extends Model
 {
@@ -95,5 +96,13 @@ class Song extends Model
         return $this->belongsToMany(Setlist::class)
             ->withPivot('order', 'notes')
             ->orderBy('pivot_order');
+    }
+
+    /**
+     * Get the files for the song.
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(SongFile::class);
     }
 }

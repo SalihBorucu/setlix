@@ -11,15 +11,19 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
+use App\Services\SongFileService;
 
 class SongController extends Controller
 {
+    protected SongFileService $fileService;
+
     /**
      * Create a new controller instance.
      */
-    public function __construct()
+    public function __construct(SongFileService $fileService)
     {
         $this->middleware(['auth']);
+        $this->fileService = $fileService;
     }
 
     /**
@@ -54,15 +58,21 @@ class SongController extends Controller
     public function store(StoreSongRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-
-        // Handle document upload if present
-        if ($request->hasFile('document')) {
-            $path = $request->file('document')->store('documents', 'public');
-            $validated['document_path'] = $path;
-            $validated['document_type'] = $request->file('document')->getClientOriginalExtension();
-        }
+        $files = $validated['files'] ?? [];
+        unset($validated['files']);
 
         $song = Song::create($validated);
+
+        // Handle file uploads
+        if (!empty($files)) {
+            foreach ($files as $fileData) {
+                $this->fileService->store(
+                    $song,
+                    $fileData['file'],
+                    $fileData['type']
+                );
+            }
+        }
 
         return redirect()->route('songs.show', [
             'band' => $song->band_id,
@@ -104,18 +114,21 @@ class SongController extends Controller
     public function update(StoreSongRequest $request, Band $band, Song $song): RedirectResponse
     {
         $validated = $request->validated();
-
-        // Handle document upload if present
-        if ($request->hasFile('document')) {
-            // Delete old document if exists
-            $song->deleteDocument();
-
-            $path = $request->file('document')->store('documents', 'public');
-            $validated['document_path'] = $path;
-            $validated['document_type'] = $request->file('document')->getClientOriginalExtension();
-        }
+        $files = $validated['files'] ?? [];
+        unset($validated['files']);
 
         $song->update($validated);
+
+        // Handle file uploads
+        if (!empty($files)) {
+            foreach ($files as $fileData) {
+                $this->fileService->store(
+                    $song,
+                    $fileData['file'],
+                    $fileData['type']
+                );
+            }
+        }
 
         return redirect()->route('songs.show', [
             'band' => $band->id,
@@ -141,18 +154,16 @@ class SongController extends Controller
     /**
      * Download the song's document.
      */
-    public function downloadDocument(Band $band, Song $song): mixed
+    public function downloadDocument(Band $band, Song $song, SongFile $file): mixed
     {
         $this->authorize('view', $band);
-
-        if (!$song->hasDocument()) {
-            return back()->with('error', 'No document attached to this song.');
+        
+        try {
+            $url = $this->fileService->getTemporaryUrl($file);
+            return redirect($url);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to generate download link.');
         }
-
-        return Storage::disk('public')->download(
-            $song->document_path,
-            $song->name . '.' . $song->document_type
-        );
     }
 
     /**
