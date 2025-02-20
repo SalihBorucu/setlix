@@ -142,6 +142,7 @@ const handleDelete = () => {
                                     :href="route('songs.document', [band.id, song.id])"
                                     class="text-primary-600 hover:text-primary-700"
                                     download
+                                    target="_blank"
                                 >
                                     Download {{ song.document_type?.toUpperCase() }}
                                 </Link>

@@ -80,7 +80,8 @@ class SongController extends Controller
         return Inertia::render('Songs/Show', [
             'band' => $band,
             'song' => $song,
-            'isAdmin' => $band->isAdmin(auth()->user())
+            'isAdmin' => $band->isAdmin(auth()->user()),
+            'document_path' => $song->document_path,
         ]);
     }
 
