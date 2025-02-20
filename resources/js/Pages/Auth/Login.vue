@@ -28,12 +28,12 @@ const submit = () => {
                 <h2 class="mt-6 text-3xl font-display font-bold text-neutral-900">
                     Welcome back
                 </h2>
-                <p class="mt-2 text-sm text-neutral-600">
-                    Or
-                    <Link :href="route('register')" class="font-medium text-primary-500 hover:text-primary-600">
-                        Sign Up
-                    </Link>
-                </p>
+<!--                <p class="mt-2 text-sm text-neutral-600">-->
+<!--                    Or-->
+<!--                    <Link :href="route('register')" class="font-medium text-primary-500 hover:text-primary-600">-->
+<!--                        Sign Up-->
+<!--                    </Link>-->
+<!--                </p>-->
             </div>
 
             <!-- Login Form -->
