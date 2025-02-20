@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSAlert } from '@/Components/UI'
 import AlertModal from '@/Components/UI/AlertModal.vue'
+import visitExternalLink from '@/Utilities/visitExternalLink'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -28,6 +29,14 @@ const confirmDelete = () => {
 
 const handleDelete = () => {
     router.delete(route('songs.destroy', [props.band.id, props.song.id]))
+}
+
+const handleDownload = (file) => {
+    visitExternalLink(
+        route('songs.files.download', [props.band.id, props.song.id, file.id]),
+        true,
+        true
+    )
 }
 </script>
 
@@ -131,21 +140,36 @@ const handleDelete = () => {
                             </div>
                         </div>
 
-                        <!-- Document -->
-                        <div v-if="song.document_path" class="py-4">
-                            <dt class="text-sm font-medium text-neutral-500">Document</dt>
-                            <dd class="mt-1 flex items-center text-sm">
-                                <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                                <Link
-                                    :href="route('songs.document', [band.id, song.id])"
-                                    class="text-primary-600 hover:text-primary-700"
-                                    download
-                                    target="_blank"
+                        <!-- Files -->
+                        <div v-if="song.files?.length" class="py-4">
+                            <dt class="text-sm font-medium text-neutral-500">Files</dt>
+                            <dd class="mt-2 space-y-2">
+                                <div 
+                                    v-for="file in song.files" 
+                                    :key="file.id"
+                                    class="flex items-center justify-between rounded-md border border-neutral-200 p-2"
                                 >
-                                    Download {{ song.document_type?.toUpperCase() }}
-                                </Link>
+                                    <div class="flex items-center">
+                                        <svg class="mr-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        <div>
+                                            <span class="text-sm font-medium text-neutral-900">
+                                                {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}
+                                            </span>
+                                            <p class="text-xs text-neutral-500">{{ file.original_filename }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <Link
+                                            :href="route('songs.files.download', [band.id, song.id, file.id])"
+                                            class="text-sm text-primary-600 hover:text-primary-700"
+                                            @click="handleDownload(file)"
+                                        >
+                                            Download
+                                        </Link>
+                                    </div>
+                                </div>
                             </dd>
                         </div>
 

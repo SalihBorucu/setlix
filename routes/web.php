@@ -9,15 +9,14 @@ use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Services\SpotifyService;
+use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/test', function () {
-    $spotifyService =new SpotifyService();
-    $x = $spotifyService->getPlaylistTracks('https://open.spotify.com/playlist/7ygoaEEzXOFWczNIT0UmKL?si=415d711385b04d6d');
-    dd($x);
+    Bugsnag::notifyException(new RuntimeException("Test error"));
 });
 
 Route::get('/', function () {
@@ -61,6 +60,10 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::patch('/bands/{band}/songs/{song}', [SongController::class, 'update'])->name('songs.update');
     Route::delete('/bands/{band}/songs/{song}', [SongController::class, 'destroy'])->name('songs.destroy');
     Route::get('/bands/{band}/songs/{song}/document', [SongController::class, 'downloadDocument'])->name('songs.document');
+    Route::delete('/bands/{band}/songs/{song}/files/{file}', [SongController::class, 'deleteFile'])
+        ->name('songs.files.destroy');
+    Route::get('/bands/{band}/songs/{song}/files/{file}/download', [SongController::class, 'downloadFile'])
+        ->name('songs.files.download');
 
     // Setlist routes (nested under bands)
     Route::get('/bands/{band}/setlists', [SetlistController::class, 'index'])->name('setlists.index');

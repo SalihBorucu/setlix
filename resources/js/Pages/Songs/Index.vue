@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard } from '@/Components/UI'
+import visitExternalLink from '@/Utilities/visitExternalLink'
 
 const props = defineProps({
     band: {
@@ -22,6 +23,14 @@ const deleteSong = (songId) => {
     if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
         router.delete(route('songs.destroy', [props.band.id, songId]))
     }
+}
+
+const handleDownload = (file, song) => {
+    visitExternalLink(
+        route('songs.files.download', [props.band.id, song.id, file.id]),
+        true,
+        true
+    )
 }
 </script>
 
@@ -134,8 +143,21 @@ const deleteSong = (songId) => {
                                             {{ song.formatted_duration }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center space-x-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-2">
+                                            <div
+                                                v-for="file in song.files"
+                                                :key="file.id"
+                                                class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 cursor-pointer"
+                                                @click="handleDownload(file, song)"
+                                            >
+                                                <div class="inline-flex items-center">
+                                                    <svg class="-ml-0.5 mr-1.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                    </svg>
+                                                    {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}
+                                                </div>
+                                            </div>
                                             <a
                                                 v-if="song.url"
                                                 :href="song.url"
@@ -147,16 +169,6 @@ const deleteSong = (songId) => {
                                                 </svg>
                                                 URL
                                             </a>
-                                            <Link
-                                                v-if="song.document_path"
-                                                :href="route('songs.document', [band.id, song.id])"
-                                                class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 hover:bg-primary-100"
-                                            >
-                                                <svg class="-ml-0.5 mr-1.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                </svg>
-                                                {{ song.document_type?.toUpperCase() }}
-                                            </Link>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
