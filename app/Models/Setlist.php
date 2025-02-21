@@ -73,4 +73,14 @@ class Setlist extends Model
         
         return sprintf('%d:%02d', $minutes, $seconds);
     }
+
+    public function items()
+    {
+        return $this->hasMany(SetlistItem::class)->orderBy('order');
+    }
+
+    public function calculateTotalDuration(): int
+    {
+        return $this->items()->sum('duration_seconds');
+    }
 }
