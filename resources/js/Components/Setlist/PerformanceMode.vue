@@ -47,8 +47,8 @@ const handleFileDownload = (file, song) => {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <DSCard bg-color="bg-gray-900 h-full">
+    <div class="space-y-6 flex justify-center">
+        <DSCard bg-color="bg-gray-900 h-full lg:w-1/2 w-full">
             <div class="p-6">
                 <DSButton
                     variant="primary"
@@ -98,10 +98,10 @@ const handleFileDownload = (file, song) => {
                                         </template>
                                         {{ item.type === 'break' ? item.title : item.song.name }}
                                     </span>
-                                    <span class="text-sm text-neutral-500">
-                                        {{ formatDuration(item.duration_seconds) }}
-                                    </span>
                                 </div>
+                                <span class="text-sm text-neutral-500">
+                                        {{ formatDuration(item.duration_seconds) }}
+                                </span>
                             </div>
 
                             <div v-if="item.notes" 
