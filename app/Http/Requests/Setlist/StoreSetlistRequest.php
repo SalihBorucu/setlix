@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Setlist;
 
-use App\Models\Band;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Band;
 
 class StoreSetlistRequest extends FormRequest
 {
@@ -12,8 +12,9 @@ class StoreSetlistRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // Get the band from the form data since we're creating a new setlist
         $band = Band::findOrFail($this->band_id);
-        return $band->isAdmin($this->user());
+        return $this->user()->can('update', $band);
     }
 
     /**
@@ -26,10 +27,17 @@ class StoreSetlistRequest extends FormRequest
         return [
             'band_id' => ['required', 'exists:bands,id'],
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'song_order' => ['nullable', 'array'],
-            'song_order.*' => ['exists:songs,id'],
-            'total_duration' => ['nullable', 'integer', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.type' => ['required', 'in:song,break'],
+            // For songs
+            'items.*.song_id' => ['nullable', 'required_if:items.*.type,song', 'exists:songs,id'],
+            // For breaks
+            'items.*.title' => ['nullable', 'required_if:items.*.type,break', 'string', 'max:255'],
+            // Common fields
+            'items.*.duration_seconds' => ['required', 'integer', 'min:1'],
+            'items.*.notes' => ['nullable', 'string'],
+            'total_duration' => ['required', 'integer', 'min:1']
         ];
     }
 
@@ -41,7 +49,10 @@ class StoreSetlistRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'song_order.*.exists' => 'One or more selected songs do not exist.',
+            'items.*.song_id.required_if' => 'A song ID is required for song items.',
+            'items.*.title.required_if' => 'A title is required for break items.',
+            'items.*.song_id.exists' => 'One or more selected songs do not exist.',
+            'items.*.duration_seconds.min' => 'Duration must be at least 1 second.',
             'total_duration.min' => 'The total duration cannot be negative.',
         ];
     }

@@ -44,7 +44,7 @@ class SetlistController extends Controller
         $this->authorize('update', $band);
 
         return Inertia::render('Setlists/Create', [
-            'band' => $band,
+            'band' => $band,    
             'songs' => $band->songs()->orderBy('name')->get()
         ]);
     }
@@ -54,14 +54,23 @@ class SetlistController extends Controller
      */
     public function store(StoreSetlistRequest $request): RedirectResponse
     {
-        $setlist = Setlist::create($request->validated());
+        $setlist = Setlist::create([
+            'band_id' => $request->band_id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'total_duration' => $request->total_duration
+        ]);
 
-        // Attach songs if provided in song_order
-        if ($request->song_order) {
-            foreach ($request->song_order as $index => $songId) {
-                $setlist->songs()->attach($songId, ['order' => $index]);
-            }
-            $setlist->updateTotalDuration();
+        // Create setlist items
+        foreach ($request->items as $index => $item) {
+            $setlist->items()->create([
+                'type' => $item['type'],
+                'song_id' => $item['song_id'] ?? null,
+                'title' => $item['title'] ?? null,
+                'duration_seconds' => $item['duration_seconds'],
+                'notes' => $item['notes'] ?? null,
+                'order' => $index
+            ]);
         }
 
         return redirect()->route('setlists.show', [
@@ -77,8 +86,11 @@ class SetlistController extends Controller
     {
         $this->authorize('view', $band);
 
-        // Load songs with their files and format the created_at date
-        $setlist->load(['songs.files']); // Add files relationship
+        // Load items with songs and their files
+        $setlist->load([
+            'items.song.files', // Load files for songs
+        ]);
+        
         $setlist->formatted_created_at = $setlist->created_at->format('d M Y');
 
         return Inertia::render('Setlists/Show', [
@@ -95,10 +107,21 @@ class SetlistController extends Controller
     {
         $this->authorize('update', $band);
 
+        // Load items with their songs
+        $setlist->load(['items.song']);
+
+        // Get all available songs (excluding ones already in the setlist)
+        $availableSongs = $band->songs()
+            ->whereNotIn('id', $setlist->items()
+                ->where('type', 'song')
+                ->pluck('song_id'))
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Setlists/Edit', [
             'band' => $band,
-            'setlist' => $setlist->load('songs'),
-            'availableSongs' => $band->songs()->orderBy('name')->get()
+            'setlist' => $setlist,
+            'availableSongs' => $availableSongs
         ]);
     }
 
@@ -107,15 +130,25 @@ class SetlistController extends Controller
      */
     public function update(StoreSetlistRequest $request, Band $band, Setlist $setlist): RedirectResponse
     {
-        $setlist->update($request->validated());
+        $setlist->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'total_duration' => $request->total_duration
+        ]);
 
-        // Update song order if provided
-        if ($request->song_order) {
-            $setlist->songs()->detach(); // Remove all existing songs
-            foreach ($request->song_order as $index => $songId) {
-                $setlist->songs()->attach($songId, ['order' => $index]);
-            }
-            $setlist->updateTotalDuration();
+        // Remove existing items
+        $setlist->items()->delete();
+
+        // Create new items
+        foreach ($request->items as $index => $item) {
+            $setlist->items()->create([
+                'type' => $item['type'],
+                'song_id' => $item['song_id'] ?? null,
+                'title' => $item['title'] ?? null,
+                'duration_seconds' => $item['duration_seconds'],
+                'notes' => $item['notes'] ?? null,
+                'order' => $index
+            ]);
         }
 
         return redirect()->route('setlists.show', [
@@ -131,7 +164,7 @@ class SetlistController extends Controller
     {
         $this->authorize('update', $band);
 
-        $setlist->songs()->detach();
+        // Delete items (will happen automatically due to cascadeOnDelete)
         $setlist->delete();
 
         return redirect()->route('setlists.index', ['band' => $band->id]);

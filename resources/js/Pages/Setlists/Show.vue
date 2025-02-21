@@ -63,11 +63,6 @@ const handleFileDownload = (file, song) => {
         true
     );
 };
-
-// Sort songs by their order in the setlist
-const sortedSongs = computed(() => {
-    return [...props.setlist.songs].sort((a, b) => a.pivot.order - b.pivot.order)
-})
 </script>
 
 <template>
@@ -77,7 +72,6 @@ const sortedSongs = computed(() => {
         v-if="performanceMode"
         :band="band"
         :setlist="setlist"
-        :sortedSongs="sortedSongs"
         @exit="performanceMode = false"
     />
 
@@ -100,7 +94,7 @@ const sortedSongs = computed(() => {
                         {{ setlist.name }}
                     </h2>
                     <p class="mt-1 text-sm text-neutral-500">
-                        {{ setlist.songs?.length || 0 }} songs · {{ formatDuration(setlist.total_duration) }} total duration
+                        {{ setlist.items?.length || 0 }} items ({{ setlist.items?.filter(i => i.type === 'song').length || 0 }} songs)
                     </p>
                 </div>
                 <div class="mt-4 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 md:ml-4 md:mt-0">
@@ -166,7 +160,7 @@ const sortedSongs = computed(() => {
                                 <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                 </svg>
-                                {{ setlist.songs?.length || 0 }} songs
+                                {{ setlist.items?.length || 0 }} items ({{ setlist.items?.filter(i => i.type === 'song').length || 0 }} songs)
                             </dd>
                         </div>
 
@@ -196,37 +190,62 @@ const sortedSongs = computed(() => {
             <DSCard>
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-neutral-900">Songs</h3>
+                        <h3 class="text-lg font-semibold text-neutral-900">Setlist Items</h3>
                         <Link v-if="isAdmin" :href="route('setlists.edit', [band.id, setlist.id])">
                             <DSButton variant="secondary" size="sm">
-                                Reorder Songs
+                                Edit Setlist
                             </DSButton>
                         </Link>
                     </div>
                     <div class="divide-y divide-neutral-200">
                         <div
-                            v-for="(song, index) in sortedSongs"
-                            :key="song.id"
-                            class="py-4"
+                            v-for="(item, index) in setlist.items"
+                            :key="item.id"
+                            :class="[
+                                'py-4',
+                                item.type === 'break' ? 'bg-neutral-50 -mx-6 px-6' : ''
+                            ]"
                         >
                             <div class="flex items-start justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center">
-                                        <span class="text-sm font-medium text-neutral-900">
-                                            {{ index + 1 }}. {{ song.name }}
+                                        <!-- Item Number (only for songs) -->
+                                        <span v-if="item.type === 'song'" class="text-sm font-medium text-neutral-900">
+                                            {{ setlist.items.filter(i => i.type === 'song' && i.order <= item.order).length }}.
                                         </span>
+
+                                        <!-- Break Badge -->
+                                        <div v-if="item.type === 'break'" 
+                                            class="flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-700"
+                                        >
+                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                            <span class="text-xs font-medium">BREAK</span>
+                                        </div>
+
+                                        <!-- Item Title -->
+                                        <span class="text-sm font-medium text-neutral-900" :class="{ 'ml-2': item.type === 'song' }">
+                                            {{ item.type === 'break' ? item.title : item.song.name }}
+                                        </span>
+
+                                        <!-- Duration -->
                                         <span class="ml-2 text-xs text-neutral-500">
-                                            {{ song.formatted_duration }}
+                                            {{ formatDuration(item.duration_seconds) }}
                                         </span>
                                     </div>
-                                    <div v-if="song.pivot.notes" class="mt-2 text-sm text-neutral-600">
-                                        {{ song.pivot.notes }}
+
+                                    <!-- Notes -->
+                                    <div v-if="item.notes" class="mt-2 text-sm text-neutral-600">
+                                        {{ item.notes }}
                                     </div>
                                 </div>
-                                <div class="ml-4 flex items-center space-x-2">
+
+                                <!-- Actions (only for songs) -->
+                                <div v-if="item.type === 'song'" class="ml-4 flex items-center space-x-2">
                                     <Link
-                                        v-if="song.url"
-                                        :href="song.url"
+                                        v-if="item.song.url"
+                                        :href="item.song.url"
                                         target="_blank"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
@@ -236,7 +255,8 @@ const sortedSongs = computed(() => {
                                     </Link>
 
                                     <button
-                                        @click="visitLyricsUrl(song)"
+                                        v-if="item.type === 'song'"
+                                        @click="visitLyricsUrl(item.song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,9 +265,9 @@ const sortedSongs = computed(() => {
                                     </button>
 
                                     <button
-                                        v-for="file in song.files"
+                                        v-for="file in item.song.files"
                                         :key="file.id"
-                                        @click="handleFileDownload(file, song)"
+                                        @click="handleFileDownload(file, item.song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

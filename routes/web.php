@@ -71,7 +71,7 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::post('/bands/{band}/setlists', [SetlistController::class, 'store'])->name('setlists.store');
     Route::get('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'show'])->name('setlists.show');
     Route::get('/bands/{band}/setlists/{setlist}/edit', [SetlistController::class, 'edit'])->name('setlists.edit');
-    Route::patch('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'update'])->name('setlists.update');
+    Route::put('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'update'])->name('setlists.update');
     Route::delete('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'destroy'])->name('setlists.destroy');
 
     // Band Member Management

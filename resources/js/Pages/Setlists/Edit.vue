@@ -1,9 +1,15 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard, DSInput } from '@/Components/UI'
-import { ref, computed } from 'vue'
-import draggable from 'vuedraggable'
+import { DSButton, DSAlert } from '@/Components/UI'
+import { ref, computed, onMounted } from 'vue'
+
+// Import our components
+import SetlistHeader from '@/Components/Setlists/SetlistHeader.vue'
+import SetlistBasicInfo from '@/Components/Setlists/SetlistBasicInfo.vue'
+import AvailableSongsList from '@/Components/Setlists/AvailableSongsList.vue'
+import SetlistItemsList from '@/Components/Setlists/SetlistItemsList.vue'
+import BreakModal from '@/Components/Setlists/BreakModal.vue'
 
 const props = defineProps({
     band: {
@@ -20,6 +26,36 @@ const props = defineProps({
     }
 })
 
+const form = useForm({
+    band_id: props.band.id,
+    name: props.setlist.name,
+    description: props.setlist.description,
+    items: [],
+    total_duration: props.setlist.total_duration
+})
+
+// Available songs (not in setlist)
+const availableSongs = ref([...props.availableSongs])
+
+// Selected items (songs and breaks in setlist)
+const selectedItems = ref([])
+
+// Break modal state
+const showBreakModal = ref(false)
+
+// Initialize selected items from existing setlist
+onMounted(() => {
+    selectedItems.value = props.setlist.items.map(item => ({
+        ...item,
+        id: item.type === 'break' ? `break-${item.id}` : item.song.id,
+        name: item.type === 'break' ? item.title : item.song.name,
+        pivot: {
+            notes: item.notes,
+            order: item.order
+        }
+    }))
+})
+
 // Add search functionality
 const searchQuery = ref('')
 const filteredAvailableSongs = computed(() => {
@@ -30,37 +66,37 @@ const filteredAvailableSongs = computed(() => {
     )
 })
 
-const form = useForm({
-    band_id: props.band.id,
-    name: props.setlist.name,
-    description: props.setlist.description,
-    song_order: [],
-    total_duration: props.setlist.total_duration
-})
-
-// Initialize available and selected songs
-const selectedSongs = ref(props.setlist.songs.sort((a, b) => a.pivot.order - b.pivot.order))
-const availableSongs = ref(
-    props.availableSongs.filter(song => 
-        !selectedSongs.value.some(selected => selected.id === song.id)
-    )
-)
-
-// Update total duration whenever songs are reordered
+// Update total duration whenever items are reordered
 const updateTotalDuration = () => {
-    form.total_duration = selectedSongs.value.reduce((total, song) => total + song.duration_seconds, 0)
+    form.total_duration = selectedItems.value.reduce((total, item) => {
+        return total + (item.duration_seconds || 0)
+    }, 0)
+}
+
+// Add break to setlist
+const addBreak = (breakData) => {
+    selectedItems.value.push({
+        id: `break-${Date.now()}`, // Temporary ID for draggable
+        ...breakData,
+        pivot: {
+            notes: breakData.notes,
+            order: selectedItems.value.length
+        }
+    })
+    updateTotalDuration()
 }
 
 // Add song to setlist
 const addSong = (song) => {
-    const newSong = { 
+    const newItem = { 
         ...song,
+        type: 'song',
         pivot: {
             notes: '',
-            order: selectedSongs.value.length
+            order: selectedItems.value.length
         }
     }
-    selectedSongs.value.push(newSong)
+    selectedItems.value.push(newItem)
     const index = availableSongs.value.findIndex(s => s.id === song.id)
     if (index !== -1) {
         availableSongs.value.splice(index, 1)
@@ -68,233 +104,93 @@ const addSong = (song) => {
     updateTotalDuration()
 }
 
-// Remove song from setlist
-const removeSong = (songIndex) => {
-    const removedSong = selectedSongs.value[songIndex]
-    const cleanSong = { ...removedSong }
-    delete cleanSong.pivot
-    availableSongs.value.push(cleanSong)
-    selectedSongs.value.splice(songIndex, 1)
+// Remove item from setlist
+const removeItem = (index) => {
+    const removedItem = selectedItems.value[index]
+    if (removedItem.type === 'song') {
+        const cleanSong = { ...removedItem }
+        delete cleanSong.pivot
+        availableSongs.value.push(cleanSong)
+    }
+    selectedItems.value.splice(index, 1)
     updateTotalDuration()
 }
 
-// Format duration for display
-const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const remainingSeconds = seconds % 60
-
-    if (hours > 0) {
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+// Update notes for an item
+const updateNotes = ({ index, notes }) => {
+    if (selectedItems.value[index]) {
+        selectedItems.value[index].pivot.notes = notes
     }
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
-// Computed total duration formatted
-const totalDurationFormatted = computed(() => formatDuration(form.total_duration))
-
 const submit = () => {
-    form.song_order = selectedSongs.value.map(song => song.id)
-    form.patch(route('setlists.update', [props.band.id, props.setlist.id]), {
-        preserveScroll: true
+    form.items = selectedItems.value.map(item => {
+        const formattedItem = {
+            type: item.type,
+            duration_seconds: item.duration_seconds,
+            notes: item.pivot.notes
+        }
+
+        if (item.type === 'song') {
+            formattedItem.song_id = item.id
+            formattedItem.title = null
+        } else {
+            formattedItem.song_id = null
+            formattedItem.title = item.title || item.name
+        }
+
+        return formattedItem
+    })
+
+    form.put(route('setlists.update', [props.band.id, props.setlist.id]), {
+        preserveScroll: true,
+        onError: (errors) => {
+            console.error('Form errors:', errors)
+        }
     })
 }
 </script>
 
 <template>
-    <Head :title="`Edit ${setlist.name} - ${band.name}`" />
+    <Head title="Edit Setlist" />
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="md:flex md:items-center md:justify-between">
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center">
-                        <Link 
-                            :href="route('bands.show', band.id)"
-                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
-                        >
-                            {{ band.name }}
-                        </Link>
-                        <svg class="mx-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <Link 
-                            :href="route('setlists.show', [band.id, setlist.id])"
-                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
-                        >
-                            {{ setlist.name }}
-                        </Link>
-                    </div>
-                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                        Edit Setlist
-                    </h2>
-                </div>
-            </div>
+            <SetlistHeader :band="band" />
         </template>
 
-        <DSCard class="max-w-5xl mx-auto">
-            <form @submit.prevent="submit" class="space-y-6 p-6">
-                <!-- Basic Information -->
-                <div class="space-y-6 max-w-2xl">
-                    <DSInput
-                        v-model="form.name"
-                        type="text"
-                        label="Setlist Name"
-                        :error="form.errors.name"
-                        required
-                    />
+        <div class="max-w-7xl">
+            <form @submit.prevent="submit" class="space-y-6">
+                <!-- Error Message -->
+                <DSAlert 
+                    v-if="Object.keys(form.errors).length > 0" 
+                    type="error"
+                >
+                    <ul class="list-disc list-inside">
+                        <li v-for="error in form.errors" :key="error">{{ error }}</li>
+                    </ul>
+                </DSAlert>
 
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700">
-                            Description (Optional)
-                        </label>
-                        <div class="mt-1">
-                            <textarea
-                                v-model="form.description"
-                                rows="3"
-                                :class="[
-                                    'block w-full rounded-lg shadow-sm transition-colors duration-200',
-                                    'border-neutral-300 focus:border-primary-500 focus:ring-primary-500',
-                                    { 'border-error-500 focus:border-error-500 focus:ring-error-500': form.errors.description }
-                                ]"
-                            />
-                        </div>
-                    </div>
-                </div>
+                <!-- Basic Information -->
+                <SetlistBasicInfo :form="form" />
 
                 <!-- Song Selection -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Available Songs -->
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-medium text-neutral-900">Available Songs</h3>
-                            <span class="text-sm text-neutral-500">
-                                {{ filteredAvailableSongs.length }} songs
-                            </span>
-                        </div>
-                        
-                        <!-- Search Input -->
-                        <div class="mb-4">
-                            <DSInput
-                                v-model="searchQuery"
-                                type="text"
-                                placeholder="Search songs..."
-                                class="w-full"
-                            >
-                                <template #prefix>
-                                    <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </template>
-                            </DSInput>
-                        </div>
+                    <AvailableSongsList
+                        :songs="filteredAvailableSongs"
+                        v-model:search-query="searchQuery"
+                        @add-song="addSong"
+                    />
 
-                        <div class="min-h-[400px] rounded-lg border-2 border-dashed border-neutral-200 p-4 bg-neutral-50 overflow-y-auto">
-                            <div v-for="song in filteredAvailableSongs" :key="song.id" 
-                                class="flex items-center justify-between p-3 mb-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <div class="flex items-center">
-                                    <svg class="h-5 w-5 text-neutral-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                    </svg>
-                                    <span class="font-medium text-neutral-900">{{ song.name }}</span>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-sm text-neutral-500">
-                                        {{ formatDuration(song.duration_seconds) }}
-                                    </span>
-                                    <button 
-                                        type="button"
-                                        @click="addSong(song)"
-                                        class="p-1 rounded-full text-primary-600 hover:bg-primary-50"
-                                        title="Add to setlist"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div v-if="filteredAvailableSongs.length === 0" class="text-center py-12">
-                                <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs found</h3>
-                                <p class="mt-1 text-sm text-neutral-500">
-                                    {{ searchQuery ? 'Try a different search term.' : 'All songs are in the setlist.' }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Selected Songs -->
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-medium text-neutral-900">Setlist</h3>
-                            <div class="flex items-center text-sm text-neutral-500">
-                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Total Duration: {{ totalDurationFormatted }}
-                            </div>
-                        </div>
-                        <draggable
-                            v-model="selectedSongs"
-                            item-key="id"
-                            handle=".drag-handle"
-                            class="min-h-[400px] rounded-lg border-2 border-dashed border-neutral-200 p-4"
-                        >
-                            <template #item="{ element, index }">
-                                <div class="p-3 mb-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="flex items-center">
-                                            <span class="drag-handle cursor-move p-1 hover:bg-neutral-50 rounded mr-2">
-                                                <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                                                </svg>
-                                            </span>
-                                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mr-2">
-                                                {{ index + 1 }}
-                                            </span>
-                                            <span class="font-medium text-neutral-900">{{ element.name }}</span>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <span class="text-sm text-neutral-500">
-                                                {{ formatDuration(element.duration_seconds) }}
-                                            </span>
-                                            <button 
-                                                type="button"
-                                                @click="removeSong(index)"
-                                                class="p-1 rounded-full text-error-600 hover:bg-error-50"
-                                                title="Remove from setlist"
-                                            >
-                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <input
-                                            type="text"
-                                            v-model="element.pivot.notes"
-                                            placeholder="Add performance notes..."
-                                            class="block w-full text-sm rounded-lg border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                                        />
-                                    </div>
-                                </div>
-                            </template>
-                            <template #footer v-if="selectedSongs.length === 0">
-                                <div class="text-center py-12">
-                                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                    </svg>
-                                    <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs in setlist</h3>
-                                    <p class="mt-1 text-sm text-neutral-500">Use the plus button to add songs to your setlist.</p>
-                                </div>
-                            </template>
-                        </draggable>
-                    </div>
+                    <!-- Selected Items -->
+                    <SetlistItemsList
+                        v-model:items="selectedItems"
+                        :total-duration="form.total_duration"
+                        @remove="removeItem"
+                        @update-notes="updateNotes"
+                        @add-break="showBreakModal = true"
+                    />
                 </div>
 
                 <!-- Submit Buttons -->
@@ -310,13 +206,20 @@ const submit = () => {
                     <DSButton
                         type="submit"
                         variant="primary"
-                        :disabled="form.processing || selectedSongs.length === 0"
+                        :disabled="form.processing || selectedItems.length === 0"
                     >
-                        <span v-if="form.processing">Saving changes...</span>
-                        <span v-else>Save changes</span>
+                        <span v-if="form.processing">Saving...</span>
+                        <span v-else>Save Changes</span>
                     </DSButton>
                 </div>
             </form>
-        </DSCard>
+        </div>
+
+        <!-- Break Modal -->
+        <BreakModal
+            :is-open="showBreakModal"
+            @close="showBreakModal = false"
+            @create="addBreak"
+        />
     </AuthenticatedLayout>
 </template>
