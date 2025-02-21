@@ -157,68 +157,83 @@ const submit = () => {
                 </DSAlert>
 
                 <!-- Songs List -->
-                <div 
-                    v-for="(song, index) in form.songs" 
-                    :key="index"
-                    class="p-2 flex items-center space-x-4"
-                >
-                    <div class="flex-1">
-                        <DSInput
-                            v-model="song.name"
-                            type="text"
-                            :label="index === 0 ? 'Song Name' : ''"
-                            placeholder="Song name"
-                            required
-                        />
-                    </div>
-                    <div class="w-32">
-                        <DSInput
-                            v-model="song.duration"
-                            type="text"
-                            :label="index === 0 ? 'Duration' : ''"
-                            placeholder="MM:SS"
-                            @input="handleDurationInput(index, $event)"
-                            required
-                        />
-                    </div>
-                    <div class="w-48">
-                        <DSInput
-                            v-model="song.artist"
-                            type="text"
-                            :label="index === 0 ? 'Artist' : ''"
-                            placeholder="Artist name"
-                        />
-                    </div>
-                    <div class="w-48">
-                        <DSInput
-                            v-model="song.url"
-                            type="url"
-                            :label="index === 0 ? 'URL' : ''"
-                            placeholder="https://"
-                        />
-                    </div>
-                    <div class="flex items-end">
-                        <button 
-                            v-if="form.songs.length > 1"
-                            type="button"
-                            class="h-10 p-2 text-neutral-400 hover:text-danger-500"
-                            @click="removeSong(index)"
+                <div class="overflow-x-auto">
+                    <div class="min-w-[800px]"> <!-- Minimum width container -->
+                        <!-- Headers -->
+                        <div class="grid grid-cols-12 gap-3 px-3 py-2 bg-neutral-50 border-b">
+                            <div class="col-span-4">Song Name</div>
+                            <div class="col-span-2">Duration</div>
+                            <div class="col-span-3">Artist</div>
+                            <div class="col-span-2">URL</div>
+                            <div class="col-span-1"></div>
+                        </div>
+                        
+                        <!-- Songs -->
+                        <div 
+                            v-for="(song, index) in form.songs" 
+                            :key="index"
+                            class="grid grid-cols-12 gap-3 px-3 py-2 border-b last:border-b-0"
                         >
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
+                            <div class="col-span-4">
+                                <DSInput
+                                    v-model="song.name"
+                                    type="text"
+                                    placeholder="Song name"
+                                    required
+                                    class="w-full"
+                                />
+                            </div>
+                            <div class="col-span-2">
+                                <DSInput
+                                    v-model="song.duration"
+                                    type="text"
+                                    placeholder="MM:SS"
+                                    @input="handleDurationInput(index, $event)"
+                                    required
+                                    class="w-full"
+                                />
+                            </div>
+                            <div class="col-span-3">
+                                <DSInput
+                                    v-model="song.artist"
+                                    type="text"
+                                    placeholder="Artist name"
+                                    class="w-full"
+                                />
+                            </div>
+                            <div class="col-span-2">
+                                <DSInput
+                                    v-model="song.url"
+                                    type="url"
+                                    placeholder="https://"
+                                    class="w-full"
+                                />
+                            </div>
+                            <div class="col-span-1 flex justify-end items-center">
+                                <button 
+                                    v-if="form.songs.length > 1"
+                                    type="button"
+                                    class="p-2 text-neutral-400 hover:text-danger-500"
+                                    @click="removeSong(index)"
+                                >
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="p-6 flex items-center justify-between">
-                    <div class="flex space-x-3">
+                <div class="p-4 md:p-6 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0">
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                         <DSButton
                             type="button"
                             variant="secondary"
                             :disabled="!canAddMore"
                             @click="addSong"
+                            class="w-full sm:w-auto"
                         >
                             <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -230,6 +245,7 @@ const submit = () => {
                             type="button"
                             variant="secondary"
                             @click="showSpotifyModal = true"
+                            class="w-full sm:w-auto"
                         >
                             <svg class="-ml-0.5 mr-1.5 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
@@ -239,8 +255,14 @@ const submit = () => {
                     </div>
 
                     <div class="flex space-x-3">
-                        <Link :href="route('songs.index', band.id)">
-                            <DSButton variant="outline">
+                        <Link 
+                            :href="route('songs.index', band.id)" 
+                            class="flex-1 sm:flex-none"
+                        >
+                            <DSButton 
+                                variant="outline" 
+                                class="w-full sm:w-auto"
+                            >
                                 Cancel
                             </DSButton>
                         </Link>
@@ -248,6 +270,7 @@ const submit = () => {
                             type="submit"
                             variant="primary"
                             :disabled="form.processing"
+                            class="flex-1 sm:w-auto"
                         >
                             <span v-if="form.processing">Saving...</span>
                             <span v-else>Save All Songs</span>
