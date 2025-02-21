@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Song;
 
-use App\Models\Band;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSongRequest extends FormRequest
@@ -12,8 +11,7 @@ class StoreSongRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $band = Band::findOrFail($this->band_id);
-        return $band->isAdmin($this->user());
+        return true; // Authorization handled in controller
     }
 
     /**
@@ -26,16 +24,19 @@ class StoreSongRequest extends FormRequest
         return [
             'band_id' => ['required', 'exists:bands,id'],
             'name' => ['required', 'string', 'max:255'],
-            'duration_seconds' => ['required', 'integer', 'min:1'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-            'url' => ['nullable', 'url', 'max:255'],
-            'bpm' => ['nullable', 'int'],
+            'duration_seconds' => ['required', 'integer', 'min:0'],
+            'notes' => ['nullable', 'string'],
+            'url' => ['nullable', 'url'],
             'artist' => ['nullable', 'string', 'max:255'],
-            'document' => [
-                'nullable',
+            'bpm' => ['nullable', 'integer', 'min:0'],
+            // New file upload rules
+            'files' => ['nullable', 'array', 'max:10'], // Max 10 files
+            'files.*.type' => ['required_with:files', 'string', 'in:lyrics,notes,chords,tabs,sheet_music,other'],
+            'files.*.file' => [
+                'required_with:files',
                 'file',
                 'mimes:pdf,txt',
-                'max:10240', // 10MB max size
+                'max:10240', // 10MB
             ],
         ];
     }
@@ -48,10 +49,10 @@ class StoreSongRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'duration_seconds.required' => 'The song duration is required.',
-            'duration_seconds.min' => 'The song duration must be at least 1 second.',
-            'document.mimes' => 'The document must be a PDF or TXT file.',
-            'document.max' => 'The document may not be larger than 10MB.',
+            'files.max' => 'You can upload a maximum of 10 files.',
+            'files.*.file.max' => 'Each file must not exceed 10MB.',
+            'files.*.file.mimes' => 'Files must be PDF or TXT format.',
+            'files.*.type.in' => 'File type must be one of: lyrics, notes, chords, tabs, sheet music, or other.',
         ];
     }
 }

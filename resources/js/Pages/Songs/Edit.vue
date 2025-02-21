@@ -1,11 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import {Head, Link, router, useForm} from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
-import {DSInput} from "@/Components/UI/index.js";
+import {DSInput, DSButton, DSCard, DSAlert, DSAlertModal} from "@/Components/UI";
 
 const props = defineProps({
     band: {
@@ -26,7 +26,7 @@ const form = useForm({
     duration_seconds: props.song.duration_seconds,
     notes: props.song.notes,
     url: props.song.url,
-    document: null
+    files: []
 });
 
 const formatDuration = (seconds) => {
@@ -46,15 +46,75 @@ const updateDuration = () => {
     const duration = durationInput.value;
     if (/^\d+:\d{2}$/.test(duration)) {
         form.duration_seconds = parseDuration(duration);
+    } else {
+        form.duration_seconds = props.song.duration_seconds;
     }
 };
 
-const submit = () => {
-    form.patch(route('songs.update', [props.band.id, props.song.id]), {
+const fileGroups = ref([]);
+const deleteModal = ref(null);
+const fileToDelete = ref(null);
+
+const addFileGroup = () => {
+    if (fileGroups.value.length < 10) {
+        fileGroups.value.push({
+            type: '',
+            file: null
+        });
+    }
+};
+
+const removeFileGroup = (index) => {
+    fileGroups.value.splice(index, 1);
+};
+
+const handleFileUpload = (event, index) => {
+    const file = event.target.files[0];
+    if (file) {
+        fileGroups.value[index].file = file;
+    }
+};
+
+const confirmDeleteFile = (file) => {
+    fileToDelete.value = file;
+    deleteModal.value.open();
+};
+
+const deleteFile = () => {
+    router.delete(route('songs.files.destroy', [props.band.id, props.song.id, fileToDelete.value.id]), {
         preserveScroll: true,
         onSuccess: () => {
-            form.reset();
+            deleteModal.value.close();
+            fileToDelete.value = null;
         }
+    });
+};
+
+const submit = () => {
+    updateDuration();
+
+    const formData = new FormData();
+    
+    formData.append('_method', 'PATCH');
+    formData.append('band_id', form.band_id.toString());
+    formData.append('name', form.name);
+    formData.append('duration_seconds', form.duration_seconds.toString());
+    
+    if (form.artist) formData.append('artist', form.artist);
+    if (form.bpm) formData.append('bpm', form.bpm.toString());
+    if (form.notes) formData.append('notes', form.notes);
+    if (form.url) formData.append('url', form.url);
+
+    fileGroups.value
+        .filter(group => group.file && group.type)
+        .forEach((group, index) => {
+            formData.append(`files[${index}][type]`, group.type);
+            formData.append(`files[${index}][file]`, group.file);
+        });
+
+    router.post(route('songs.update', [props.band.id, props.song.id]), formData, {
+        preserveScroll: true,
+        forceFormData: true
     });
 };
 </script>
@@ -157,37 +217,120 @@ const submit = () => {
                                 </p>
                             </div>
 
-                            <!-- Document -->
-                            <div>
-                                <InputLabel for="document" value="Document (Optional)" />
-                                <input
-                                    id="document"
-                                    type="file"
-                                    @input="form.document = $event.target.files[0]"
-                                    class="mt-1 block w-full"
-                                    accept=".pdf,.txt"
-                                />
-                                <p v-if="song.document_path" class="mt-2 text-sm text-gray-600">
-                                    Current document: {{ song.document_type?.toUpperCase() }}
-                                </p>
-                                <InputError :message="form.errors.document" class="mt-2" />
+                            <!-- Existing Files -->
+                            <div v-if="song.files?.length" class="space-y-4">
+                                <h3 class="text-lg font-medium text-neutral-900">Existing Files</h3>
+                                <div class="space-y-2">
+                                    <div
+                                        v-for="file in song.files"
+                                        :key="file.id"
+                                        class="flex items-center gap-4 border rounded-md p-3"
+                                    >
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium text-neutral-900">{{ file.type }}</span>
+                                            <p class="text-sm text-neutral-500">{{ file.original_filename }}</p>
+                                        </div>
+
+                                        <div class="flex items-center space-x-2">
+                                            <Link
+                                                :href="route('songs.files.download', [band.id, song.id, file.id])"
+                                                class="text-primary-600 hover:text-primary-700"
+                                            >
+                                                Download
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                @click="confirmDeleteFile(file)"
+                                                class="text-neutral-400 hover:text-neutral-500"
+                                            >
+                                                <span class="sr-only">Delete</span>
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Files -->
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-lg font-medium text-neutral-900">Add New Files</h3>
+                                    <DSButton
+                                        type="button"
+                                        variant="secondary"
+                                        @click="addFileGroup"
+                                        :disabled="fileGroups.length >= 10"
+                                    >
+                                        Add File
+                                    </DSButton>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div
+                                        v-for="(group, index) in fileGroups"
+                                        :key="index"
+                                        class="flex items-center gap-4 border rounded-md p-3"
+                                    >
+                                        <div class="flex-1">
+                                            <select
+                                                v-model="group.type"
+                                                class="block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                            >
+                                                <option value="">Select Type</option>
+                                                <option value="lyrics">Lyrics</option>
+                                                <option value="notes">Notes</option>
+                                                <option value="chords">Chords</option>
+                                                <option value="tabs">Tabs</option>
+                                                <option value="sheet_music">Sheet Music</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="flex-1">
+                                            <input
+                                                type="file"
+                                                @change="handleFileUpload($event, index)"
+                                                accept=".pdf,.txt"
+                                                class="block w-full text-sm"
+                                            >
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            @click="removeFileGroup(index)"
+                                            class="text-neutral-400 hover:text-neutral-500"
+                                        >
+                                            <span class="sr-only">Remove</span>
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p class="text-sm text-neutral-500">PDF or TXT files up to 10MB</p>
                             </div>
 
                             <!-- Submit Button -->
                             <div class="flex items-center justify-end gap-4">
-                                <Link
-                                    :href="route('songs.show', [band.id, song.id])"
-                                    class="text-gray-600 hover:text-gray-900"
-                                >
-                                    Cancel
+                                <Link :href="route('songs.show', [band.id, song.id])">
+                                    <DSButton
+                                        type="button"
+                                        variant="outline"
+                                    >
+                                        Cancel
+                                    </DSButton>
                                 </Link>
-                                <button
+                                <DSButton
                                     type="submit"
-                                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                                    variant="primary"
                                     :disabled="form.processing"
                                 >
-                                    Save Changes
-                                </button>
+                                    <span v-if="form.processing">Saving...</span>
+                                    <span v-else>Save Changes</span>
+                                </DSButton>
                             </div>
                         </form>
                     </div>
@@ -195,4 +338,14 @@ const submit = () => {
             </div>
         </div>
     </AuthenticatedLayout>
+
+    <DSAlertModal
+        ref="deleteModal"
+        title="Delete File"
+        message="Are you sure you want to delete this file? This action cannot be undone."
+        type="error"
+        confirm-text="Delete"
+        :show-cancel="true"
+        @confirm="deleteFile"
+    />
 </template>

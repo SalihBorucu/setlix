@@ -1,4 +1,4 @@
-# AI Setlist Manager Documentation
+# Setlix Documentation
 
 ## Tech Stack 🛠
 
@@ -13,6 +13,18 @@
 - Tailwind CSS
 - Vue Test Utils for component testing
 - Vite for development
+
+### Rules
+ - Keep the design consistent
+ - Keep the code clean and readable
+ - Keep the code DRY
+ - App is in production, so we need to be careful with the code
+ - We need to be able to add new features without breaking the app
+ - We need to be able to fix bugs without breaking the app
+ - We need to be able to add new pages without breaking the app
+ - We need to be able to add new components without breaking the app
+ - We need to be able to add new routes without breaking the app
+ 
 
 ## Core Features 🎸
 

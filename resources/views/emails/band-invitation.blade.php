@@ -79,7 +79,7 @@
 
             <p>You've been invited to join <strong>{{ $bandName }}</strong> as <strong>{{ $role }}</strong>.</p>
 
-            <p>AI Setlist Manager is a modern platform for bands to manage their setlists, songs, and performances. As a {{ $role }}, you'll be able to:</p>
+            <p>Setlix is a modern platform for bands to manage their setlists, songs, and performances. As a {{ $role }}, you'll be able to:</p>
 
             <ul style="margin: 1rem 0; padding-left: 1.5rem;">
                 @if($role === 'admin')

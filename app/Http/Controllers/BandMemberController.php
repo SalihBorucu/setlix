@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class BandMemberController extends Controller
 {
@@ -56,6 +57,21 @@ class BandMemberController extends Controller
             'role' => ['required', 'in:member,admin'],
         ]);
 
+        // Check member limit
+        if ($band->members()->count() >= 50) {
+            return back()->withErrors(['error' => 'Band has reached the maximum member limit of 50.']);
+        }
+
+        // Check active invitations limit
+        $activeInvitationsCount = $band->invitations()
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->count();
+
+        if ($activeInvitationsCount >= 10) {
+            return back()->withErrors(['error' => 'Maximum of 10 pending invitations allowed.']);
+        }
+
         // Check if user is already a member
         if ($band->members()->where('email', $validated['email'])->exists()) {
             return back()->withErrors(['email' => 'This user is already a member of the band.']);
@@ -65,6 +81,26 @@ class BandMemberController extends Controller
         if ($band->invitations()->where('email', $validated['email'])->whereNull('accepted_at')->exists()) {
             return back()->withErrors(['email' => 'An invitation has already been sent to this email.']);
         }
+
+        // Check invitation history and cooldown
+        $lastInvitation = DB::table('band_invitation_history')
+            ->where('band_id', $band->id)
+            ->where('email', $validated['email'])
+            ->orderBy('invited_at', 'desc')
+            ->first();
+
+        if ($lastInvitation && now()->subHours(24)->lt($lastInvitation->invited_at)) {
+            return back()->withErrors(['email' => 'Please wait 24 hours before sending another invitation to this email.']);
+        }
+
+        // Record invitation attempt
+        DB::table('band_invitation_history')->insert([
+            'band_id' => $band->id,
+            'email' => $validated['email'],
+            'invited_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $invitation = $band->invitations()->create($validated);
 

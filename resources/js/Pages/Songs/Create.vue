@@ -19,8 +19,30 @@ const form = useForm({
     url: '',
     bpm: '',
     artist: '',
-    document: null
+    files: []
 })
+
+const fileGroups = ref([])
+
+const addFileGroup = () => {
+    if (fileGroups.value.length < 10) {
+        fileGroups.value.push({
+            type: '',
+            file: null
+        })
+    }
+}
+
+const removeFileGroup = (index) => {
+    fileGroups.value.splice(index, 1)
+}
+
+const handleFileUpload = (event, index) => {
+    const file = event.target.files[0]
+    if (file) {
+        fileGroups.value[index].file = file
+    }
+}
 
 // Convert MM:SS to seconds
 const formatDuration = (value) => {
@@ -31,13 +53,18 @@ const formatDuration = (value) => {
 const durationInput = ref('')
 
 const submit = () => {
-    // Convert duration from MM:SS to seconds before submitting
+    // Convert duration from MM:SS to seconds
     form.duration_seconds = formatDuration(durationInput.value)
-    form.post(route('songs.store', props.band.id))
-}
+    
+    // Add files to form data
+    form.files = fileGroups.value
+        .filter(group => group.file && group.type) // Only include complete groups
+        .map(group => ({
+            type: group.type,
+            file: group.file
+        }))
 
-const handleFileChange = (event) => {
-    form.document = event.target.files[0]
+    form.post(route('songs.store', props.band.id))
 }
 </script>
 
@@ -166,38 +193,64 @@ const handleFileChange = (event) => {
                     </p>
                 </div>
 
-                <!-- Document Upload -->
-                <div>
-                    <label class="block text-sm font-medium text-neutral-700">
-                        Document (Optional)
-                    </label>
-                    <div class="mt-1 flex justify-center rounded-lg border border-dashed border-neutral-300 px-6 py-10">
-                        <div class="text-center">
-                            <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <div class="mt-4 flex text-sm text-neutral-600">
-                                <label
-                                    for="document"
-                                    class="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500"
+                <!-- File Upload Section -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-neutral-900">Files</h3>
+                        <DSButton
+                            type="button"
+                            variant="secondary"
+                            @click="addFileGroup"
+                            :disabled="fileGroups.length >= 10"
+                        >
+                            Add File
+                        </DSButton>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div 
+                            v-for="(group, index) in fileGroups" 
+                            :key="index" 
+                            class="flex items-center gap-4 border rounded-md p-3"
+                        >
+                            <div class="flex-1">
+                                <select
+                                    v-model="group.type"
+                                    class="block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                                 >
-                                    <span>Upload a file</span>
-                                    <input
-                                        id="document"
-                                        type="file"
-                                        class="sr-only"
-                                        accept=".pdf,.txt"
-                                        @change="handleFileChange"
-                                    >
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
+                                    <option value="">Select Type</option>
+                                    <option value="lyrics">Lyrics</option>
+                                    <option value="notes">Notes</option>
+                                    <option value="chords">Chords</option>
+                                    <option value="tabs">Tabs</option>
+                                    <option value="sheet_music">Sheet Music</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
-                            <p class="text-xs text-neutral-500">PDF or TXT up to 10MB</p>
+
+                            <div class="flex-1">
+                                <input
+                                    type="file"
+                                    @change="handleFileUpload($event, index)"
+                                    accept=".pdf,.txt"
+                                    class="block w-full text-sm"
+                                >
+                            </div>
+
+                            <button
+                                type="button"
+                                @click="removeFileGroup(index)"
+                                class="text-neutral-400 hover:text-neutral-500"
+                            >
+                                <span class="sr-only">Remove</span>
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <p v-if="form.errors.document" class="mt-1 text-sm text-error-500">
-                        {{ form.errors.document }}
-                    </p>
+
+                    <p class="text-sm text-neutral-500">PDF or TXT files up to 10MB</p>
                 </div>
 
                 <!-- Submit Buttons -->
