@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI'
 import { ref } from 'vue'
+import { DSDurationInput } from '@/Components/UI'
 
 const props = defineProps({
     band: {
@@ -14,6 +15,7 @@ const props = defineProps({
 const form = useForm({
     band_id: props.band.id,
     name: '',
+    duration: '',
     duration_seconds: '',
     notes: '',
     url: '',
@@ -44,18 +46,7 @@ const handleFileUpload = (event, index) => {
     }
 }
 
-// Convert MM:SS to seconds
-const formatDuration = (value) => {
-    const [minutes, seconds] = value.split(':').map(Number)
-    return minutes * 60 + seconds
-}
-
-const durationInput = ref('')
-
 const submit = () => {
-    // Convert duration from MM:SS to seconds
-    form.duration_seconds = formatDuration(durationInput.value)
-    
     // Add files to form data
     form.files = fileGroups.value
         .filter(group => group.file && group.type) // Only include complete groups
@@ -137,14 +128,12 @@ const submit = () => {
                     </div>
 
                     <div>
-                        <DSInput
-                            v-model="durationInput"
-                            type="text"
-                            label="Duration (MM:SS)"
+                        <DSDurationInput
+                            v-model="form.duration"
+                            @update:seconds="(seconds) => form.duration_seconds = seconds"
+                            label="Duration"
                             :error="form.errors.duration_seconds"
                             required
-                            pattern="[0-9]{1,2}:[0-9]{2}"
-                            placeholder="03:30"
                         />
                     </div>
 

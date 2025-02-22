@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard, DSInput, DSAlert, DSModal } from '@/Components/UI'
+import { DSButton, DSCard, DSInput, DSAlert, DSModal, DSDurationInput } from '@/Components/UI'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { DialogTitle } from '@headlessui/vue'
@@ -184,13 +184,12 @@ const submit = () => {
                                 />
                             </div>
                             <div class="col-span-2">
-                                <DSInput
+                                <DSDurationInput
                                     v-model="song.duration"
-                                    type="text"
-                                    placeholder="MM:SS"
-                                    @input="handleDurationInput(index, $event)"
+                                    @update:seconds="(seconds) => song.duration_seconds = seconds"
+                                    :label="null"
+                                    placeholder="Duration (MM:SS)"
                                     required
-                                    class="w-full"
                                 />
                             </div>
                             <div class="col-span-3">
