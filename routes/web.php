@@ -108,4 +108,12 @@ Route::middleware([
 // Public route for accepting invitations
 Route::get('/invitations/{token}', [BandMemberController::class, 'acceptInvitation'])->name('invitations.accept');
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('subscription/create', [SubscriptionController::class, 'createSubscription'])
+        ->name('subscription.create');
+});
+
+Route::post('stripe/webhook', [SubscriptionController::class, 'handleWebhook'])
+    ->name('stripe.webhook');
+
 require __DIR__.'/auth.php';

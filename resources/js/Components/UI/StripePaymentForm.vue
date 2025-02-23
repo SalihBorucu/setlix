@@ -56,6 +56,8 @@
 import { ref, onMounted } from 'vue';
 import { DSButton } from '@/Components/UI';
 import { LockClosedIcon } from '@heroicons/vue/24/solid';
+import axios from 'axios';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
   stripeKey: {
@@ -65,6 +67,10 @@ const props = defineProps({
   submitButtonText: {
     type: String,
     default: 'Subscribe Now • $10/month'
+  },
+  bandId: {
+    type: String,
+    required: true
   }
 });
 
@@ -108,13 +114,36 @@ const handleSubmit = async () => {
   cardError.value = null;
 
   try {
-    // We'll implement this in the next step
-    console.log('Processing payment...');
-    emit('success', { cardName: cardName.value });
+    // Create subscription
+    const { data } = await axios.post(route('subscription.create'), {
+      band_id: props.bandId,
+      card_name: cardName.value
+    });
+
+    // Confirm the payment with Stripe
+    const { error, paymentIntent } = await stripe.value.confirmCardPayment(data.clientSecret, {
+      payment_method: {
+        card: elements.value.getElement('card'),
+        billing_details: {
+          name: cardName.value,
+        },
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Process the successful payment using Inertia's router
+    router.post(route('subscription.process'), {
+      band_id: props.bandId,
+      payment_intent: paymentIntent.id
+    });
+
   } catch (e) {
-    const errorMessage = 'An error occurred while processing your payment. Please try again.';
+    const errorMessage = e.message || 'An error occurred while processing your payment. Please try again.';
     emit('error', errorMessage);
-    console.error('Payment error:', e);
+    cardError.value = errorMessage;
   } finally {
     isLoading.value = false;
   }

@@ -19,6 +19,9 @@ class Band extends Model
         'cover_image_path',
         'cover_image_thumbnail_path',
         'cover_image_small_path',
+        'stripe_subscription_id',
+        'subscription_status',
+        'subscription_ends_at',
     ];
 
     /**

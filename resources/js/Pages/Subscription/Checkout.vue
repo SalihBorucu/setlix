@@ -26,7 +26,7 @@
                 <p class="text-sm text-gray-500">Monthly Subscription</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-gray-900">$10.00</p>
+                <p class="text-lg font-bold text-gray-900">£10.00</p>
                 <p class="text-sm text-gray-500">per month</p>
               </div>
             </div>
@@ -43,6 +43,7 @@
         <!-- Right Column: Payment Form -->
         <StripePaymentForm
           :stripe-key="stripeKey"
+          :band-id="band.id"
           @success="handlePaymentSuccess"
           @error="handlePaymentError"
         />
@@ -94,8 +95,8 @@ const features = [
 
 const handlePaymentSuccess = (data) => {
   router.post(route('subscription.process'), {
-    bandId: props.band.id,
-    cardName: data.cardName
+    band_id: props.band.id,
+    card_name: data.cardName
   }, {
     preserveScroll: true,
     onSuccess: (page) => {

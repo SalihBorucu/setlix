@@ -3,14 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\Band;
+use App\Services\StripeService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Services\SubscriptionWebhookHandler;
+use App\Services\SubscriptionManager;
 
 class SubscriptionController extends Controller
 {
+    protected $stripeService;
+    protected $subscriptionManager;
+    protected $webhookHandler;
+
+    public function __construct(
+        StripeService $stripeService,
+        SubscriptionManager $subscriptionManager,
+        SubscriptionWebhookHandler $webhookHandler
+    ) {
+        $this->stripeService = $stripeService;
+        $this->subscriptionManager = $subscriptionManager;
+        $this->webhookHandler = $webhookHandler;
+    }
+
     /**
      * Show the subscription expired page
      */
@@ -32,82 +51,92 @@ class SubscriptionController extends Controller
                 ->with('error', 'Please create a band first.');
         }
 
-        // Calculate trial days based on band creation date
-        // Trial period is 14 days from band creation
-        $bandCreatedAt = Carbon::parse($band->created_at);
-        $trialEndsAt = $bandCreatedAt->copy()->addDays(14);
-        $trialDaysLeft = now()->lt($trialEndsAt) 
-            ? (int) now()->diffInDays($trialEndsAt)
-            : 0;
-
         return Inertia::render('Subscription/Checkout', [
             'band' => [
                 'id' => $band->id,
                 'name' => $band->name,
                 'created_at' => $band->created_at,
             ],
-            'trialDaysLeft' => $trialDaysLeft,
+            'trialDaysLeft' => $this->subscriptionManager->calculateTrialDays($band),
             'stripeKey' => config('services.stripe.key')
         ]);
     }
 
     /**
-     * Handle the subscription process for a specific band
+     * Handle the successful subscription process for a band
      */
-    public function process(): RedirectResponse
+    public function process(Request $request): RedirectResponse
     {
-        $bandId = request()->input('bandId');
-        
-        // Validate band ownership
-        $band = Band::where('id', $bandId)
-            ->whereHas('users', function ($query) {
-                $query->where('users.id', auth()->id())
-                    ->where('role', 'admin');
-            })
-            ->firstOrFail();
-
-        Log::info('Subscription process initiated', [
-            'user_id' => auth()->id(),
-            'band_id' => $bandId,
-            'band_name' => $band->name,
-            'timestamp' => now()
+        $request->validate([
+            'band_id' => 'required|exists:bands,id',
+            'payment_intent' => 'required|string',
         ]);
 
-        // For now, we'll just redirect with a success message
-        // Later this will integrate with Stripe or another payment processor
-        
-        return redirect()->route('dashboard')->with('success', 
-            "Subscription process initiated for {$band->name}. Payment processing will be implemented soon."
-        );
-        
-        // When implementing payment processing, it will look something like this:
-        /*
         try {
-            // Create payment intent/session with Stripe
-            $session = Stripe::checkout()->create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price' => config('services.stripe.price_id'),
-                    'quantity' => 1,
-                ]],
-                'mode' => 'subscription',
-                'success_url' => route('subscription.success', ['band' => $band->id]),
-                'cancel_url' => route('subscription.checkout'),
-                'metadata' => [
-                    'band_id' => $band->id,
-                    'user_id' => auth()->id()
-                ]
-            ]);
+            $user = auth()->user();
+            $band = Band::findOrFail($request->band_id);
 
-            return redirect($session->url);
+            if (!$band->isAdmin($user)) {
+                return back()->with('error', 'Unauthorized');
+            }
+
+            $this->subscriptionManager->processSubscription($band, $user, $request->payment_intent);
+
+            return redirect()
+                ->route('bands.show', $band)
+                ->with('success', "Subscription activated for {$band->name}!");
+
         } catch (\Exception $e) {
-            Log::error('Stripe checkout creation failed', [
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-                'band_id' => $band->id
-            ]);
-            return back()->with('error', 'Unable to initiate checkout. Please try again.');
+            Log::error('Subscription processing failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Unable to process subscription. Please try again.');
         }
-        */
+    }
+
+    public function createSubscription(Request $request): JsonResponse
+    {
+        $request->validate([
+            'band_id' => 'required|exists:bands,id',
+            'card_name' => 'required|string|max:255',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $band = Band::findOrFail($request->band_id);
+
+            if (!$band->isAdmin($user)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $result = $this->stripeService->createSubscription(
+                $band,
+                $user,
+                $request->all()
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json(
+                ['error' => 'Unable to process subscription. Please try again.'],
+                500
+            );
+        }
+    }
+
+    public function handleWebhook(Request $request)
+    {
+        try {
+            $result = $this->webhookHandler->handleWebhook(
+                $request->getContent(),
+                $request->header('Stripe-Signature')
+            );
+            
+            return response()->json(['status' => 'success', 'result' => $result]);
+        } catch (\Exception $e) {
+            Log::error('Webhook error', [
+                'error' => $e->getMessage(),
+                'payload' => $request->all()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 } 
