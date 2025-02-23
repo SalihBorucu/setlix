@@ -31,6 +31,13 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         
+        // Get the user's first band if they're in trial
+        $trialBandId = null;
+        if ($user && !$user->is_subscribed) {
+            $firstBand = $user->bands()->first();
+            $trialBandId = $firstBand ? $firstBand->id : null;
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -42,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'limitReached' => session('trial_limit_reached', false),
                 'limitMessage' => session('trial_limit_message', ''),
                 'isSubscribed' => $user->is_subscribed,
+                'bandId' => $trialBandId,
             ] : null,
         ];
     }

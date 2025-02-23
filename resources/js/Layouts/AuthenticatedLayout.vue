@@ -231,7 +231,7 @@ const currentBandId = route().params.band
         </nav>
 
         <!-- Add this right after the navigation bar -->
-        <TrialStatusBanner />
+        <TrialStatusBanner :band-id="currentBandId" />
 
         <!-- Page Content -->
         <main class="py-10">

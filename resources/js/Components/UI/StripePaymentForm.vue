@@ -69,7 +69,7 @@ const props = defineProps({
     default: 'Subscribe Now • $10/month'
   },
   bandId: {
-    type: String,
+    type: [String, Number],
     required: true
   }
 });
@@ -135,7 +135,7 @@ const handleSubmit = async () => {
     }
 
     // Process the successful payment using Inertia's router
-    router.post(route('subscription.process'), {
+    router.post(route('bands.subscribe', props.bandId), {
       band_id: props.bandId,
       payment_intent: paymentIntent.id
     });

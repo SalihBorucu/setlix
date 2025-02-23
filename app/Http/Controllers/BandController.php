@@ -63,7 +63,7 @@ class BandController extends Controller
         // Attach the creator as an admin
         $band->members()->attach($request->user(), ['role' => 'admin']);
         
-        return redirect()->route('bands.show', $band)
+        return redirect()->route('dashboard', $band)
             ->with('success', 'Band created successfully.');
     }
 

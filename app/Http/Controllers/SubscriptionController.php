@@ -39,16 +39,25 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Show the checkout page for the user's band
+     * Show the checkout page for a specific band
+     * 
+     * @param Band $band The band being subscribed
+     * @return Response
      */
-    public function checkout(): Response
+    public function checkout(Band $band): Response
     {
         $user = auth()->user();
-        $band = $user->bands()->first();
 
-        if (!$band) {
-            return redirect()->route('bands.create')
-                ->with('error', 'Please create a band first.');
+        // Check if user has permission to subscribe this band
+        if (!$band->isAdmin($user)) {
+            return redirect()->route('bands.index')
+                ->with('error', 'You do not have permission to subscribe this band.');
+        }
+
+        $trialDaysLeft = $this->subscriptionManager->calculateTrialDays($band);
+
+        if ($user->is_subscribed) {
+            $trialDaysLeft = 0;
         }
 
         return Inertia::render('Subscription/Checkout', [
@@ -57,7 +66,7 @@ class SubscriptionController extends Controller
                 'name' => $band->name,
                 'created_at' => $band->created_at,
             ],
-            'trialDaysLeft' => $this->subscriptionManager->calculateTrialDays($band),
+            'trialDaysLeft' => $trialDaysLeft,
             'stripeKey' => config('services.stripe.key')
         ]);
     }

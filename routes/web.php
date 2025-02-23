@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/test', function () {
     Bugsnag::notifyException(new RuntimeException("Test error"));
@@ -28,18 +29,9 @@ Route::get('/', function () {
     return redirect('/login');
 })->middleware(EnsureProfileIsComplete::class);
 
-Route::get('/dashboard', function () {
-    $bands = Auth::user()->bands()->with('members')->get();
-
-    $bands->map(function ($band) {
-        $band->cover_image_thumbnail_path = $band->cover_image_thumbnail_path ? Storage::url($band->cover_image_thumbnail_path) : null;
-        return $band;
-    });
-
-    return Inertia::render('Dashboard', [
-        'bands' => $bands
-    ]);
-})->middleware(['auth', 'verified', EnsureProfileIsComplete::class])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
+    ->name('dashboard');
 
 Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -90,9 +82,12 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     // Subscription routes - group them together
     Route::controller(SubscriptionController::class)->group(function () {
         Route::get('/subscription/expired', 'expired')->name('subscription.expired');
-        Route::get('/subscription/checkout', 'checkout')->name('subscription.checkout');
         Route::post('/subscription/process', 'process')->name('subscription.process');
     });
+
+    // Consolidated subscription checkout route
+    Route::get('/bands/{band}/subscribe', [SubscriptionController::class, 'checkout'])
+        ->name('bands.subscribe');
 });
 
 Route::middleware([
