@@ -21,8 +21,10 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@floating-ui/vue": "^1.1.6",
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
+        "floating-vue": "^5.2.2",
         "vuedraggable": "^4.1.0"
     }
 }

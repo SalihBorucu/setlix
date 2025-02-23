@@ -7,6 +7,7 @@ use App\Http\Controllers\SetlistController;
 use App\Http\Controllers\BandMemberController;
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Services\SpotifyService;
 use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
@@ -68,7 +69,6 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     // Setlist routes (nested under bands)
     Route::get('/bands/{band}/setlists', [SetlistController::class, 'index'])->name('setlists.index');
     Route::get('/bands/{band}/setlists/create', [SetlistController::class, 'create'])->name('setlists.create');
-    Route::post('/bands/{band}/setlists', [SetlistController::class, 'store'])->name('setlists.store');
     Route::get('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'show'])->name('setlists.show');
     Route::get('/bands/{band}/setlists/{setlist}/edit', [SetlistController::class, 'edit'])->name('setlists.edit');
     Route::put('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'update'])->name('setlists.update');
@@ -86,6 +86,22 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
 
     Route::post('/spotify/playlist-tracks', [SpotifyController::class, 'getPlaylistTracks'])
         ->name('spotify.playlist-tracks');
+
+    Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
+        ->name('subscription.expired');
+    
+    Route::get('/subscription/checkout', [SubscriptionController::class, 'checkout'])
+        ->name('subscription.checkout');
+});
+
+Route::middleware([
+    'auth',
+    \App\Http\Middleware\EnforceTrialLimits::class
+])->group(function () {
+    // Group all routes that need trial limits
+    Route::post('/bands/{band}/songs', [SongController::class, 'store'])->name('songs.store');
+    Route::post('/bands/{band}/setlists', [SetlistController::class, 'store'])->name('setlists.store');
+    // ... other routes that need trial limits ...
 });
 
 // Public route for accepting invitations

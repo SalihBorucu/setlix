@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import { DSButton } from '@/Components/UI'
+import TrialStatusBanner from '@/Components/UI/TrialStatusBanner.vue'
 
 const showingNavigationDropdown = ref(false)
 const { auth } = usePage().props
@@ -228,6 +229,9 @@ const currentBandId = route().params.band
                 </div>
             </div>
         </nav>
+
+        <!-- Add this right after the navigation bar -->
+        <TrialStatusBanner />
 
         <!-- Page Content -->
         <main class="py-10">

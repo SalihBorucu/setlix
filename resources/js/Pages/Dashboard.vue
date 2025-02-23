@@ -1,13 +1,22 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSCard, DSButton } from '@/Components/UI'
+import { DSCard, DSButton, DSTooltip } from '@/Components/UI'
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
     bands: {
         type: Array,
         default: () => []
     }
+})
+
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+const canCreateBand = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return props.bands.length === 0
 })
 
 // Add debug output
@@ -34,7 +43,15 @@ const hasAdminRole = (band) => {
                     </h2>
                 </div>
                 <div class="mt-4 flex md:ml-4 md:mt-0">
-                    <Link :href="route('bands.create')">
+                    <DSTooltip v-if="!canCreateBand">
+                        <DSButton variant="primary" disabled>
+                            Create New Band
+                        </DSButton>
+                        <template #content>
+                            Free trial allows only one band. Please subscribe to create more.
+                        </template>
+                    </DSTooltip>
+                    <Link v-else :href="route('bands.create')">
                         <DSButton variant="primary">
                             Create New Band
                         </DSButton>

@@ -29,11 +29,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'trial' => $user ? [
+                'isInTrial' => $user->isInTrialPeriod(),
+                'remainingDays' => $user->getRemainingTrialDays(),
+                'limitReached' => session('trial_limit_reached', false),
+                'limitMessage' => session('trial_limit_message', ''),
+                'isSubscribed' => $user->is_subscribed,
+            ] : null,
         ];
     }
 }

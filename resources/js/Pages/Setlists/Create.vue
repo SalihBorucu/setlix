@@ -44,7 +44,7 @@ const searchQuery = ref('')
 const filteredAvailableSongs = computed(() => {
     if (!searchQuery.value) return availableSongs.value
     const query = searchQuery.value.toLowerCase()
-    return availableSongs.value.filter(song => 
+    return availableSongs.value.filter(song =>
         song.name.toLowerCase().includes(query)
     )
 })
@@ -71,7 +71,7 @@ const addBreak = (breakData) => {
 
 // Add song to setlist
 const addSong = (song) => {
-    const newItem = { 
+    const newItem = {
         ...song,
         type: 'song',
         pivot: {
@@ -147,8 +147,8 @@ const submit = () => {
         <div class="max-w-7xl">
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Error Message -->
-                <DSAlert 
-                    v-if="Object.keys(form.errors).length > 0" 
+                <DSAlert
+                    v-if="Object.keys(form.errors).length > 0"
                     type="error"
                 >
                     <ul class="list-disc list-inside">
@@ -207,4 +207,4 @@ const submit = () => {
             @create="addBreak"
         />
     </AuthenticatedLayout>
-</template> 
+</template>

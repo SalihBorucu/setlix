@@ -1,9 +1,11 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
+import { DSButton, DSCard, DSAlertModal, DSTooltip } from '@/Components/UI'
 import AddMemberModal from '@/Components/Bands/AddMemberModal.vue'
 import { ref } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import copyToClipboard from "@/Utilities/copyToClipboard.js";
 import CopyTextButton from "@/Components/CopyTextButton.vue";
 
@@ -24,6 +26,16 @@ const props = defineProps({
         type: Boolean,
         required: true
     }
+})
+
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+
+// Trial limit check
+const canAddMembers = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    const totalMembers = props.members.length + props.pendingInvitations.length
+    return totalMembers < 3
 })
 
 const showInviteModal = ref(false)
@@ -91,16 +103,32 @@ const handleCancelInvitation = () => {
                     </p>
                 </div>
                 <div class="mt-4 flex md:ml-4 md:mt-0">
-                    <DSButton
-                        v-if="isAdmin"
-                        variant="primary"
-                        @click="showInviteModal = true"
-                    >
-                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Member
-                    </DSButton>
+                    <template v-if="isAdmin">
+                        <DSTooltip v-if="!canAddMembers">
+                            <DSButton
+                                variant="primary"
+                                disabled
+                            >
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Member
+                            </DSButton>
+                            <template #content>
+                                Free trial allows maximum 3 members. Please subscribe to add more.
+                            </template>
+                        </DSTooltip>
+                        <DSButton
+                            v-else
+                            variant="primary"
+                            @click="showInviteModal = true"
+                        >
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Member
+                        </DSButton>
+                    </template>
                 </div>
             </div>
         </template>
@@ -200,6 +228,7 @@ const handleCancelInvitation = () => {
 
         <!-- Add Member Modal -->
         <AddMemberModal
+            v-if="canAddMembers"
             :show="showInviteModal"
             :band-id="band.id"
             @close="showInviteModal = false"

@@ -42,6 +42,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
         'password' => 'hashed',
         'password_set' => 'boolean',
     ];
@@ -70,5 +71,42 @@ class User extends Authenticatable
     public function isAdminOf(Band $band): bool
     {
         return $this->adminBands()->where('band_id', $band->id)->exists();
+    }
+
+    /**
+     * Trial-related functionality for users
+     */
+    public function isInTrialPeriod(): bool
+    {
+        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+    }
+
+    public function hasTrialExpired(): bool
+    {
+        return $this->trial_ends_at && $this->trial_ends_at->isPast() && !$this->is_subscribed;
+    }
+
+    public function getRemainingTrialDays(): int
+    {
+        if (!$this->trial_ends_at) {
+            return 0;
+        }
+        return max(0, now()->diffInDays($this->trial_ends_at));
+    }
+
+    public function canCreateMoreBands(): bool
+    {
+        if ($this->is_subscribed) {
+            return true;
+        }
+        return $this->bands()->count() < 1;
+    }
+
+    public function canAddMoreMembers(Band $band): bool
+    {
+        if ($this->is_subscribed) {
+            return true;
+        }
+        return $band->members()->count() < 3;
     }
 }

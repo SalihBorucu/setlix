@@ -1,9 +1,11 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard } from '@/Components/UI'
+import { DSButton, DSCard, DSTooltip } from '@/Components/UI'
 import ConfirmModal from '@/Components/UI/ConfirmModal.vue'
 import { ref } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
     band: {
@@ -22,6 +24,20 @@ const props = defineProps({
 
 const showDeleteModal = ref(false)
 const showLeaveModal = ref(false)
+
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+
+// Trial limit checks
+const canAddSongs = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return (props.band.songs_count || 0) < 10
+})
+
+const canAddSetlists = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return (props.band.setlists_count || 0) < 3
+})
 
 const deleteBand = () => {
     router.delete(route('bands.destroy', props.band.id))
@@ -167,14 +183,21 @@ const leaveBand = () => {
                                             View All
                                         </DSButton>
                                     </Link>
-                                    <Link 
-                                        v-if="isAdmin"
-                                        :href="route('songs.create', { band: band.id })"
-                                    >
-                                        <DSButton variant="primary" size="sm">
-                                            Add New Song
-                                        </DSButton>
-                                    </Link>
+                                    <template v-if="isAdmin">
+                                        <DSTooltip v-if="!canAddSongs">
+                                            <DSButton variant="primary" size="sm" disabled>
+                                                Add New Song
+                                            </DSButton>
+                                            <template #content>
+                                                Free trial allows maximum 10 songs. Please subscribe to add more.
+                                            </template>
+                                        </DSTooltip>
+                                        <Link v-else :href="route('songs.create', { band: band.id })">
+                                            <DSButton variant="primary" size="sm">
+                                                Add New Song
+                                            </DSButton>
+                                        </Link>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -192,14 +215,21 @@ const leaveBand = () => {
                                             View All
                                         </DSButton>
                                     </Link>
-                                    <Link 
-                                        v-if="isAdmin"
-                                        :href="route('setlists.create', { band: band.id })"
-                                    >
-                                        <DSButton variant="primary" size="sm">
-                                            Create New Setlist
-                                        </DSButton>
-                                    </Link>
+                                    <template v-if="isAdmin">
+                                        <DSTooltip v-if="!canAddSetlists">
+                                            <DSButton variant="primary" size="sm" disabled>
+                                                Create New Setlist
+                                            </DSButton>
+                                            <template #content>
+                                                Free trial allows maximum 3 setlists. Please subscribe to add more.
+                                            </template>
+                                        </DSTooltip>
+                                        <Link v-else :href="route('setlists.create', { band: band.id })">
+                                            <DSButton variant="primary" size="sm">
+                                                Create New Setlist
+                                            </DSButton>
+                                        </Link>
+                                    </template>
                                 </div>
                             </div>
                         </div>
