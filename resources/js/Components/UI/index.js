@@ -7,6 +7,7 @@ export { default as DSAlertModal } from './AlertModal.vue'
 export { default as DSModal } from './Modal.vue'
 import DSDurationInput from './DSDurationInput.vue'
 export { default as DSTooltip } from './DSTooltip.vue'
+export { default as TrialStatusBanner } from './TrialStatusBanner.vue'
 
 export {
     DSDurationInput,

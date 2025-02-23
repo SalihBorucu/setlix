@@ -12,6 +12,7 @@
 
         <!-- Scripts -->
         @routes
+        <script src="https://js.stripe.com/v3/" defer></script>
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>

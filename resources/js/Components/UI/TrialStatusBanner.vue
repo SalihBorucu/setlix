@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showBanner" class="bg-blue-50 border-b border-blue-200">
+  <div v-if="shouldShowBanner" class="bg-blue-50 border-b border-blue-200">
     <div class="max-w-7xl mx-auto p-3">
       <div class="flex items-center justify-between">
         <!-- Trial Status -->
@@ -18,14 +18,14 @@
         </div>
 
         <!-- Subscribe Button -->
-        <DSButton
+        <Link
           v-if="!isSubscribed"
-          variant="primary"
-          size="sm"
           :href="route('subscription.checkout')"
         >
-          Subscribe Now
-        </DSButton>
+          <DSButton variant="primary" size="sm">
+            Subscribe Now
+          </DSButton>
+        </Link>
       </div>
     </div>
   </div>
@@ -33,7 +33,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { DSButton } from '@/Components/UI';
 
 const page = usePage();
@@ -43,5 +43,10 @@ const isSubscribed = computed(() => trial.value?.isSubscribed ?? false);
 const remainingDays = computed(() => trial.value?.remainingDays ?? 0);
 const trialLimitReached = computed(() => trial.value?.limitReached ?? false);
 const trialLimitMessage = computed(() => trial.value?.limitMessage ?? '');
-const showBanner = computed(() => trial.value && !isSubscribed.value);
+
+// Don't show banner on checkout page
+const shouldShowBanner = computed(() => {
+  const isCheckoutPage = route().current('subscription.checkout');
+  return trial.value && !isSubscribed.value && !isCheckoutPage;
+});
 </script> 

@@ -87,11 +87,12 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::post('/spotify/playlist-tracks', [SpotifyController::class, 'getPlaylistTracks'])
         ->name('spotify.playlist-tracks');
 
-    Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
-        ->name('subscription.expired');
-    
-    Route::get('/subscription/checkout', [SubscriptionController::class, 'checkout'])
-        ->name('subscription.checkout');
+    // Subscription routes - group them together
+    Route::controller(SubscriptionController::class)->group(function () {
+        Route::get('/subscription/expired', 'expired')->name('subscription.expired');
+        Route::get('/subscription/checkout', 'checkout')->name('subscription.checkout');
+        Route::post('/subscription/process', 'process')->name('subscription.process');
+    });
 });
 
 Route::middleware([
