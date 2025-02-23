@@ -1,10 +1,10 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard, DSTooltip } from '@/Components/UI'
+import { DSButton, DSCard, DSTooltip, DSAlertModal } from '@/Components/UI'
 import visitExternalLink from '@/Utilities/visitExternalLink'
 import { usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
     band: {
@@ -30,10 +30,19 @@ const canAddSongs = computed(() => {
     return props.songs.length < 10
 })
 
-const deleteSong = (songId) => {
-    if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
-        router.delete(route('songs.destroy', [props.band.id, songId]))
-    }
+// Add reference to modal
+const deleteModal = ref(null)
+const songToDelete = ref(null)
+
+// Update delete handler to use modal
+const deleteSong = (song) => {
+    songToDelete.value = song
+    deleteModal.value.open()
+}
+
+// Add confirm delete handler
+const confirmDelete = () => {
+    router.delete(route('songs.destroy', [props.band.id, songToDelete.value.id]))
 }
 
 const handleDownload = (file, song) => {
@@ -236,7 +245,7 @@ const handleDownload = (file, song) => {
                                             </Link>
                                             <button
                                                 v-if="isAdmin"
-                                                @click="deleteSong(song.id)"
+                                                @click="deleteSong(song)"
                                                 class="text-danger-400 hover:text-danger-500"
                                             >
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,4 +262,15 @@ const handleDownload = (file, song) => {
             </div>
         </DSCard>
     </AuthenticatedLayout>
+
+    <!-- Add modal component at the end of the template -->
+    <DSAlertModal
+        ref="deleteModal"
+        title="Delete Song"
+        message="Are you sure you want to delete this song? This action cannot be undone."
+        type="error"
+        confirm-text="Delete"
+        :show-cancel="true"
+        @confirm="confirmDelete"
+    />
 </template> 
