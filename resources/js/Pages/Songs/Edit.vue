@@ -5,7 +5,19 @@ import { ref } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
-import {DSInput, DSButton, DSCard, DSAlert, DSAlertModal} from "@/Components/UI";
+import {DSInput, DSButton, DSCard, DSAlert, DSAlertModal, DSDurationInput} from "@/Components/UI";
+
+// Move helper functions before they're used
+const formatDuration = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const parseDuration = (duration) => {
+    const [minutes, seconds] = duration.split(':').map(Number);
+    return minutes * 60 + seconds;
+};
 
 const props = defineProps({
     band: {
@@ -22,34 +34,12 @@ const form = useForm({
     band_id: props.band.id,
     name: props.song.name,
     artist: props.song.artist,
-    bpm: props.song.bpm,
+    duration: formatDuration(props.song.duration_seconds),
     duration_seconds: props.song.duration_seconds,
     notes: props.song.notes,
     url: props.song.url,
     files: []
 });
-
-const formatDuration = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
-const parseDuration = (duration) => {
-    const [minutes, seconds] = duration.split(':').map(Number);
-    return minutes * 60 + seconds;
-};
-
-const durationInput = ref(formatDuration(props.song.duration_seconds));
-
-const updateDuration = () => {
-    const duration = durationInput.value;
-    if (/^\d+:\d{2}$/.test(duration)) {
-        form.duration_seconds = parseDuration(duration);
-    } else {
-        form.duration_seconds = props.song.duration_seconds;
-    }
-};
 
 const fileGroups = ref([]);
 const deleteModal = ref(null);
@@ -91,8 +81,6 @@ const deleteFile = () => {
 };
 
 const submit = () => {
-    updateDuration();
-
     const formData = new FormData();
     
     formData.append('_method', 'PATCH');
@@ -101,7 +89,7 @@ const submit = () => {
     formData.append('duration_seconds', form.duration_seconds.toString());
     
     if (form.artist) formData.append('artist', form.artist);
-    if (form.bpm) formData.append('bpm', form.bpm.toString());
+    if (form.duration) formData.append('duration', form.duration);
     if (form.notes) formData.append('notes', form.notes);
     if (form.url) formData.append('url', form.url);
 
@@ -163,14 +151,11 @@ const submit = () => {
                                 </div>
 
                                 <div>
-                                    <DSInput
-                                        v-model="durationInput"
-                                        type="text"
-                                        label="Duration (MM:SS)"
-                                        :error="form.errors.duration_seconds"
+                                    <DSDurationInput
+                                        v-model="form.duration"
+                                        @update:seconds="(seconds) => form.duration_seconds = seconds"
+                                        label="Duration"
                                         required
-                                        pattern="[0-9]{1,2}:[0-9]{2}"
-                                        placeholder="03:30"
                                     />
                                 </div>
 

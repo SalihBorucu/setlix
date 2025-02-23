@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { DSButton, DSInput } from '@/Components/UI'
+import { DSButton, DSInput, DSDurationInput } from '@/Components/UI'
 
 const props = defineProps({
     isOpen: {
@@ -13,24 +13,19 @@ const emit = defineEmits(['close', 'create'])
 
 const form = ref({
     title: '',
-    duration: '', // Will store as MM:SS format
+    duration: '', // For the display value
+    duration_seconds: '', // For the actual value
     notes: ''
 })
-
-// Convert MM:SS to seconds, matching song creation logic
-const formatDuration = (value) => {
-    const [minutes, seconds] = value.split(':').map(Number)
-    return minutes * 60 + seconds
-}
 
 const submit = () => {
     emit('create', {
         type: 'break',
         title: form.value.title,
-        duration_seconds: formatDuration(form.value.duration),
+        duration_seconds: form.value.duration_seconds,
         notes: form.value.notes
     })
-    form.value = { title: '', duration: '', notes: '' }
+    form.value = { title: '', duration: '', duration_seconds: '', notes: '' }
     emit('close')
 }
 </script>
@@ -48,12 +43,10 @@ const submit = () => {
                     required
                 />
 
-                <DSInput
+                <DSDurationInput
                     v-model="form.duration"
-                    type="text"
-                    label="Duration (MM:SS)"
-                    pattern="[0-9]{1,2}:[0-9]{2}"
-                    placeholder="05:00"
+                    @update:seconds="(seconds) => form.duration_seconds = seconds"
+                    label="Duration"
                     required
                 />
 

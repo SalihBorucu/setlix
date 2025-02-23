@@ -38,8 +38,7 @@ const currentBandId = route().params.band
                         <!-- Logo -->
                         <div class="flex-shrink-0 flex items-center">
                             <Link :href="route('dashboard')" class="flex">
-                                <img class="h-8 w-auto" src="/images/logo.svg" alt="AI Setlist" />
-                                <img class="h-8 w-auto" src="/images/logo_text.svg" alt="AI Setlist" />
+                                <img class="h-12 w-auto" src="/images/text_logo.svg" alt="AI Setlist" />
                             </Link>
                         </div>
 

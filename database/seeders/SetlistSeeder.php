@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Band;
 use App\Models\Setlist;
+use App\Models\SetlistItem;
+use App\Models\Song;
 use Illuminate\Database\Seeder;
 
 class SetlistSeeder extends Seeder
@@ -13,55 +15,53 @@ class SetlistSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create setlists for each band
-        Band::all()->each(function ($band) {
-            // Create 2-4 setlists for each band
-            $setlistCount = rand(2, 4);
-            
-            for ($i = 0; $i < $setlistCount; $i++) {
-                // Create setlist
+        $bands = Band::all();
+
+        foreach ($bands as $band) {
+            // Create 2-3 setlists for each band
+            for ($i = 0; $i < rand(2, 3); $i++) {
                 $setlist = Setlist::create([
                     'band_id' => $band->id,
-                    'name' => $this->getSetlistName($i),
-                    'description' => fake()->paragraph(),
-                    'total_duration' => 0 // Will be calculated after adding songs
+                    'name' => "Setlist " . ($i + 1) . " - " . $band->name,
+                    'description' => "Sample setlist description " . ($i + 1),
                 ]);
 
-                // Get random songs from the band (3-8 songs per setlist)
-                $songs = $band->songs()->inRandomOrder()->take(rand(3, 8))->get();
+                // Get band's songs
+                $bandSongs = $band->songs;
                 
-                // Attach songs with order
-                foreach ($songs as $index => $song) {
-                    $setlist->songs()->attach($song->id, [
-                        'order' => $index,
-                        'notes' => rand(0, 1) ? fake()->sentence() : null // 50% chance of having notes
-                    ]);
+                // Create setlist items (mix of songs and breaks)
+                $order = 1;
+                
+                // Add 8-12 items to each setlist
+                for ($j = 0; $j < rand(8, 12); $j++) {
+                    if (rand(0, 10) < 8) { // 80% chance of being a song
+                        $song = $bandSongs->random();
+                        SetlistItem::create([
+                            'setlist_id' => $setlist->id,
+                            'type' => 'song',
+                            'song_id' => $song->id,
+                            'title' => $song->name,
+                            'duration_seconds' => $song->duration_seconds,
+                            'notes' => "Performance notes for " . $song->name,
+                            'order' => $order,
+                        ]);
+                    } else { // 20% chance of being a break
+                        SetlistItem::create([
+                            'setlist_id' => $setlist->id,
+                            'type' => 'break',
+                            'title' => 'Short Break',
+                            'duration_seconds' => rand(300, 600), // 5-10 minutes
+                            'notes' => 'Time for water and tuning',
+                            'order' => $order,
+                        ]);
+                    }
+                    $order++;
                 }
 
                 // Update total duration
-                $setlist->updateTotalDuration();
+                $setlist->total_duration = $setlist->calculateTotalDuration();
+                $setlist->save();
             }
-        });
-    }
-
-    /**
-     * Get a creative setlist name based on index
-     */
-    private function getSetlistName(int $index): string
-    {
-        $names = [
-            'Main Set',
-            'Acoustic Night',
-            'Greatest Hits',
-            'New Material',
-            'Fan Favorites',
-            'Extended Set',
-            'Festival Set',
-            'Club Night Mix',
-            'Unplugged Session',
-            'Rock Night Special'
-        ];
-
-        return $names[$index] ?? fake()->words(2, true) . ' Set';
+        }
     }
 } 
