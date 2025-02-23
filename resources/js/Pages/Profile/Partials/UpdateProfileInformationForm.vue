@@ -1,9 +1,6 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, Link } from '@inertiajs/vue3';
+import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI';
 
 defineProps({
     mustVerifyEmail: {
@@ -23,90 +20,98 @@ const form = useForm({
 </script>
 
 <template>
-    <section>
-        <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
-            </h2>
+    <DSCard class="max-w-2xl">
+        <div class="p-6 space-y-6">
+            <header>
+                <h2 class="text-2xl font-bold text-neutral-900">
+                    Profile Information
+                </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information and email address.
-            </p>
-        </header>
-
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
-            <div>
-                <InputLabel for="name" value="Name" />
-
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
-
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
+                <p class="mt-1 text-sm text-neutral-500">
+                    Update your account's profile information and email address.
                 </p>
+            </header>
 
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    A new verification link has been sent to your email address.
+            <!-- Error Message -->
+            <DSAlert
+                v-if="Object.keys(form.errors).length > 0"
+                type="error"
+            >
+                <ul class="list-disc list-inside">
+                    <li v-for="error in form.errors" :key="error">{{ error }}</li>
+                </ul>
+            </DSAlert>
+
+            <form @submit.prevent="form.patch(route('profile.update'))" class="space-y-6">
+                <div class="grid gap-4">
+                    <!-- Name -->
+                    <DSInput
+                        v-model="form.name"
+                        type="text"
+                        label="Name"
+                        :error="form.errors.name"
+                        required
+                        autofocus
+                    />
+
+                    <!-- Email -->
+                    <DSInput
+                        v-model="form.email"
+                        type="email"
+                        label="Email"
+                        :error="form.errors.email"
+                        required
+                    />
                 </div>
-            </div>
 
-            <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
-
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
-                >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
-                        Saved.
+                <!-- Email Verification Notice -->
+                <div v-if="mustVerifyEmail && user.email_verified_at === null">
+                    <p class="text-sm text-neutral-800">
+                        Your email address is unverified.
+                        <Link
+                            :href="route('verification.send')"
+                            method="post"
+                            as="button"
+                            class="text-primary-600 hover:text-primary-700 underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        >
+                            Click here to re-send the verification email.
+                        </Link>
                     </p>
-                </Transition>
-            </div>
-        </form>
-    </section>
+
+                    <div
+                        v-show="status === 'verification-link-sent'"
+                        class="mt-2 text-sm font-medium text-green-600"
+                    >
+                        A new verification link has been sent to your email address.
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end space-x-4">
+                    <DSButton
+                        type="submit"
+                        variant="primary"
+                        :disabled="form.processing"
+                    >
+                        <span v-if="form.processing">Saving...</span>
+                        <span v-else>Save Changes</span>
+                    </DSButton>
+
+                    <transition
+                        enter-active-class="transition ease-in-out"
+                        enter-from-class="opacity-0"
+                        leave-active-class="transition ease-in-out"
+                        leave-to-class="opacity-0"
+                    >
+                        <p
+                            v-if="form.recentlySuccessful"
+                            class="text-sm text-neutral-600"
+                        >
+                            Saved.
+                        </p>
+                    </transition>
+                </div>
+            </form>
+        </div>
+    </DSCard>
 </template>

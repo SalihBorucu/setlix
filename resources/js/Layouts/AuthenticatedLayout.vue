@@ -19,7 +19,7 @@ const bandNavigation = [
 
 const userNavigation = [
     { name: 'Your Profile', href: route('profile.edit') },
-    { name: 'Settings', href: '#' },
+    // { name: 'Settings', href: '#' },
     { name: 'Sign out', href: route('logout'), method: 'post' }
 ]
 
