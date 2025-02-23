@@ -12,14 +12,18 @@ const props = defineProps({
 })
 
 const form = useForm({
-    name: props.band.name,
-    description: props.band.description,
+    name: props.band.name || '',
+    description: props.band.description || '',
     cover_image: null,
+    _method: 'PATCH',
 })
 
 const submit = () => {
-    form.patch(route('bands.update', props.band.id), {
+    form.post(route('bands.update', props.band.id), {
         preserveScroll: true,
+        onSuccess: () => {
+            window.location.href = route('bands.show', props.band.id)
+        },
     })
 }
 </script>
@@ -103,6 +107,7 @@ const submit = () => {
                     <ImageUpload
                         v-model="form.cover_image"
                         :error="form.errors.cover_image"
+                        @update:modelValue="(value) => form.cover_image = value"
                     />
                 </div>
 
