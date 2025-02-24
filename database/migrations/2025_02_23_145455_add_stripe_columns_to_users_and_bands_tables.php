@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('stripe_subscription_id')->nullable();
             $table->string('subscription_status')->nullable();
             $table->timestamp('subscription_ends_at')->nullable();
+            $table->string('idempotency_key')->nullable()->index();
         });
     }
 
@@ -35,7 +36,8 @@ return new class extends Migration
             $table->dropColumn([
                 'stripe_subscription_id',
                 'subscription_status',
-                'subscription_ends_at'
+                'subscription_ends_at',
+                'idempotency_key'
             ]);
         });
     }

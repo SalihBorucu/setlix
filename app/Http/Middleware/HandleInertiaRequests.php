@@ -43,6 +43,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'flash' => [
+                'message' => fn () => $request->session()->get('message'),
+                'error' => fn () => $request->session()->get('error'),
+                'info' => fn () => $request->session()->get('info'),
+                'success' => fn () => $request->session()->get('success'),
+            ],
             'trial' => $user ? [
                 'isInTrial' => $user->isInTrialPeriod(),
                 'remainingDays' => $user->getRemainingTrialDays(),

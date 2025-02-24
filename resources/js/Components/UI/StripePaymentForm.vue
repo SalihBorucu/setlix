@@ -66,7 +66,7 @@ const props = defineProps({
   },
   submitButtonText: {
     type: String,
-    default: 'Subscribe Now • $10/month'
+    default: 'Subscribe Now • £10/month'
   },
   bandId: {
     type: [String, Number],

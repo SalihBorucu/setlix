@@ -18,6 +18,9 @@ class StripeService
     public function createSubscription(Band $band, User $user, array $paymentData)
     {
         try {
+            // Generate idempotency key based on band and user
+            $idempotencyKey = md5($band->id . '_' . $user->id . '_' . time());
+
             // Create or retrieve Stripe customer
             $customer = $this->getOrCreateCustomer($user);
 
@@ -26,7 +29,7 @@ class StripeService
                 throw new \Exception('Stripe price ID is not configured');
             }
 
-            // Create subscription with immediate payment
+            // Create subscription with immediate payment and idempotency key
             $subscription = \Stripe\Subscription::create([
                 'customer' => $customer->id,
                 'items' => [
@@ -39,13 +42,30 @@ class StripeService
                 'metadata' => [
                     'band_id' => $band->id,
                     'user_id' => $user->id,
+                    'idempotency_key' => $idempotencyKey
                 ],
+            ], [
+                'idempotency_key' => $idempotencyKey
             ]);
 
-            // Store subscription ID immediately
+            // Validate subscription creation
+            if (!$subscription->id || !$subscription->latest_invoice->payment_intent) {
+                throw new \Exception('Invalid subscription response from Stripe');
+            }
+
+            // Store subscription ID and metadata immediately
             $band->update([
                 'stripe_subscription_id' => $subscription->id,
-                'subscription_status' => 'incomplete' // Will be updated to 'active' after payment success
+                'subscription_status' => 'incomplete', // Will be updated to 'active' after payment success
+                'idempotency_key' => $idempotencyKey
+            ]);
+
+            // Log subscription creation attempt
+            \Log::info('Subscription creation initiated', [
+                'band_id' => $band->id,
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'idempotency_key' => $idempotencyKey
             ]);
 
             return [
@@ -53,8 +73,21 @@ class StripeService
                 'clientSecret' => $subscription->latest_invoice->payment_intent->client_secret,
             ];
 
-        } catch (ApiErrorException $e) {
-            \Log::error('Stripe subscription creation failed', [
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            // Handle Stripe-specific errors
+            \Log::error('Stripe API error during subscription creation', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'user_id' => $user->id,
+                'band_id' => $band->id,
+                'price_id' => $priceId ?? 'not set',
+                'stripe_error_code' => $e->getStripeCode(),
+                'stripe_error_type' => $e->getStripeParam()
+            ]);
+            throw new \Exception('Payment service error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            // Handle other errors
+            \Log::error('Subscription creation failed', [
                 'error' => $e->getMessage(),
                 'error_type' => get_class($e),
                 'user_id' => $user->id,

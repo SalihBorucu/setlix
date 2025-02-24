@@ -29,7 +29,7 @@ defineProps({
         <!-- Total Monthly Fee -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h3 class="text-lg font-medium text-neutral-900 mb-2">Total Monthly Fee</h3>
-            <p class="text-2xl font-bold text-primary-600">${{ totalMonthlyFee.toFixed(2) }}/month</p>
+            <p class="text-2xl font-bold text-primary-600">£{{ totalMonthlyFee.toFixed(2) }}/month</p>
         </div>
 
         <!-- Subscriptions List -->
@@ -45,18 +45,20 @@ defineProps({
                                 Status: <span :class="{
                                     'text-green-600': subscription.status === 'active',
                                     'text-yellow-600': subscription.status === 'trialing',
-                                    'text-red-600': subscription.status === 'expired' || subscription.status === 'no subscription'
+                                    'text-red-600': subscription.status === 'expired',
+                                    'text-orange-600': subscription.status === 'payment_failed',
+                                    'text-gray-600': subscription.status === 'cancelled'
                                 }">{{ subscription.status }}</span>
                             </p>
                             <p class="text-sm text-neutral-500" v-if="subscription.status === 'active'">
-                                ${{ subscription.price }}/month
+                                £{{ subscription.price }}/month
                             </p>
                         </div>
                         
                         <div class="flex gap-3">
-                            <!-- Wrap DSButton in Link component for navigation -->
+                            <!-- Subscribe button for expired/cancelled subscriptions -->
                             <Link
-                                v-if="subscription.status === 'expired' || subscription.status === 'no subscription'"
+                                v-if="['expired', 'cancelled'].includes(subscription.status)"
                                 :href="route('bands.subscribe', subscription.band.id)"
                             >
                                 <DSButton variant="primary">
@@ -64,7 +66,17 @@ defineProps({
                                 </DSButton>
                             </Link>
 
-                            <!-- Show Cancel button for active subscriptions -->
+                            <!-- Retry payment button for failed payments -->
+                            <Link
+                                v-if="subscription.status === 'payment_failed'"
+                                :href="route('bands.subscribe', subscription.band.id)"
+                            >
+                                <DSButton variant="warning">
+                                    Update Payment
+                                </DSButton>
+                            </Link>
+
+                            <!-- Cancel button for active subscriptions -->
                             <DSButton
                                 v-if="subscription.status === 'active'"
                                 variant="danger"
@@ -73,7 +85,7 @@ defineProps({
                                 Cancel Subscription
                             </DSButton>
 
-                            <!-- Show "On Trial" badge for trial period -->
+                            <!-- Trial badge -->
                             <div
                                 v-if="subscription.status === 'trialing'"
                                 class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium"

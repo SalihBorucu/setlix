@@ -8,6 +8,7 @@ export { default as DSModal } from './Modal.vue'
 import DSDurationInput from './DSDurationInput.vue'
 export { default as DSTooltip } from './DSTooltip.vue'
 export { default as TrialStatusBanner } from './TrialStatusBanner.vue'
+export { default as FlashMessage } from './FlashMessage.vue'
 
 export {
     DSDurationInput,

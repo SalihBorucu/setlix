@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import { DSButton } from '@/Components/UI'
 import TrialStatusBanner from '@/Components/UI/TrialStatusBanner.vue'
+import { FlashMessage } from '@/Components/UI'
 
 const showingNavigationDropdown = ref(false)
 const { auth } = usePage().props
@@ -30,6 +31,7 @@ const currentBandId = route().params.band
 
 <template>
     <div class="min-h-screen bg-neutral-50 test">
+        <FlashMessage />
         <!-- Navigation -->
         <nav class="bg-white border-b border-neutral-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

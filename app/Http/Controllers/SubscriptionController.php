@@ -158,20 +158,28 @@ class SubscriptionController extends Controller
     {
         $user = auth()->user();
 
-        // Get all bands for the user with their subscription info
-        $subscriptions = $user->bands()
+        // Get only bands where the user is an admin
+        $subscriptions = $user->adminBands()
             ->get()
             ->map(function ($band) {
+                // Get subscription status based on trial and subscription state
+                $status = match($band->subscription_status) {
+                    'active' => 'active',
+                    'payment_failed' => 'payment_failed',
+                    'cancelled' => 'cancelled',
+                    default => $band->trial_ends_at && Carbon::now()->lt($band->trial_ends_at) 
+                        ? 'trialing' 
+                        : 'expired'
+                };
+
                 return [
                     'id' => $band->id,
                     'band' => [
                         'id' => $band->id,
                         'name' => $band->name,
                     ],
-                    'status' => $band->trial_ends_at
-                        ? (Carbon::now()->lt($band->trial_ends_at) ? 'trialing' : 'expired')
-                        : ($band->is_subscribed ? 'active' : 'no subscription'),
-                    'price' => $band->is_subscribed ? 10.00 : 0, // Assuming $10/month subscription
+                    'status' => $status,
+                    'price' => $status === 'active' ? 10.00 : 0, // $10/month for active subscriptions
                 ];
             });
 

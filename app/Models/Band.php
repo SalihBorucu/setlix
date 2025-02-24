@@ -116,4 +116,44 @@ class Band extends Model
             ? Storage::disk('public')->url($this->cover_image_small_path)
             : null;
     }
+
+    /**
+     * Check if band is in trial period
+     */
+    public function isInTrial(): bool
+    {
+        return $this->trial_ends_at && now()->lt($this->trial_ends_at);
+    }
+
+    /**
+     * Check if band has active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription_status === 'active';
+    }
+
+    /**
+     * Check if band is in read-only mode
+     */
+    public function isReadOnly(): bool
+    {
+        return !$this->hasActiveSubscription() && !$this->isInTrial();
+    }
+
+    /**
+     * Check if band can perform write operations
+     */
+    public function canPerformWriteOperations(): bool
+    {
+        return $this->hasActiveSubscription() || $this->isInTrial();
+    }
+
+    /**
+     * Check if band requires subscription
+     */
+    public function requiresSubscription(): bool
+    {
+        return !$this->hasActiveSubscription() && (!$this->trial_ends_at || now()->gt($this->trial_ends_at));
+    }
 }
