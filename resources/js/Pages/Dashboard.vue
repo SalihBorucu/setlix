@@ -99,6 +99,7 @@ const isBandDisabled = (band) => {
                 >
                     <template v-if="isBandDisabled(band)">
                         <Link 
+                            v-if="hasAdminRole(band)"
                             :href="getSubscriptionUrl(band)"
                             class="group block relative"
                         >
@@ -155,6 +156,59 @@ const isBandDisabled = (band) => {
                                 </div>
                             </DSCard>
                         </Link>
+
+                        <!-- Show disabled state for non-admin members -->
+                        <div v-else class="group block relative">
+                            <DSCard class="h-full opacity-50 relative">
+                                <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
+                                    <img
+                                        :src="band.cover_image_thumbnail_path || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
+                                        class="object-cover"
+                                        :alt="band.name"
+                                    />
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-medium text-neutral-900 group-hover:text-primary-600">
+                                            {{ band.name }}
+                                        </h3>
+                                        <div v-if="hasAdminRole(band)" class="flex items-center text-primary-600">
+                                            <svg class="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                            <span class="text-sm font-medium">Admin</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 flex items-center text-sm text-neutral-500">
+                                        <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
+                                        </svg>
+                                        {{ band.members_count }} members
+                                    </div>
+                                    <div class="mt-4 flex space-x-3">
+                                        <Link 
+                                            :href="route('songs.index', { band: band.id })"
+                                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                        >
+                                            View Songs
+                                        </Link>
+                                        <Link 
+                                            :href="route('setlists.index', { band: band.id })"
+                                            class="text-sm font-medium text-primary-600 hover:text-primary-700"
+                                        >
+                                            View Setlists
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                <!-- Add overlay showing disabled state -->
+                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <div class="text-center">
+                                        <p class="text-white">This band is currently inactive</p>
+                                    </div>
+                                </div>
+                            </DSCard>
+                        </div>
                     </template>
 
                     <Link 
