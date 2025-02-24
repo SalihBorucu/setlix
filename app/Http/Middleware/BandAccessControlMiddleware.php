@@ -39,6 +39,10 @@ class BandAccessControlMiddleware
             'route' => $request->route()->getName()
         ]);
 
+        if (!$request->user()->is_subscribed) {
+            return $next($request);
+        }
+
         // Check if band has no active subscription and no trial
         if (!$band->hasActiveSubscription() && !$band->trial_ends_at) {
             return redirect()->route('bands.subscribe', $band)

@@ -134,7 +134,7 @@ class BandMemberController extends Controller
         return back()->with('success', 'Invitation cancelled successfully.');
     }
 
-    public function acceptInvitation(AcceptBandInvitationRequest $request, $token)
+    public function acceptInvitation(AcceptBandInvitationRequest $request, string $token)
     {
         $result = $request->process($token);
 

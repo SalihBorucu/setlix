@@ -1,12 +1,12 @@
 <template>
-    <div v-if="hasMessage" class="fixed top-4 right-4 z-50 max-w-sm">
+    <div v-if="isVisible" class="fixed top-4 right-4 z-50 max-w-sm">
         <transition
             enter-active-class="transform ease-out duration-300 transition"
-            enter-from-class="translate-y-2 opacity-0"
-            enter-to-class="translate-y-0 opacity-100"
-            leave-active-class="transition ease-in duration-200"
-            leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
+            enter-from-class="translate-y-2 opacity-0 scale-95"
+            enter-to-class="translate-y-0 opacity-100 scale-100"
+            leave-active-class="transform ease-in duration-200 transition"
+            leave-from-class="translate-y-0 opacity-100 scale-100"
+            leave-to-class="translate-y-2 opacity-0 scale-95"
         >
             <DSAlert :type="type" class="shadow-xl rounded-lg border bg-white p-4">
                 <div class="flex items-center gap-3">
@@ -38,11 +38,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { DSAlert } from '@/Components/UI';
 
 const page = usePage();
+const isVisible = ref(false);
+let timeout = null;
 
 const message = computed(() => {
     return page.props.flash.success || 
@@ -60,5 +62,24 @@ const type = computed(() => {
 
 const hasMessage = computed(() => {
     return !!message.value;
+});
+
+// Watch for changes in the message and handle visibility
+watchEffect(() => {
+    // Clear any existing timeout
+    if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+    }
+
+    // If there's a message, show it and set up auto-dismiss
+    if (hasMessage.value) {
+        isVisible.value = true;
+        timeout = setTimeout(() => {
+            isVisible.value = false;
+        }, 7000); // 7 seconds
+    } else {
+        isVisible.value = false;
+    }
 });
 </script> 

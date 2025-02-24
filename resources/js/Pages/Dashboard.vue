@@ -98,6 +98,7 @@ const isBandDisabled = (band) => {
                     class="group relative"
                 >
                     <template v-if="isBandDisabled(band)">
+                        {{ band }}
                         <Link 
                             v-if="hasAdminRole(band)"
                             :href="getSubscriptionUrl(band)"
