@@ -19,7 +19,7 @@
         <div>
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Subscription Details</h2>
-            
+
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
               <div>
                 <p class="font-medium text-gray-900">{{ band.name }}</p>
@@ -63,6 +63,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { CheckCircleIcon } from '@heroicons/vue/24/solid';
 import StripePaymentForm from '@/Components/UI/StripePaymentForm.vue';
+import axios from 'axios';
 
 const props = defineProps({
   band: {
@@ -93,25 +94,30 @@ const features = [
   'Priority email support'
 ];
 
-const handlePaymentSuccess = (data) => {
-  router.post(route('subscription.process'), {
-    band_id: props.band.id,
-    card_name: data.cardName
-  }, {
-    preserveScroll: true,
-    onSuccess: (page) => {
-      if (page.props.flash.success) {
-        console.log('Success:', page.props.flash.success);
-      }
-    },
-    onError: (errors) => {
-      error.value = 'An error occurred during checkout. Please try again.';
-      console.error('Checkout errors:', errors);
+const handlePaymentSuccess = async (data) => {
+  error.value = null;
+  
+  try {
+    const response = await axios.post(route('subscription.create'), {
+      band_id: props.band.id,
+      card_name: data.cardName
+    });
+    
+    const { clientSecret, subscriptionId } = response.data;
+    
+    if (clientSecret && subscriptionId) {
+      // Handle the successful subscription creation
+      // You might want to redirect using Inertia after the payment is confirmed
+      router.visit(route('bands.show', props.band.id), {
+        preserveScroll: true
+      });
     }
-  });
+  } catch (e) {
+    error.value = e.response?.data?.message || 'An error occurred during checkout. Please try again.';
+  }
 };
 
 const handlePaymentError = (message) => {
   error.value = message;
 };
-</script> 
+</script>

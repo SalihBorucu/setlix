@@ -40,17 +40,16 @@ class SubscriptionController extends Controller
 
     /**
      * Show the checkout page for a specific band
-     * 
+     *
      * @param Band $band The band being subscribed
-     * @return Response
+     * @return RedirectResponse|Response
      */
-    public function checkout(Band $band): Response
+    public function checkout(Band $band): Response|RedirectResponse
     {
         $user = auth()->user();
 
-        // Check if user has permission to subscribe this band
         if (!$band->isAdmin($user)) {
-            return redirect()->route('bands.index')
+            return redirect()->route('dashboard')
                 ->with('error', 'You do not have permission to subscribe this band.');
         }
 
@@ -61,11 +60,7 @@ class SubscriptionController extends Controller
         }
 
         return Inertia::render('Subscription/Checkout', [
-            'band' => [
-                'id' => $band->id,
-                'name' => $band->name,
-                'created_at' => $band->created_at,
-            ],
+            'band' => $band->only(['id', 'name', 'created_at']),
             'trialDaysLeft' => $trialDaysLeft,
             'stripeKey' => config('services.stripe.key')
         ]);
@@ -113,7 +108,9 @@ class SubscriptionController extends Controller
             $band = Band::findOrFail($request->band_id);
 
             if (!$band->isAdmin($user)) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+                return response()->json([
+                    'message' => 'You are not authorized to manage this band\'s subscription.'
+                ], 403);
             }
 
             $result = $this->stripeService->createSubscription(
@@ -122,12 +119,20 @@ class SubscriptionController extends Controller
                 $request->all()
             );
 
-            return response()->json($result);
+            return response()->json([
+                'clientSecret' => $result['clientSecret'],
+                'subscriptionId' => $result['subscriptionId']
+            ]);
+
         } catch (\Exception $e) {
-            return response()->json(
-                ['error' => 'Unable to process subscription. Please try again.'],
-                500
-            );
+            Log::error('Subscription creation failed', [
+                'error' => $e->getMessage(),
+                'band_id' => $request->band_id
+            ]);
+
+            return response()->json([
+                'message' => 'Unable to process subscription. Please try again.'
+            ], 500);
         }
     }
 
@@ -138,7 +143,7 @@ class SubscriptionController extends Controller
                 $request->getContent(),
                 $request->header('Stripe-Signature')
             );
-            
+
             return response()->json(['status' => 'success', 'result' => $result]);
         } catch (\Exception $e) {
             Log::error('Webhook error', [
@@ -148,4 +153,49 @@ class SubscriptionController extends Controller
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
-} 
+
+    public function index()
+    {
+        $user = auth()->user();
+
+        // Get all bands for the user with their subscription info
+        $subscriptions = $user->bands()
+            ->get()
+            ->map(function ($band) {
+                return [
+                    'id' => $band->id,
+                    'band' => [
+                        'id' => $band->id,
+                        'name' => $band->name,
+                    ],
+                    'status' => $band->trial_ends_at
+                        ? (Carbon::now()->lt($band->trial_ends_at) ? 'trialing' : 'expired')
+                        : ($band->is_subscribed ? 'active' : 'no subscription'),
+                    'price' => $band->is_subscribed ? 10.00 : 0, // Assuming $10/month subscription
+                ];
+            });
+
+        // Calculate total monthly fee
+        $totalMonthlyFee = $subscriptions
+            ->where('status', 'active')
+            ->sum('price');
+
+        return Inertia::render('Subscriptions/Index', [
+            'subscriptions' => $subscriptions,
+            'totalMonthlyFee' => $totalMonthlyFee,
+        ]);
+    }
+
+    public function cancel($id)
+    {
+        $band = Band::findOrFail($id);
+
+        // Ensure user has permission to cancel this subscription
+        $this->authorize('update', $band);
+
+        // Cancel the subscription using the subscription manager
+        $this->subscriptionManager->cancelSubscription($band);
+
+        return redirect()->back()->with('success', 'Subscription cancelled successfully');
+    }
+}

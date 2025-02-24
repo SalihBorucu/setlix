@@ -84,10 +84,6 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::get('/subscription/expired', 'expired')->name('subscription.expired');
         Route::post('/subscription/process', 'process')->name('subscription.process');
     });
-
-    // Consolidated subscription checkout route
-    Route::get('/bands/{band}/subscribe', [SubscriptionController::class, 'checkout'])
-        ->name('bands.subscribe');
 });
 
 Route::middleware([
@@ -104,11 +100,19 @@ Route::middleware([
 Route::get('/invitations/{token}', [BandMemberController::class, 'acceptInvitation'])->name('invitations.accept');
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('subscription/create', [SubscriptionController::class, 'createSubscription'])
+    // Subscription routes
+    Route::get('bands/{band}/subscribe', [SubscriptionController::class, 'checkout'])
+        ->name('bands.subscribe');
+    Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])
         ->name('subscription.create');
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])
+        ->name('subscriptions.index');
+    Route::delete('/subscriptions/{subscription}', [SubscriptionController::class, 'cancel'])
+        ->name('subscriptions.cancel');
 });
 
 Route::post('stripe/webhook', [SubscriptionController::class, 'handleWebhook'])
-    ->name('stripe.webhook');
+    ->name('stripe.webhook')
+    ->middleware(['stripe-webhook']);
 
 require __DIR__.'/auth.php';

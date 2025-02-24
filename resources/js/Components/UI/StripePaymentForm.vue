@@ -114,34 +114,48 @@ const handleSubmit = async () => {
   cardError.value = null;
 
   try {
-    // Create subscription
+    // Create subscription and get client secret
     const { data } = await axios.post(route('subscription.create'), {
       band_id: props.bandId,
       card_name: cardName.value
     });
 
+    // Check if we have a client secret in the response
+    if (!data.clientSecret) {
+      throw new Error('Invalid response from server');
+    }
+
     // Confirm the payment with Stripe
-    const { error, paymentIntent } = await stripe.value.confirmCardPayment(data.clientSecret, {
-      payment_method: {
-        card: elements.value.getElement('card'),
-        billing_details: {
-          name: cardName.value,
-        },
+    const { error, paymentIntent } = await stripe.value.confirmCardPayment(
+      data.clientSecret,
+      {
+        payment_method: {
+          card: elements.value.getElement('card'),
+          billing_details: {
+            name: cardName.value,
+          },
+        }
       }
-    });
+    );
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // Process the successful payment using Inertia's router
-    router.post(route('bands.subscribe', props.bandId), {
+    // Use Inertia for the final redirect
+    router.post(route('subscription.process', { band: props.bandId }), {
       band_id: props.bandId,
       payment_intent: paymentIntent.id
     });
 
+    // Emit success
+    emit('success', {
+      cardName: cardName.value,
+      paymentIntent: paymentIntent.id
+    });
+
   } catch (e) {
-    const errorMessage = e.message || 'An error occurred while processing your payment. Please try again.';
+    const errorMessage = e.response?.data?.message || e.message || 'An error occurred while processing your payment.';
     emit('error', errorMessage);
     cardError.value = errorMessage;
   } finally {

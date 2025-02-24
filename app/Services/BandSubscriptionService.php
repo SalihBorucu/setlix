@@ -19,23 +19,37 @@ class BandSubscriptionService
 
     public function getStatus(Band $band): array
     {
-        $createdAt = Carbon::parse($band->created_at);
-        $trialEndsAt = $createdAt->copy()->addDays(self::TRIAL_DAYS);
-        $readOnlyEndsAt = $trialEndsAt->copy()->addDays(self::READ_ONLY_DAYS);
-        $deletionDate = $readOnlyEndsAt->copy()->addDays(self::DELETION_DAYS);
-        
-        $now = now();
-        
-        return [
-            'isInTrial' => $now->lt($trialEndsAt),
-            'isReadOnly' => $now->gte($trialEndsAt) && $now->lt($readOnlyEndsAt),
-            'isSoftDeleted' => $now->gte($readOnlyEndsAt) && $now->lt($deletionDate),
-            'trialDaysLeft' => $now->lt($trialEndsAt) ? (int) $now->diffInDays($trialEndsAt) : 0,
-            'readOnlyDaysLeft' => $now->gte($trialEndsAt) && $now->lt($readOnlyEndsAt) 
-                ? (int) $now->diffInDays($readOnlyEndsAt) 
-                : 0,
-            'willBeDeletedAt' => $deletionDate,
-        ];
+        if (!$band) {
+            throw new \InvalidArgumentException('Band not found');
+        }
+
+        try {
+            $createdAt = Carbon::parse($band->created_at);
+            $trialEndsAt = $createdAt->copy()->addDays(self::TRIAL_DAYS);
+            $readOnlyEndsAt = $trialEndsAt->copy()->addDays(self::READ_ONLY_DAYS);
+            $deletionDate = $readOnlyEndsAt->copy()->addDays(self::DELETION_DAYS);
+            
+            $now = now();
+            
+            return [
+                'isInTrial' => $now->lt($trialEndsAt),
+                'isReadOnly' => $now->gte($trialEndsAt) && $now->lt($readOnlyEndsAt),
+                'isSoftDeleted' => $now->gte($readOnlyEndsAt) && $now->lt($deletionDate),
+                'trialDaysLeft' => $now->lt($trialEndsAt) ? (int) $now->diffInDays($trialEndsAt) : 0,
+                'readOnlyDaysLeft' => $now->gte($trialEndsAt) && $now->lt($readOnlyEndsAt) 
+                    ? (int) $now->diffInDays($readOnlyEndsAt) 
+                    : 0,
+                'willBeDeletedAt' => $deletionDate,
+                'isSubscribed' => $band->is_subscribed,
+                'hasPaymentMethod' => $band->hasPaymentMethod(),
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error getting band subscription status', [
+                'band_id' => $band->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function checkTrialLimits(Band $band): array
