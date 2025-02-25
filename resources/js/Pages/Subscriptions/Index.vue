@@ -2,6 +2,8 @@
 import { Head, Link } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton } from '@/Components/UI'
+import ConfirmModal from '@/Components/UI/ConfirmModal.vue'
+import { ref } from 'vue'
 
 // Props received from the controller
 defineProps({
@@ -14,6 +16,34 @@ defineProps({
         required: true
     }
 })
+
+// Add state for cancellation modal
+const showCancelModal = ref(false)
+const subscriptionToCancel = ref(null)
+
+// Handle cancel button click
+const handleCancelClick = (subscription) => {
+    subscriptionToCancel.value = subscription
+    showCancelModal.value = true
+}
+
+// Handle confirmation of cancellation
+const handleConfirmCancel = () => {
+    if (subscriptionToCancel.value) {
+        window.Inertia.delete(route('subscriptions.cancel', subscriptionToCancel.value.id))
+    }
+}
+
+// Format date to human readable format
+const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(date)
+}
 </script>
 
 <template>
@@ -53,6 +83,11 @@ defineProps({
                             <p class="text-sm text-neutral-500" v-if="subscription.status === 'active'">
                                 £{{ subscription.price }}/month
                             </p>
+                            <!-- Show subscription end date for cancelled subscriptions -->
+                            <p v-if="subscription.status === 'cancelled' && subscription.subscription_ends_at" 
+                               class="text-sm text-neutral-500 mt-1">
+                                Access until: <span class="font-medium">{{ formatDate(subscription.subscription_ends_at) }}</span>
+                            </p>
                         </div>
                         
                         <div class="flex gap-3">
@@ -80,9 +115,9 @@ defineProps({
                             <DSButton
                                 v-if="subscription.status === 'active'"
                                 variant="danger"
-                                @click="$inertia.delete(route('subscriptions.cancel', subscription.id))"
+                                @click="handleCancelClick(subscription)"
                             >
-                                Cancel Subscription
+                                Cancel
                             </DSButton>
 
                             <!-- Trial badge -->
@@ -97,5 +132,16 @@ defineProps({
                 </li>
             </ul>
         </div>
+
+        <!-- Cancellation Confirmation Modal -->
+        <ConfirmModal
+            v-model="showCancelModal"
+            title="Cancel Subscription"
+            description="Are you sure you want to cancel this subscription? Your band will continue to have access until the end of the current billing period. After that, you'll lose access to premium features unless you resubscribe."
+            confirm-text="Yes, Cancel Subscription"
+            cancel-text="No, Keep Subscription"
+            confirm-variant="danger"
+            @confirm="handleConfirmCancel"
+        />
     </AuthenticatedLayout>
 </template> 

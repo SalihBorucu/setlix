@@ -86,4 +86,40 @@ class SubscriptionManager
             'subscription_id' => $subscription->id
         ]);
     }
+
+    /**
+     * Cancel a band's subscription
+     * 
+     * @param Band $band The band whose subscription to cancel
+     * @throws \Exception If cancellation fails
+     */
+    public function cancelSubscription(Band $band): void
+    {
+        try {
+            // Use database transaction to ensure consistency
+            \DB::transaction(function () use ($band) {
+                // Cancel subscription in Stripe
+                $result = app(StripeService::class)->cancelSubscription($band);
+
+                // Update band subscription status
+                $band->update([
+                    'subscription_status' => 'cancelled',
+                    'subscription_ends_at' => $result['cancellation_effective_date']
+                ]);
+
+                // Log successful cancellation
+                \Log::info('Band subscription cancelled successfully', [
+                    'band_id' => $band->id,
+                    'subscription_id' => $band->stripe_subscription_id,
+                    'end_date' => $result['cancellation_effective_date']
+                ]);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to cancel subscription', [
+                'error' => $e->getMessage(),
+                'band_id' => $band->id
+            ]);
+            throw new \Exception('Failed to cancel subscription: ' . $e->getMessage());
+        }
+    }
 } 

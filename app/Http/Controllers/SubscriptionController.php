@@ -180,6 +180,7 @@ class SubscriptionController extends Controller
                     ],
                     'status' => $status,
                     'price' => $status === 'active' ? 10.00 : 0, // $10/month for active subscriptions
+                    'subscription_ends_at' => $band->subscription_ends_at ? Carbon::parse($band->subscription_ends_at)->toDateTimeString() : null
                 ];
             });
 
@@ -194,16 +195,39 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    public function cancel($id)
+    /**
+     * Cancel a band's subscription
+     *
+     * @param string|int $id The band ID
+     * @return RedirectResponse
+     */
+    public function cancel($id): RedirectResponse
     {
-        $band = Band::findOrFail($id);
+        try {
+            $band = Band::findOrFail($id);
 
-        // Ensure user has permission to cancel this subscription
-        $this->authorize('update', $band);
+            // Ensure user has permission to cancel this subscription
+            if (!$band->isAdmin(auth()->user())) {
+                return redirect()->back()->with('error', 'You do not have permission to cancel this subscription.');
+            }
 
-        // Cancel the subscription using the subscription manager
-        $this->subscriptionManager->cancelSubscription($band);
+            // Check if subscription is active
+            if ($band->subscription_status !== 'active') {
+                return redirect()->back()->with('error', 'This subscription cannot be cancelled.');
+            }
 
-        return redirect()->back()->with('success', 'Subscription cancelled successfully');
+            // Cancel the subscription using the subscription manager
+            $this->subscriptionManager->cancelSubscription($band);
+
+            return redirect()->back()->with('success', 'Your subscription has been cancelled. You will have access until the end of your current billing period.');
+
+        } catch (\Exception $e) {
+            Log::error('Subscription cancellation failed', [
+                'error' => $e->getMessage(),
+                'band_id' => $id
+            ]);
+
+            return redirect()->back()->with('error', 'Unable to cancel subscription. Please try again or contact support.');
+        }
     }
 }

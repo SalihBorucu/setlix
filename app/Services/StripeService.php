@@ -7,6 +7,7 @@ use App\Models\User;
 use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\Exception\ApiErrorException;
+use Carbon\Carbon;
 
 class StripeService
 {
@@ -116,5 +117,49 @@ class StripeService
         $user->update(['stripe_customer_id' => $customer->id]);
 
         return $customer;
+    }
+
+    /**
+     * Cancel a band's subscription in Stripe
+     *
+     * @param Band $band The band whose subscription to cancel
+     * @return array Information about the cancelled subscription
+     * @throws \Exception If subscription cancellation fails
+     */
+    public function cancelSubscription(Band $band): array
+    {
+        try {
+            if (!$band->stripe_subscription_id) {
+                throw new \Exception('No active subscription found for this band');
+            }
+
+            // Retrieve the subscription from Stripe
+            $subscription = \Stripe\Subscription::retrieve($band->stripe_subscription_id);
+
+            // Cancel the subscription at period end
+            $cancelledSubscription = $subscription->cancel();
+
+            // Log the cancellation
+            \Log::info('Subscription cancelled successfully', [
+                'band_id' => $band->id,
+                'subscription_id' => $band->stripe_subscription_id,
+                'cancellation_date' => now(),
+                'end_date' => Carbon::createFromTimestamp($cancelledSubscription->current_period_end)
+            ]);
+
+            return [
+                'status' => 'cancelled',
+                'subscription_id' => $cancelledSubscription->id,
+                'cancellation_effective_date' => Carbon::createFromTimestamp($cancelledSubscription->current_period_end)
+            ];
+
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            \Log::error('Stripe API error during subscription cancellation', [
+                'error' => $e->getMessage(),
+                'band_id' => $band->id,
+                'subscription_id' => $band->stripe_subscription_id ?? 'not set'
+            ]);
+            throw new \Exception('Failed to cancel subscription: ' . $e->getMessage());
+        }
     }
 } 
