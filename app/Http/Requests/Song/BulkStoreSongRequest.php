@@ -18,13 +18,19 @@ class BulkStoreSongRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        // Get current song count and check trial status
+        $band = Band::findOrFail($this->route('band')->id);
+        $currentSongCount = $band->songs()->count();
+        $isSubscribed = $this->user()->trial?->isSubscribed ?? false;
+        
+        // If on trial, limit total songs to 10
+        $maxNewSongs = $isSubscribed ? 200 : (10 - $currentSongCount);
+        
         return [
-            'songs' => ['required', 'array', 'min:1', 'max:200'],
+            'songs' => ['required', 'array', 'min:1', "max:{$maxNewSongs}"],
             'songs.*.name' => ['required', 'string', 'max:255'],
             'songs.*.duration_seconds' => ['required', 'integer', 'min:1', 'max:7200'], // max 2 hours
             'songs.*.url' => ['nullable', 'url', 'max:2048'],
@@ -34,14 +40,16 @@ class BulkStoreSongRequest extends FormRequest
 
     /**
      * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
      */
     public function messages(): array
     {
+        $isSubscribed = $this->user()->trial?->isSubscribed ?? false;
+        
         return [
             'songs.required' => 'At least one song is required.',
-            'songs.max' => 'You can only add up to 30 songs at once.',
+            'songs.max' => $isSubscribed 
+                ? 'You can only add up to 200 songs at once.'
+                : 'Free trial allows maximum 10 songs total. Please subscribe to add more songs.',
             'songs.*.name.required' => 'Each song must have a name.',
             'songs.*.name.max' => 'Song names cannot be longer than 255 characters.',
             'songs.*.duration_seconds.required' => 'Each song must have a duration.',

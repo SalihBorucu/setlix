@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Band\AcceptBandInvitationRequest;
 
 class BandMemberController extends Controller
 {
@@ -133,64 +134,15 @@ class BandMemberController extends Controller
         return back()->with('success', 'Invitation cancelled successfully.');
     }
 
-    public function acceptInvitation(Request $request, $token)
+    public function acceptInvitation(AcceptBandInvitationRequest $request, string $token)
     {
-        $invitation = BandInvitation::where('token', $token)
-            ->whereNull('accepted_at')
-            ->where('expires_at', '>', now())
-            ->firstOrFail();
+        $result = $request->process($token);
 
-        $user = User::where('email', $invitation->email)->first();
-
-        if (!auth()->check() && $user) {
-            Auth::login($user);
-
-            if ($invitation->band->members()->where('user_id', $user->id)->exists()) {
-                return redirect()->route('bands.show', $invitation->band)
-                    ->with('error', "You have already joined the $invitation->band.");
-            }
-
-            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
-            $invitation->update(['accepted_at' => now()]);
-
-            return redirect()->route('bands.show', $invitation->band)
-                ->with('success', "You have successfully joined the $invitation->band.");
+        if ($result['redirect'] === 'back') {
+            return back()->withErrors(['error' => $result['message']]);
         }
 
-        if (!auth()->check()) {
-            // Create a new user with a temporary password
-            $tempPassword = Str::random(16);
-            $user = User::create([
-                'name' => explode('@', $invitation->email)[0], // Use email prefix as temporary name
-                'email' => $invitation->email,
-                'password' => Hash::make($tempPassword),
-                'password_set' => false, // Set this to false for new users
-            ]);
-            // Log the user in
-            Auth::login($user);
-
-            // Add them to the band
-            $invitation->band->members()->attach($user->id, ['role' => $invitation->role]);
-            $invitation->update(['accepted_at' => now()]);
-
-            // Redirect to complete profile setup
-            return redirect()->route('profile.complete')
-                ->with('success', 'Welcome to ' . $invitation->band->name . '! Please complete your profile setup.');
-        }
-
-        if (auth()->user()->email !== $invitation->email) {
-            return back()->withErrors(['error' => 'This invitation was sent to a different email address.']);
-        }
-
-        if ($invitation->band->members()->where('user_id', $user->id)->exists()) {
-            return redirect()->route('bands.show', $invitation->band)
-                ->with('error', "You have already joined the $invitation->band.");
-        }
-
-        $invitation->band->members()->attach(auth()->id(), ['role' => $invitation->role]);
-        $invitation->update(['accepted_at' => now()]);
-
-        return redirect()->route('bands.show', $invitation->band)
-            ->with('success', 'You have successfully joined the band.');
+        return redirect($result['redirect'])
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 }

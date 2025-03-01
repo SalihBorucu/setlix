@@ -1,8 +1,10 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
+import { DSButton, DSCard, DSAlertModal, DSTooltip } from '@/Components/UI'
 import { ref } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
     band: {
@@ -17,6 +19,15 @@ const props = defineProps({
         type: Boolean,
         required: true
     }
+})
+
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+
+// Trial limit check
+const canAddSetlists = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return props.setlists.length < 3
 })
 
 const deleteModal = ref(null)
@@ -79,14 +90,27 @@ const formatDuration = (seconds) => {
                             Back to Band
                         </DSButton>
                     </Link>
-                    <Link v-if="isAdmin" :href="route('setlists.create', band.id)">
-                        <DSButton variant="primary" class="w-full sm:w-auto">
-                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Create New Setlist
-                        </DSButton>
-                    </Link>
+                    <template v-if="isAdmin">
+                        <DSTooltip v-if="!canAddSetlists">
+                            <DSButton variant="primary" class="w-full sm:w-auto" disabled>
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create New Setlist
+                            </DSButton>
+                            <template #content>
+                                Free trial allows maximum 3 setlists. Please subscribe to add more.
+                            </template>
+                        </DSTooltip>
+                        <Link v-else :href="route('setlists.create', band.id)">
+                            <DSButton variant="primary" class="w-full sm:w-auto">
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create New Setlist
+                            </DSButton>
+                        </Link>
+                    </template>
                 </div>
             </div>
         </template>
@@ -100,11 +124,21 @@ const formatDuration = (seconds) => {
                     <h3 class="mt-2 text-sm font-medium text-neutral-900">No setlists</h3>
                     <p class="mt-1 text-sm text-neutral-500">Get started by creating your first setlist.</p>
                     <div class="mt-6">
-                        <Link v-if="isAdmin" :href="route('setlists.create', band.id)">
-                            <DSButton variant="primary">
-                                Create Your First Setlist
-                            </DSButton>
-                        </Link>
+                        <template v-if="isAdmin">
+                            <DSTooltip v-if="!canAddSetlists">
+                                <DSButton variant="primary" disabled>
+                                    Create Your First Setlist
+                                </DSButton>
+                                <template #content>
+                                    Free trial allows maximum 3 setlists. Please subscribe to add more.
+                                </template>
+                            </DSTooltip>
+                            <Link v-else :href="route('setlists.create', band.id)">
+                                <DSButton variant="primary">
+                                    Create Your First Setlist
+                                </DSButton>
+                            </Link>
+                        </template>
                     </div>
                 </div>
                 <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

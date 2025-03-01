@@ -9,12 +9,19 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\ImageService;
+use App\Services\TrialService;
+use Illuminate\Http\Request;
 
 class BandController extends Controller
 {
+    protected $trialService;
+
     public function __construct(
-        private ImageService $imageService
-    ) {}
+        private ImageService $imageService,
+        TrialService $trialService
+    ) {
+        $this->trialService = $trialService;
+    }
 
     /**
      * Show the form for creating a new band.
@@ -29,6 +36,16 @@ class BandController extends Controller
      */
     public function store(StoreBandRequest $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // Check if user can create more bands
+        if ($user->is_trial && $user->bands()->count() >= 1) {
+            return back()->with('error', 'Free trial allows only one band. Please subscribe to create more.');
+        }
+
+        // Start trial on first band creation
+        $this->trialService->startTrial($user);
+
         $validated = $request->validated();
         
         // Create band with basic info
@@ -46,7 +63,7 @@ class BandController extends Controller
         // Attach the creator as an admin
         $band->members()->attach($request->user(), ['role' => 'admin']);
         
-        return redirect()->route('bands.show', $band)
+        return redirect()->route('dashboard', $band)
             ->with('success', 'Band created successfully.');
     }
 
@@ -173,5 +190,17 @@ class BandController extends Controller
         
         return redirect()->route('dashboard')
             ->with('success', 'You have left the band successfully.');
+    }
+
+    public function addMember(Request $request, Band $band)
+    {
+        $user = $request->user();
+
+        // Check member limit for trial
+        if ($user->is_trial && $band->members()->count() >= 3) {
+            return back()->with('error', 'Free trial allows maximum 3 members. Please subscribe to add more.');
+        }
+
+        // ... rest of add member logic
     }
 }

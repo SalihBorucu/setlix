@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, Link } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI'
 import ImageUpload from '@/Components/UI/ImageUpload.vue'
@@ -37,8 +37,8 @@ const submit = () => {
         <DSCard class="max-w-2xl">
             <form @submit.prevent="submit" class="space-y-6 p-6">
                 <!-- Error Message -->
-                <DSAlert 
-                    v-if="Object.keys(form.errors).length > 0" 
+                <DSAlert
+                    v-if="Object.keys(form.errors).length > 0"
                     type="error"
                 >
                     <ul class="list-disc list-inside">
@@ -94,13 +94,14 @@ const submit = () => {
 
                 <!-- Submit Button -->
                 <div class="flex items-center justify-end space-x-4">
-                    <DSButton
-                        type="button"
-                        variant="outline"
-                        :href="route('dashboard')"
-                    >
-                        Cancel
-                    </DSButton>
+                    <Link :href="route('dashboard')">
+                        <DSButton
+                            type="button"
+                            variant="outline"
+                        >
+                            Cancel
+                        </DSButton>
+                    </Link>
                     <DSButton
                         type="submit"
                         variant="primary"
@@ -113,4 +114,4 @@ const submit = () => {
             </form>
         </DSCard>
     </AuthenticatedLayout>
-</template> 
+</template>

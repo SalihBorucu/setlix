@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { DSButton, DSAlert } from '@/Components/UI';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 const props = defineProps({
     status: {
@@ -22,40 +22,60 @@ const verificationLinkSent = computed(
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Email Verification" />
+    <Head title="Verify Email" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Thanks for signing up! Before getting started, could you verify your
-            email address by clicking on the link we just emailed to you? If you
-            didn't receive the email, we will gladly send you another.
-        </div>
-
-        <div
-            class="mb-4 text-sm font-medium text-green-600"
-            v-if="verificationLinkSent"
-        >
-            A new verification link has been sent to the email address you
-            provided during registration.
-        </div>
-
-        <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Resend Verification Email
-                </PrimaryButton>
-
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >Log Out</Link
-                >
+    <main class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Logo and Header -->
+            <div class="text-center">
+                <ApplicationLogo />
+                <h2 class="mt-6 text-3xl font-display font-bold text-neutral-900">
+                    Verify your email
+                </h2>
+                <p class="mt-2 text-sm text-neutral-600">
+                    Thanks for signing up! Please verify your email address to continue.
+                </p>
             </div>
-        </form>
-    </GuestLayout>
+
+            <!-- Verification Notice -->
+            <div class="space-y-6">
+                <!-- Success Message -->
+                <DSAlert
+                    v-if="verificationLinkSent"
+                    type="success"
+                >
+                    A new verification link has been sent to your email address.
+                </DSAlert>
+
+                <p class="text-sm text-neutral-600">
+                    Before getting started, please verify your email address by clicking on the link we just emailed to you. 
+                    If you didn't receive the email, we will gladly send you another one.
+                </p>
+
+                <form @submit.prevent="submit" class="space-y-6">
+                    <DSButton
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        class="w-full"
+                        :disabled="form.processing"
+                    >
+                        <span v-if="form.processing">Sending...</span>
+                        <span v-else>Resend Verification Email</span>
+                    </DSButton>
+
+                    <div class="text-center">
+                        <Link
+                            :href="route('logout')"
+                            method="post"
+                            as="button"
+                            class="text-sm font-medium text-neutral-600 hover:text-neutral-900"
+                        >
+                            Log Out
+                        </Link>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
 </template>

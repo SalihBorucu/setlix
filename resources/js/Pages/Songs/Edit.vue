@@ -2,9 +2,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {Head, Link, router, useForm} from '@inertiajs/vue3';
 import { ref } from 'vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import {DSInput, DSButton, DSCard, DSAlert, DSAlertModal, DSDurationInput} from "@/Components/UI";
 
 // Move helper functions before they're used
@@ -82,12 +79,12 @@ const deleteFile = () => {
 
 const submit = () => {
     const formData = new FormData();
-    
+
     formData.append('_method', 'PATCH');
     formData.append('band_id', form.band_id.toString());
     formData.append('name', form.name);
     formData.append('duration_seconds', form.duration_seconds.toString());
-    
+
     if (form.artist) formData.append('artist', form.artist);
     if (form.duration) formData.append('duration', form.duration);
     if (form.notes) formData.append('notes', form.notes);

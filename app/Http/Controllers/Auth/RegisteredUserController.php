@@ -20,8 +20,8 @@ class RegisteredUserController extends Controller
      */
     public function create()
     {
-        return redirect('/login');
-//        return Inertia::render('Auth/Register');
+//        return redirect('/login');
+        return Inertia::render('Auth/Register');
     }
 
     /**
@@ -41,12 +41,15 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_trial' => true,
+            'trial_started_at' => now(),
+            'trial_ends_at' => now()->addDays(14),
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('verification.notice', absolute: false));
     }
 }

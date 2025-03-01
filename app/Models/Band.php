@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Band extends Model
 {
@@ -112,5 +113,65 @@ class Band extends Model
         return $this->cover_image_small_path
             ? Storage::disk('public')->url($this->cover_image_small_path)
             : null;
+    }
+
+    /**
+     * Get the active subscription for the band
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(BandSubscription::class)
+            ->whereNull('ends_at')
+            ->where('stripe_status', 'active');
+    }
+
+    /**
+     * Get all subscriptions for the band
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(BandSubscription::class);
+    }
+
+    /**
+     * Check if band is in trial period
+     */
+    public function isInTrial(): bool
+    {
+        $subscription = $this->subscription;
+        return $subscription ? $subscription->onTrial() : false;
+    }
+
+    /**
+     * Check if band has active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        $subscription = $this->subscription;
+        return $subscription ? $subscription->isActive() : false;
+    }
+
+    /**
+     * Check if band is in read-only mode
+     */
+    public function isReadOnly(): bool
+    {
+        return !$this->hasActiveSubscription() && !$this->isInTrial();
+    }
+
+    /**
+     * Check if band can perform write operations
+     */
+    public function canPerformWriteOperations(): bool
+    {
+        return $this->hasActiveSubscription() || $this->isInTrial();
+    }
+
+    /**
+     * Check if band requires subscription
+     */
+    public function requiresSubscription(): bool
+    {
+        return !$this->hasActiveSubscription() && (!$this->trial_ends_at || now()->gt($this->trial_ends_at));
     }
 }

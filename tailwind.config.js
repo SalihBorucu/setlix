@@ -28,16 +28,16 @@ export default {
                 },
                 // Secondary colors for accents
                 secondary: {
-                    50: '#f5f3ff',
-                    100: '#ede9fe',
-                    200: '#ddd6fe',
-                    300: '#c4b5fd',
-                    400: '#a78bfa',
-                    500: '#8b5cf6',  // Secondary accent
-                    600: '#7c3aed',
-                    700: '#6d28d9',
-                    800: '#5b21b6',
-                    900: '#4c1d95',
+                    50: '#f4f6f7',   // Lightest
+                    100: '#e2e7e9',
+                    200: '#c5cfd3',
+                    300: '#a7b5bb',
+                    400: '#718791',
+                    500: '#102731',  // Your specified color
+                    600: '#0e232c',
+                    700: '#0b1d24',
+                    800: '#09171d',
+                    900: '#071318',  // Darkest
                 },
                 // Neutral colors for text and backgrounds
                 neutral: {

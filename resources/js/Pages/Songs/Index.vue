@@ -1,8 +1,10 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSCard } from '@/Components/UI'
+import { DSButton, DSCard, DSTooltip, DSAlertModal } from '@/Components/UI'
 import visitExternalLink from '@/Utilities/visitExternalLink'
+import { usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
     band: {
@@ -19,10 +21,28 @@ const props = defineProps({
     }
 })
 
-const deleteSong = (songId) => {
-    if (confirm('Are you sure you want to delete this song? This action cannot be undone.')) {
-        router.delete(route('songs.destroy', [props.band.id, songId]))
-    }
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+
+// Trial limit check
+const canAddSongs = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return props.songs.length < 10
+})
+
+// Add reference to modal
+const deleteModal = ref(null)
+const songToDelete = ref(null)
+
+// Update delete handler to use modal
+const deleteSong = (song) => {
+    songToDelete.value = song
+    deleteModal.value.open()
+}
+
+// Add confirm delete handler
+const confirmDelete = () => {
+    router.delete(route('songs.destroy', [props.band.id, songToDelete.value.id]))
 }
 
 const handleDownload = (file, song) => {
@@ -69,7 +89,18 @@ const handleDownload = (file, song) => {
                         </DSButton>
                     </Link>
                     <template v-if="isAdmin">
-                        <Link :href="route('songs.create', band.id)">
+                        <DSTooltip v-if="!canAddSongs">
+                            <DSButton variant="primary" class="w-full sm:w-auto" disabled>
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add New Song
+                            </DSButton>
+                            <template #content>
+                                Free trial allows maximum 10 songs. Please subscribe to add more.
+                            </template>
+                        </DSTooltip>
+                        <Link v-else :href="route('songs.create', band.id)">
                             <DSButton variant="primary" class="w-full sm:w-auto">
                                 <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -77,7 +108,18 @@ const handleDownload = (file, song) => {
                                 Add New Song
                             </DSButton>
                         </Link>
-                        <Link :href="route('songs.bulk-create', band.id)">
+                        <DSTooltip v-if="!canAddSongs">
+                            <DSButton variant="primary" class="w-full sm:w-auto" disabled>
+                                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Add Multiple Songs
+                            </DSButton>
+                            <template #content>
+                                Free trial allows maximum 10 songs. Please subscribe to add more.
+                            </template>
+                        </DSTooltip>
+                        <Link v-else :href="route('songs.bulk-create', band.id)">
                             <DSButton variant="primary" class="w-full sm:w-auto">
                                 <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -99,11 +141,21 @@ const handleDownload = (file, song) => {
                     <h3 class="mt-2 text-sm font-medium text-neutral-900">No songs</h3>
                     <p class="mt-1 text-sm text-neutral-500">Get started by creating your first song.</p>
                     <div class="mt-6">
-                        <Link v-if="isAdmin" :href="route('songs.create', band.id)">
-                            <DSButton variant="primary">
-                                Add Your First Song
-                            </DSButton>
-                        </Link>
+                        <template v-if="isAdmin">
+                            <DSTooltip v-if="!canAddSongs">
+                                <DSButton variant="primary" disabled>
+                                    Add Your First Song
+                                </DSButton>
+                                <template #content>
+                                    Free trial allows maximum 10 songs. Please subscribe to add more.
+                                </template>
+                            </DSTooltip>
+                            <Link v-else :href="route('songs.create', band.id)">
+                                <DSButton variant="primary">
+                                    Add Your First Song
+                                </DSButton>
+                            </Link>
+                        </template>
                     </div>
                 </div>
                 <div v-else>
@@ -193,7 +245,7 @@ const handleDownload = (file, song) => {
                                             </Link>
                                             <button
                                                 v-if="isAdmin"
-                                                @click="deleteSong(song.id)"
+                                                @click="deleteSong(song)"
                                                 class="text-danger-400 hover:text-danger-500"
                                             >
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,4 +262,15 @@ const handleDownload = (file, song) => {
             </div>
         </DSCard>
     </AuthenticatedLayout>
+
+    <!-- Add modal component at the end of the template -->
+    <DSAlertModal
+        ref="deleteModal"
+        title="Delete Song"
+        message="Are you sure you want to delete this song? This action cannot be undone."
+        type="error"
+        confirm-text="Delete"
+        :show-cancel="true"
+        @confirm="confirmDelete"
+    />
 </template> 
