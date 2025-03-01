@@ -74,8 +74,8 @@ const handleFileDownload = (file, song) => {
                         :key="item.id"
                         :class="[
                             'rounded-lg border p-1',
-                            item.type === 'break' 
-                                ? 'border-neutral-600 bg-neutral-700/50' 
+                            item.type === 'break'
+                                ? 'border-neutral-600 bg-neutral-700/50'
                                 : 'border-neutral-700 bg-neutral-800/50'
                         ]"
                     >
@@ -83,13 +83,13 @@ const handleFileDownload = (file, song) => {
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2">
                                     <!-- Break Badge -->
-                                    <div v-if="item.type === 'break'" 
+                                    <div v-if="item.type === 'break'"
                                         class="flex items-center px-2 py-1 rounded-md bg-neutral-600 text-neutral-200"
                                     >
-                                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        <span class="text-xs font-medium">BREAK</span>
+<!--                                        <span class="text-xs font-medium">*</span>-->
                                     </div>
 
                                     <span class="text-base font-semibold text-white">
@@ -104,7 +104,7 @@ const handleFileDownload = (file, song) => {
                                 </span>
                             </div>
 
-                            <div v-if="item.notes" 
+                            <div v-if="item.notes"
                                 class="text-sm text-neutral-400 pl-4 -mt-1"
                             >
                                 {{ item.notes }}
@@ -112,7 +112,7 @@ const handleFileDownload = (file, song) => {
 
                             <!-- Song Actions -->
                             <div v-if="item.type === 'song'" class="flex flex-wrap gap-1.5">
-                                <Link 
+                                <Link
                                     v-if="item.song.url"
                                     :href="item.song.url"
                                     target="_blank"
@@ -143,4 +143,4 @@ const handleFileDownload = (file, song) => {
             </div>
         </DSCard>
     </div>
-</template> 
+</template>

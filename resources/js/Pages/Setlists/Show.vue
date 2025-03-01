@@ -215,13 +215,13 @@ const handleFileDownload = (file, song) => {
                                         </span>
 
                                         <!-- Break Badge -->
-                                        <div v-if="item.type === 'break'" 
+                                        <div v-if="item.type === 'break'"
                                             class="flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-700"
                                         >
-                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
-                                            <span class="text-xs font-medium">BREAK</span>
+<!--                                            <span class="text-xs font-medium">BREAK</span>-->
                                         </div>
 
                                         <!-- Item Title -->
