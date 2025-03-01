@@ -40,7 +40,8 @@ class BandSubscriptionService
                     ? (int) $now->diffInDays($readOnlyEndsAt) 
                     : 0,
                 'willBeDeletedAt' => $deletionDate,
-                'isSubscribed' => $band->is_subscribed,
+                'subscriptionStatus' => $band->subscription_status,
+                'isSubscribed' => !$band->is_trial,
                 'hasPaymentMethod' => $band->hasPaymentMethod(),
             ];
         } catch (\Exception $e) {

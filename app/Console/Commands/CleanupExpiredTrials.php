@@ -15,7 +15,7 @@ class CleanupExpiredTrials extends Command
         // Soft delete data for trials expired more than 7 days ago
         User::query()
             ->where('trial_ends_at', '<', now()->subDays(7))
-            ->where('is_subscribed', false)
+            ->where('is_trial', true)
             ->whereNull('soft_deleted_at')
             ->update(['soft_deleted_at' => now()]);
 

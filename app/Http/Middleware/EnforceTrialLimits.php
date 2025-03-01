@@ -19,7 +19,7 @@ class EnforceTrialLimits
     {
         $user = $request->user();
         
-        if (!$user || $user->is_subscribed) {
+        if (!$user || !$user->is_trial) {
             return $next($request);
         }
 

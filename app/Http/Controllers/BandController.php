@@ -39,7 +39,7 @@ class BandController extends Controller
         $user = $request->user();
 
         // Check if user can create more bands
-        if (!$user->is_subscribed && $user->bands()->count() >= 1) {
+        if ($user->is_trial && $user->bands()->count() >= 1) {
             return back()->with('error', 'Free trial allows only one band. Please subscribe to create more.');
         }
 
@@ -197,7 +197,7 @@ class BandController extends Controller
         $user = $request->user();
 
         // Check member limit for trial
-        if (!$user->is_subscribed && $band->members()->count() >= 3) {
+        if ($user->is_trial && $band->members()->count() >= 3) {
             return back()->with('error', 'Free trial allows maximum 3 members. Please subscribe to add more.');
         }
 

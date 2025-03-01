@@ -23,8 +23,8 @@ class CheckTrialStatus
             return $next($request);
         }
 
-        // Allow subscribed users to pass
-        if ($user->is_subscribed) {
+        // Skip check for subscribed users
+        if (!$user->is_trial) {
             return $next($request);
         }
 

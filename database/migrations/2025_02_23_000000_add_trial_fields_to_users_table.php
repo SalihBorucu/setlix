@@ -8,22 +8,22 @@ class AddTrialFieldsToUsersTable extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * @return void
      */
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('trial_ends_at')->nullable();
-            $table->timestamp('trial_started_at')->nullable();
-            $table->boolean('is_subscribed')->default(false);
-            $table->timestamp('soft_deleted_at')->nullable();
+            $table->timestamp('trial_ends_at')->after('remember_token')->nullable();
+            $table->timestamp('trial_started_at')->after('remember_token')->nullable();
+            $table->boolean('is_trial')->after('remember_token')->default(false);
+            $table->timestamp('soft_deleted_at')->after('remember_token')->nullable();
         });
     }
 
     /**
      * Reverse the migrations.
-     * 
+     *
      * @return void
      */
     public function down()
@@ -32,4 +32,4 @@ class AddTrialFieldsToUsersTable extends Migration
             $table->dropColumn(['trial_ends_at', 'trial_started_at', 'is_subscribed', 'soft_deleted_at']);
         });
     }
-} 
+}

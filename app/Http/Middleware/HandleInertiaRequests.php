@@ -33,7 +33,7 @@ class HandleInertiaRequests extends Middleware
         
         // Get the user's first band if they're in trial
         $trialBandId = null;
-        if ($user && !$user->is_subscribed) {
+        if ($user && $user->is_trial) {
             $firstBand = $user->bands()->first();
             $trialBandId = $firstBand ? $firstBand->id : null;
         }
@@ -54,7 +54,7 @@ class HandleInertiaRequests extends Middleware
                 'remainingDays' => $user->getRemainingTrialDays(),
                 'limitReached' => session('trial_limit_reached', false),
                 'limitMessage' => session('trial_limit_message', ''),
-                'isSubscribed' => $user->is_subscribed,
+                'isSubscribed' => !$user->is_trial,
                 'bandId' => $trialBandId,
             ] : null,
         ];

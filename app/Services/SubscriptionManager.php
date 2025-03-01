@@ -31,7 +31,7 @@ class SubscriptionManager
     public function processSubscription(Band $band, User $user, string $paymentIntentId): void
     {
         // Check for existing active subscription
-        if ($band->is_subscribed && $band->subscription_status === 'active') {
+        if (!$band->is_trial && $band->subscription_status === 'active') {
             throw new \Exception('Band already has an active subscription');
         }
 
@@ -68,14 +68,14 @@ class SubscriptionManager
                 'stripe_subscription_id' => $subscription->id,
                 'subscription_status' => 'active',
                 'subscription_ends_at' => null,
-                'is_subscribed' => true
+                'is_trial' => false
             ]);
 
             // Update user trial status and subscription
             $user->update([
                 'trial_started_at' => null,
                 'trial_ends_at' => null,
-                'is_subscribed' => true
+                'is_trial' => false
             ]);
         });
 

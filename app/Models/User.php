@@ -28,7 +28,7 @@ class User extends Authenticatable
         'stripe_customer_id',
         'trial_started_at',
         'trial_ends_at',
-        'is_subscribed',
+        'is_trial',
     ];
 
     /**
@@ -122,7 +122,7 @@ class User extends Authenticatable
 
     public function hasTrialExpired(): bool
     {
-        return $this->trial_ends_at && $this->trial_ends_at->isPast() && !$this->is_subscribed;
+        return $this->trial_ends_at && $this->trial_ends_at->isPast() && !$this->is_trial;
     }
 
     public function getRemainingTrialDays(): int
@@ -135,7 +135,7 @@ class User extends Authenticatable
 
     public function canCreateMoreBands(): bool
     {
-        if ($this->is_subscribed) {
+        if (!$this->is_trial) {
             return true;
         }
         return $this->bands()->count() < 1;

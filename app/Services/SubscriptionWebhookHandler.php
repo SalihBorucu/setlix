@@ -131,7 +131,7 @@ class SubscriptionWebhookHandler
             $user->update([
                 'trial_started_at' => null,
                 'trial_ends_at' => null,
-                'is_subscribed' => true
+                'is_trial' => false
             ]);
 
             ray('Subscription activated successfully');

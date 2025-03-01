@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'stripe_id')) {
-                $table->string('stripe_id')->nullable()->index();
+                $table->string('stripe_id')->nullable()->after('remember_token')->index();
             }
             if (!Schema::hasColumn('users', 'pm_type')) {
-                $table->string('pm_type')->nullable();
+                $table->string('pm_type')->nullable()->after('remember_token');
             }
             if (!Schema::hasColumn('users', 'pm_last_four')) {
-                $table->string('pm_last_four', 4)->nullable();
+                $table->string('pm_last_four', 4)->nullable()->after('remember_token');
             }
         });
     }
