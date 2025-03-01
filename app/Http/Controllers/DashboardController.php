@@ -27,7 +27,7 @@ class DashboardController extends Controller
                 : null;
 
             // Add disabled status if not in trial and subscription not active
-            $band->is_disabled = $band->subscription?->stripe_status !== 'active';
+            $band->is_disabled = !$user->is_trial && $band->subscription?->stripe_status !== 'active';
 
             return $band;
         });

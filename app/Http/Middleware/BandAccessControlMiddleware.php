@@ -25,6 +25,10 @@ class BandAccessControlMiddleware
             return $next($request);
         }
 
+        if ($request->user()->is_trial) {
+            return $next($request);
+        }
+
         // Skip checks for subscription-related routes to prevent redirect loops
         if ($this->isSubscriptionRoute($request)) {
             return $next($request);
