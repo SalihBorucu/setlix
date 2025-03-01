@@ -41,12 +41,57 @@
         </div>
 
         <!-- Right Column: Payment Form -->
-        <StripePaymentForm
-          :stripe-key="stripeKey"
-          :band-id="band.id"
-          @success="handlePaymentSuccess"
-          @error="handlePaymentError"
-        />
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Payment Information</h2>
+          
+          <form @submit.prevent="handleSubmit">
+            <!-- Card Holder Name -->
+            <div class="mb-4">
+              <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">
+                Card Holder Name
+              </label>
+              <input
+                id="cardName"
+                v-model="cardName"
+                type="text"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <!-- Stripe Card Element -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Card Details
+              </label>
+              <div 
+                ref="cardElement"
+                class="p-3 border rounded-md border-gray-300 bg-white"
+              ></div>
+              <div 
+                v-if="cardError" 
+                class="mt-1 text-sm text-red-600"
+              >{{ cardError }}</div>
+            </div>
+
+            <!-- Submit Button -->
+            <DSButton
+              type="submit"
+              variant="primary"
+              class="w-full justify-center"
+              :disabled="isLoading"
+            >
+              <span v-if="isLoading">Processing...</span>
+              <span v-else>Subscribe Now • £10/month</span>
+            </DSButton>
+          </form>
+
+          <!-- Security Notice -->
+          <div class="mt-4 flex items-center justify-center text-sm text-gray-500">
+            <LockClosedIcon class="h-4 w-4 mr-1" />
+            <span>Secure payment powered by Stripe</span>
+          </div>
+        </div>
       </div>
 
       <!-- Terms and Cancellation -->
@@ -58,11 +103,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { CheckCircleIcon } from '@heroicons/vue/24/solid';
-import StripePaymentForm from '@/Components/UI/StripePaymentForm.vue';
+import { CheckCircleIcon, LockClosedIcon } from '@heroicons/vue/24/solid';
+import { DSButton } from '@/Components/UI';
 import axios from 'axios';
 
 const props = defineProps({
@@ -78,10 +123,20 @@ const props = defineProps({
   stripeKey: {
     type: String,
     required: true
+  },
+  clientSecret: {
+    type: String,
+    required: true
   }
 });
 
 const error = ref(null);
+const cardError = ref(null);
+const cardName = ref('');
+const isLoading = ref(false);
+const stripe = ref(null);
+const cardElement = ref(null);
+const elements = ref(null);
 
 const features = [
   'Unlimited free band members',
@@ -94,30 +149,83 @@ const features = [
   'Priority email support'
 ];
 
-const handlePaymentSuccess = async (data) => {
-  error.value = null;
+onMounted(() => {
+  // Initialize Stripe
+  stripe.value = Stripe(props.stripeKey);
+  elements.value = stripe.value.elements();
   
-  try {
-    const response = await axios.post(route('subscription.create'), {
-      band_id: props.band.id,
-      card_name: data.cardName
-    });
-    
-    const { clientSecret, subscriptionId } = response.data;
-    
-    if (clientSecret && subscriptionId) {
-      // Handle the successful subscription creation
-      // You might want to redirect using Inertia after the payment is confirmed
-      router.visit(route('bands.show', props.band.id), {
-        preserveScroll: true
-      });
-    }
-  } catch (e) {
-    error.value = e.response?.data?.message || 'An error occurred during checkout. Please try again.';
-  }
-};
+  const card = elements.value.create('card', {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#374151',
+        '::placeholder': {
+          color: '#9CA3AF',
+        },
+      },
+    },
+  });
+  
+  card.mount(cardElement.value);
+  
+  card.on('change', (event) => {
+    cardError.value = event.error ? event.error.message : '';
+  });
+});
 
-const handlePaymentError = (message) => {
-  error.value = message;
+const handleSubmit = async () => {
+  if (isLoading.value) return;
+  
+  isLoading.value = true;
+  cardError.value = null;
+  error.value = null;
+
+  try {
+    // Create payment method
+    const { setupIntent, error: setupError } = await stripe.value.confirmCardSetup(
+      props.clientSecret,
+      {
+        payment_method: {
+          card: elements.value.getElement('card'),
+          billing_details: {
+            name: cardName.value,
+          },
+        }
+      }
+    );
+
+    if (setupError) {
+      throw new Error(setupError.message);
+    }
+
+    console.log('Payment method created:', setupIntent.payment_method);
+
+    // Create subscription with the payment method
+    const { data } = await axios.post(route('subscription.create'), {
+      band_id: props.band.id,
+      payment_method: setupIntent.payment_method,
+    });
+
+    console.log('Subscription response:', data);
+
+    if (data.status === 'requires_action') {
+      // Handle additional payment action if needed
+      const { error: actionError } = await stripe.value.confirmCardPayment(data.payment_intent_client_secret);
+      if (actionError) {
+        throw new Error(actionError.message);
+      }
+    }
+
+    // Redirect to band page on success
+    router.visit(route('bands.show', props.band.id), {
+      preserveScroll: true
+    });
+
+  } catch (e) {
+    console.error('Subscription error:', e);
+    error.value = e.response?.data?.message || e.message || 'An error occurred during checkout. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>

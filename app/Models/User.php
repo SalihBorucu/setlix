@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -70,11 +72,44 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all band subscriptions for the user
+     */
+    public function bandSubscriptions(): HasMany
+    {
+        return $this->hasMany(BandSubscription::class);
+    }
+
+    /**
      * Check if user is admin of a specific band
      */
     public function isAdminOf(Band $band): bool
     {
         return $this->adminBands()->where('band_id', $band->id)->exists();
+    }
+
+    /**
+     * Check if a band has an active subscription
+     */
+    public function hasBandSubscription(Band $band): bool
+    {
+        return $this->bandSubscriptions()
+            ->where('band_id', $band->id)
+            ->whereNull('ends_at')
+            ->exists();
+    }
+
+    /**
+     * Create a subscription for a band
+     */
+    public function subscribeBand(Band $band, string $priceId, array $options = []): \Laravel\Cashier\Subscription
+    {
+        return $this->newSubscription("band_{$band->id}", $priceId)
+            ->create(null, array_merge([
+                'metadata' => [
+                    'band_id' => $band->id,
+                    'user_id' => $this->id,
+                ]
+            ], $options));
     }
 
     /**
@@ -108,7 +143,7 @@ class User extends Authenticatable
 
     public function canAddMoreMembers(Band $band): bool
     {
-        if ($this->is_subscribed) {
+        if ($this->hasBandSubscription($band)) {
             return true;
         }
         return $band->members()->count() < 3;

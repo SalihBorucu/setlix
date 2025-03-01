@@ -18,9 +18,9 @@ const trial = computed(() => page.props.trial || {})
 // Helper function to get subscription checkout URL
 const getSubscriptionUrl = (band) => {
     if (trial.value?.isSubscribed) {
-        return route('bands.subscribe', band.id)
+        return route('subscription.checkout', band.id)
     }
-    return route('bands.subscribe', band.id)
+    return route('subscription.checkout', band.id)
 }
 
 const canCreateBand = computed(() => {
@@ -31,8 +31,8 @@ const canCreateBand = computed(() => {
 // Helper function to check admin status
 const hasAdminRole = (band) => {
     // Check both is_admin and roles/pivot data since Laravel might send it in different ways
-    return band.is_admin ||
-           (band.pivot && band.pivot.role === 'admin') ||
+    return band.is_admin || 
+           (band.pivot && band.pivot.role === 'admin') || 
            (band.roles && band.roles.includes('admin'))
 }
 
@@ -92,13 +92,13 @@ const isBandDisabled = (band) => {
         <template v-else>
             <!-- Bands Grid -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <div
-                    v-for="band in bands"
-                    :key="band.id"
+                <div 
+                    v-for="band in bands" 
+                    :key="band.id" 
                     class="group relative"
                 >
                     <template v-if="isBandDisabled(band)">
-                        <Link
+                        <Link 
                             v-if="hasAdminRole(band)"
                             :href="getSubscriptionUrl(band)"
                             class="group block relative"
@@ -130,13 +130,13 @@ const isBandDisabled = (band) => {
                                         {{ band.members_count }} members
                                     </div>
                                     <div class="mt-4 flex space-x-3">
-                                        <Link
+                                        <Link 
                                             :href="route('songs.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
                                             View Songs
                                         </Link>
-                                        <Link
+                                        <Link 
                                             :href="route('setlists.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
@@ -186,13 +186,13 @@ const isBandDisabled = (band) => {
                                         {{ band.members_count }} members
                                     </div>
                                     <div class="mt-4 flex space-x-3">
-                                        <Link
+                                        <Link 
                                             :href="route('songs.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
                                             View Songs
                                         </Link>
-                                        <Link
+                                        <Link 
                                             :href="route('setlists.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
@@ -211,7 +211,7 @@ const isBandDisabled = (band) => {
                         </div>
                     </template>
 
-                    <Link
+                    <Link 
                         v-else
                         :href="route('bands.show', band.id)"
                         class="group"
@@ -243,13 +243,13 @@ const isBandDisabled = (band) => {
                                     {{ band.members_count }} members
                                 </div>
                                 <div class="mt-4 flex space-x-3">
-                                    <Link
+                                    <Link 
                                         :href="route('songs.index', { band: band.id })"
                                         class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                     >
                                         View Songs
                                     </Link>
-                                    <Link
+                                    <Link 
                                         :href="route('setlists.index', { band: band.id })"
                                         class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                     >

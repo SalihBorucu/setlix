@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Band extends Model
 {
@@ -19,9 +20,6 @@ class Band extends Model
         'cover_image_path',
         'cover_image_thumbnail_path',
         'cover_image_small_path',
-        'stripe_subscription_id',
-        'subscription_status',
-        'subscription_ends_at',
     ];
 
     /**
@@ -118,11 +116,30 @@ class Band extends Model
     }
 
     /**
+     * Get the active subscription for the band
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(BandSubscription::class)
+            ->whereNull('ends_at')
+            ->where('stripe_status', 'active');
+    }
+
+    /**
+     * Get all subscriptions for the band
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(BandSubscription::class);
+    }
+
+    /**
      * Check if band is in trial period
      */
     public function isInTrial(): bool
     {
-        return $this->trial_ends_at && now()->lt($this->trial_ends_at);
+        $subscription = $this->subscription;
+        return $subscription ? $subscription->onTrial() : false;
     }
 
     /**
@@ -130,7 +147,8 @@ class Band extends Model
      */
     public function hasActiveSubscription(): bool
     {
-        return $this->subscription_status === 'active';
+        $subscription = $this->subscription;
+        return $subscription ? $subscription->isActive() : false;
     }
 
     /**

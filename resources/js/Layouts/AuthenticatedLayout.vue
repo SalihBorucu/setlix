@@ -21,7 +21,7 @@ const bandNavigation = [
 
 const userNavigation = [
     { name: 'Your Profile', href: route('profile.edit') },
-    { name: 'Subscriptions', href: route('subscriptions.index') },
+    { name: 'Subscriptions', href: route('subscription.index') },
     { name: 'Sign out', href: route('logout'), method: 'post' }
 ]
 

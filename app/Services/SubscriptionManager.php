@@ -17,15 +17,15 @@ class SubscriptionManager
     {
         $bandCreatedAt = Carbon::parse($band->created_at);
         $trialEndsAt = $bandCreatedAt->copy()->addDays(14);
-        
-        return now()->lt($trialEndsAt) 
+
+        return now()->lt($trialEndsAt)
             ? (int) now()->diffInDays($trialEndsAt)
             : 0;
     }
 
     /**
      * Process a successful subscription payment
-     * 
+     *
      * @throws \Exception If payment verification fails
      */
     public function processSubscription(Band $band, User $user, string $paymentIntentId): void
@@ -37,7 +37,7 @@ class SubscriptionManager
 
         // Verify payment intent with Stripe
         $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
-        
+
         // Validate payment intent status
         if ($paymentIntent->status !== 'succeeded') {
             throw new \Exception('Payment was not successful');
@@ -89,7 +89,7 @@ class SubscriptionManager
 
     /**
      * Cancel a band's subscription
-     * 
+     *
      * @param Band $band The band whose subscription to cancel
      * @throws \Exception If cancellation fails
      */
@@ -99,7 +99,9 @@ class SubscriptionManager
             // Use database transaction to ensure consistency
             \DB::transaction(function () use ($band) {
                 // Cancel subscription in Stripe
+                ray('before');
                 $result = app(StripeService::class)->cancelSubscription($band);
+                ray('after');
 
                 // Update band subscription status
                 $band->update([
@@ -122,4 +124,4 @@ class SubscriptionManager
             throw new \Exception('Failed to cancel subscription: ' . $e->getMessage());
         }
     }
-} 
+}

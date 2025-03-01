@@ -11,7 +11,7 @@ class SubscriptionPageAccessMiddleware
 {
     /**
      * Handle subscription page access control
-     * 
+     *
      * Checks:
      * 1. If band is already subscribed -> redirect to band page
      * 2. If user is not band admin -> redirect to dashboard
@@ -20,11 +20,13 @@ class SubscriptionPageAccessMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $band = $request->route('band');
-        
+
         if (!$band instanceof Band) {
             return redirect()->route('dashboard')
                 ->with('error', 'Invalid band specified.');
         }
+
+        $band->load('subscription');
 
         $user = $request->user();
 
@@ -35,7 +37,7 @@ class SubscriptionPageAccessMiddleware
         }
 
         // Check if band is already subscribed
-        if ($band->subscription_status === 'active') {
+        if ($band->subscription) {
             return redirect()->route('bands.show', $band)
                 ->with('info', 'This band already has an active subscription.');
         }
@@ -48,4 +50,4 @@ class SubscriptionPageAccessMiddleware
 
         return $next($request);
     }
-} 
+}

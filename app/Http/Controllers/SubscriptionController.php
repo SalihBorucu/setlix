@@ -4,32 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Band;
 use App\Services\StripeService;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use App\Services\SubscriptionWebhookHandler;
-use App\Services\SubscriptionManager;
+use Laravel\Cashier\Exceptions\IncompletePayment;
 
 class SubscriptionController extends Controller
 {
-    protected $stripeService;
-    protected $subscriptionManager;
-    protected $webhookHandler;
-
-    public function __construct(
-        StripeService $stripeService,
-        SubscriptionManager $subscriptionManager,
-        SubscriptionWebhookHandler $webhookHandler
-    ) {
-        $this->stripeService = $stripeService;
-        $this->subscriptionManager = $subscriptionManager;
-        $this->webhookHandler = $webhookHandler;
-    }
-
     /**
      * Show the subscription expired page
      */
@@ -40,72 +25,65 @@ class SubscriptionController extends Controller
 
     /**
      * Show the checkout page for a specific band
-     *
-     * @param Band $band The band being subscribed
-     * @return RedirectResponse|Response
      */
     public function checkout(Band $band): Response|RedirectResponse
     {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
 
-        if (!$band->isAdmin($user)) {
+            if (!$band->isAdmin($user)) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'You do not have permission to subscribe this band.');
+            }
+
+            // Create or get Stripe customer
+            if (!$user->stripe_id) {
+                $stripeCustomer = $user->createAsStripeCustomer();
+                ray('Created customer:', $stripeCustomer->toArray());
+            }
+
+            // Create setup intent
+            $intent = $user->createSetupIntent();
+            ray('Created setup intent:', $intent->toArray());
+
+            return Inertia::render('Subscription/Checkout', [
+                'band' => $band->only(['id', 'name', 'created_at']),
+                'stripeKey' => config('cashier.key'),
+                'clientSecret' => $intent->client_secret,
+            ]);
+
+        } catch (\Exception $e) {
+            ray('Error in checkout:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->route('dashboard')
-                ->with('error', 'You do not have permission to subscribe this band.');
+                ->with('error', 'Unable to initialize checkout. Please try again.');
         }
-
-        $trialDaysLeft = $this->subscriptionManager->calculateTrialDays($band);
-
-        if ($user->is_subscribed) {
-            $trialDaysLeft = 0;
-        }
-
-        return Inertia::render('Subscription/Checkout', [
-            'band' => $band->only(['id', 'name', 'created_at']),
-            'trialDaysLeft' => $trialDaysLeft,
-            'stripeKey' => config('services.stripe.key')
-        ]);
     }
 
     /**
-     * Handle the successful subscription process for a band
+     * Create a new subscription
      */
-    public function process(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'band_id' => 'required|exists:bands,id',
-            'payment_intent' => 'required|string',
-        ]);
-
-        try {
-            $user = auth()->user();
-            $band = Band::findOrFail($request->band_id);
-
-            if (!$band->isAdmin($user)) {
-                return back()->with('error', 'Unauthorized');
-            }
-
-            $this->subscriptionManager->processSubscription($band, $user, $request->payment_intent);
-
-            return redirect()
-                ->route('bands.show', $band)
-                ->with('success', "Subscription activated for {$band->name}!");
-
-        } catch (\Exception $e) {
-            Log::error('Subscription processing failed', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Unable to process subscription. Please try again.');
-        }
-    }
-
     public function createSubscription(Request $request): JsonResponse
     {
+        ray('Subscription creation request:', $request->all());
+
         $request->validate([
             'band_id' => 'required|exists:bands,id',
-            'card_name' => 'required|string|max:255',
+            'payment_method' => 'required|string',
         ]);
 
         try {
             $user = auth()->user();
             $band = Band::findOrFail($request->band_id);
+
+            ray('User and Band:', [
+                'user_id' => $user->id,
+                'band_id' => $band->id,
+                'stripe_id' => $user->stripe_id
+            ]);
 
             if (!$band->isAdmin($user)) {
                 return response()->json([
@@ -113,121 +91,160 @@ class SubscriptionController extends Controller
                 ], 403);
             }
 
-            $result = $this->stripeService->createSubscription(
-                $band,
-                $user,
-                $request->all()
-            );
+            // Ensure customer exists and update payment method
+            if (!$user->stripe_id) {
+                ray('Creating new customer for subscription');
+                $user->createAsStripeCustomer();
+            }
 
-            return response()->json([
-                'clientSecret' => $result['clientSecret'],
-                'subscriptionId' => $result['subscriptionId']
+            ray('Updating payment method');
+            $user->updateDefaultPaymentMethod($request->payment_method);
+
+            // Create subscription using StripeService
+            $stripeService = app(StripeService::class);
+            $result = $stripeService->createSubscription($band, $user, [
+                'payment_method' => $request->payment_method,
             ]);
 
+            ray('Subscription created:', $result);
+
+            return response()->json([
+                'status' => 'success',
+                'subscription' => $result,
+            ]);
+
+        } catch (\Laravel\Cashier\Exceptions\IncompletePayment $exception) {
+            ray('Incomplete payment exception:', $exception->getMessage());
+            return response()->json([
+                'status' => 'requires_action',
+                'payment_intent_client_secret' => $exception->payment->clientSecret(),
+            ]);
         } catch (\Exception $e) {
-            Log::error('Subscription creation failed', [
-                'error' => $e->getMessage(),
-                'band_id' => $request->band_id
+            ray('Subscription creation error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
-                'message' => 'Unable to process subscription. Please try again.'
+                'message' => 'Unable to process subscription. Please try again.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    public function handleWebhook(Request $request)
-    {
-        try {
-            $result = $this->webhookHandler->handleWebhook(
-                $request->getContent(),
-                $request->header('Stripe-Signature')
-            );
-
-            return response()->json(['status' => 'success', 'result' => $result]);
-        } catch (\Exception $e) {
-            Log::error('Webhook error', [
-                'error' => $e->getMessage(),
-                'payload' => $request->all()
-            ]);
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
-    }
-
-    public function index()
+    /**
+     * Display subscription management page
+     * Shows all bands that the user is an admin of, along with their subscription status
+     */
+    public function index(): Response
     {
         $user = auth()->user();
-
-        // Get only bands where the user is an admin
-        $subscriptions = $user->adminBands()
+        
+        // Get all bands where user is admin, with their subscriptions
+        $bands = $user->adminBands()
+            ->with(['subscription.user'])
             ->get()
-            ->map(function ($band) {
-                // Get subscription status based on trial and subscription state
-                $status = match($band->subscription_status) {
-                    'active' => 'active',
-                    'payment_failed' => 'payment_failed',
-                    'cancelled' => 'cancelled',
-                    default => $band->trial_ends_at && Carbon::now()->lt($band->trial_ends_at) 
-                        ? 'trialing' 
-                        : 'expired'
-                };
-
+            ->map(function ($band) use ($user) {
+                $subscription = $band->subscription;
                 return [
                     'id' => $band->id,
-                    'band' => [
-                        'id' => $band->id,
-                        'name' => $band->name,
-                    ],
-                    'status' => $status,
-                    'price' => $status === 'active' ? 10.00 : 0, // $10/month for active subscriptions
-                    'subscription_ends_at' => $band->subscription_ends_at ? Carbon::parse($band->subscription_ends_at)->toDateTimeString() : null
+                    'name' => $band->name,
+                    'created_at' => $band->created_at,
+                    'subscription' => $subscription ? [
+                        'id' => $subscription->id,
+                        'status' => $subscription->stripe_status,
+                        'price' => config('subscription.monthly_price'), // Fixed price for now
+                        'ends_at' => $subscription->ends_at,
+                        'trial_ends_at' => $subscription->trial_ends_at,
+                        'is_owner' => $subscription->user_id === $user->id,
+                        'owner_name' => $subscription->user->name
+                    ] : null
                 ];
             });
 
-        // Calculate total monthly fee
-        $totalMonthlyFee = $subscriptions
-            ->where('status', 'active')
-            ->sum('price');
-
         return Inertia::render('Subscriptions/Index', [
-            'subscriptions' => $subscriptions,
-            'totalMonthlyFee' => $totalMonthlyFee,
+            'subscriptions' => $bands
         ]);
     }
 
     /**
-     * Cancel a band's subscription
-     *
-     * @param string|int $id The band ID
-     * @return RedirectResponse
+     * Cancel a subscription for a band
      */
-    public function cancel($id): RedirectResponse
+    public function cancel(Band $band): RedirectResponse
     {
         try {
-            $band = Band::findOrFail($id);
+            $user = auth()->user();
 
-            // Ensure user has permission to cancel this subscription
-            if (!$band->isAdmin(auth()->user())) {
-                return redirect()->back()->with('error', 'You do not have permission to cancel this subscription.');
+            if (!$band->isAdmin($user)) {
+                return redirect()->back()
+                    ->with('error', 'You do not have permission to cancel this subscription.');
             }
 
-            // Check if subscription is active
-            if ($band->subscription_status !== 'active') {
-                return redirect()->back()->with('error', 'This subscription cannot be cancelled.');
+            $subscription = $band->subscription;
+            if (!$subscription) {
+                return redirect()->back()
+                    ->with('error', 'No active subscription found.');
             }
 
-            // Cancel the subscription using the subscription manager
-            $this->subscriptionManager->cancelSubscription($band);
+            // Cancel the subscription at period end
+            $stripeSubscription = $user->subscription("band_{$band->id}");
+            if ($stripeSubscription) {
+                $stripeSubscription->cancelAt(Carbon::now()->addMonths(1));
+            }
 
-            return redirect()->back()->with('success', 'Your subscription has been cancelled. You will have access until the end of your current billing period.');
-
-        } catch (\Exception $e) {
-            Log::error('Subscription cancellation failed', [
-                'error' => $e->getMessage(),
-                'band_id' => $id
+            // Update local subscription record
+            $subscription->update([
+                'ends_at' => Carbon::now()->addMonths(1),
+                'stripe_status' => 'cancelled'
             ]);
 
-            return redirect()->back()->with('error', 'Unable to cancel subscription. Please try again or contact support.');
+            // Update band subscription status
+            $band->update([
+                'subscription_status' => 'cancelled'
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Your subscription has been cancelled and will end at the end of the billing period.');
+
+        } catch (Exception $e) {
+            ray('Subscription cancellation failed', [
+                'error' => $e->getMessage(),
+                'band_id' => $band->id,
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Unable to cancel subscription. Please try again or contact support.');
+        }
+    }
+
+    /**
+     * Update payment method
+     */
+    public function updatePaymentMethod(Request $request): JsonResponse
+    {
+        $request->validate([
+            'payment_method' => 'required|string',
+        ]);
+
+        try {
+            $user = auth()->user();
+            $user->updateDefaultPaymentMethod($request->payment_method);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Payment method updated successfully.',
+            ]);
+
+        } catch (Exception $e) {
+            ray('Payment method update failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'message' => 'Unable to update payment method. Please try again.'
+            ], 500);
         }
     }
 }

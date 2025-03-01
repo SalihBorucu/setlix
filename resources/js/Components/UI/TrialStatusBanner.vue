@@ -20,7 +20,7 @@
         <!-- Subscribe Button -->
         <Link
           v-if="!isSubscribed && bandId"
-          :href="route('bands.subscribe', bandId)"
+          :href="route('subscription.checkout', bandId)"
         >
           <DSButton variant="primary" size="sm">
             Subscribe Now
@@ -47,7 +47,7 @@ const bandId = computed(() => trial.value?.bandId);
 
 // Don't show banner on subscribe page
 const shouldShowBanner = computed(() => {
-  const isSubscribePage = route().current('bands.subscribe');
+  const isSubscribePage = route().current('subscription.checkout');
   return trial.value && !isSubscribed.value && !isSubscribePage && bandId.value;
 });
 </script> 

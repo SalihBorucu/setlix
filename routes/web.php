@@ -8,7 +8,10 @@ use App\Http\Controllers\BandMemberController;
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
+use App\Http\Middleware\SubscriptionPageAccessMiddleware;
 use App\Services\SpotifyService;
 use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/test', function () {
-    Bugsnag::notifyException(new RuntimeException("Test error"));
+//    Bugsnag::notifyException(new RuntimeException("Test error"));
 });
 
 Route::get('/', function () {
@@ -39,19 +42,14 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Subscription routes - keep these outside band.access middleware
-    Route::controller(SubscriptionController::class)->group(function () {
-        Route::get('/subscription/expired', 'expired')->name('subscription.expired');
-        Route::post('/subscription/process', 'process')->name('subscription.process');
-        Route::get('bands/{band}/subscribe', 'checkout')
-            ->name('bands.subscribe')
-            ->middleware('subscription.page.access');
-        Route::post('/subscription/create', 'createSubscription')
-            ->name('subscription.create');
-        Route::get('/subscriptions', 'index')
-            ->name('subscriptions.index');
-        Route::delete('/subscriptions/{subscription}', 'cancel')
-            ->name('subscriptions.cancel');
+    // Subscription routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])->name('subscription.expired');
+        Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])->name('subscription.checkout')->middleware('subscription.page.access');
+        Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])->name('subscription.create');
+        Route::post('/subscription/cancel/{band}', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+        Route::post('/subscription/update-payment-method', [SubscriptionController::class, 'updatePaymentMethod'])->name('subscription.update-payment-method');
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscription.index');
     });
 
     // Band routes with access control
@@ -99,8 +97,7 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
 });
 
 Route::middleware([
-    'auth',
-    \App\Http\Middleware\EnforceTrialLimits::class
+    'auth', EnforceTrialLimits::class
 ])->group(function () {
     // Group all routes that need trial limits
     Route::post('/bands/{band}/songs', [SongController::class, 'store'])->name('songs.store');
@@ -111,9 +108,7 @@ Route::middleware([
 // Public route for accepting invitations
 Route::get('/invitations/{token}', [BandMemberController::class, 'acceptInvitation'])->name('invitations.accept');
 
-// Stripe webhook - keep this outside auth middleware
-Route::post('stripe/webhook', [SubscriptionController::class, 'handleWebhook'])
-    ->name('stripe.webhook')
-    ->middleware(['stripe-webhook']);
+// Stripe webhook
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('cashier.webhook');
 
 require __DIR__.'/auth.php';

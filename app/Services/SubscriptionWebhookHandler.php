@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Band;
 use App\Models\User;
+use App\Models\BandSubscription;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;
@@ -84,6 +85,12 @@ class SubscriptionWebhookHandler
      */
     protected function handleSubscriptionCreated($subscription): array
     {
+        ray('Handling subscription created webhook', [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'metadata' => $subscription->metadata
+        ]);
+
         // Get IDs from metadata, with null coalescing operator for safety
         $bandId = $subscription->metadata['band_id'] ?? null;
         $userId = $subscription->metadata['user_id'] ?? null;
@@ -109,15 +116,26 @@ class SubscriptionWebhookHandler
             return ['status' => 'error', 'message' => 'Band or user not found'];
         }
 
-        $band->update([
-            'subscription_status' => 'active'
-        ]);
+        // Update subscription status when subscription is active
+        if ($subscription->status === 'active') {
+            ray('Updating subscription to active status');
 
-        $user->update([
-            'trial_started_at' => null,
-            'trial_ends_at' => null,
-            'is_subscribed' => true
-        ]);
+            // Update BandSubscription record
+            BandSubscription::where('stripe_subscription_id', $subscription->id)
+                ->update([
+                    'stripe_status' => 'active',
+                    'ends_at' => null
+                ]);
+
+            // Update user subscription status
+            $user->update([
+                'trial_started_at' => null,
+                'trial_ends_at' => null,
+                'is_subscribed' => true
+            ]);
+
+            ray('Subscription activated successfully');
+        }
 
         return ['status' => 'success', 'message' => 'Subscription created'];
     }
@@ -185,32 +203,34 @@ class SubscriptionWebhookHandler
      */
     protected function handlePaymentSucceeded($invoice): array
     {
+        ray('Handling payment succeeded webhook', [
+            'invoice_id' => $invoice->id,
+            'subscription_id' => $invoice->subscription ?? null
+        ]);
+
         $subscriptionId = $invoice->subscription ?? null;
         if (!$subscriptionId) {
             throw new \Exception('Missing subscription ID in payment success webhook');
         }
 
-        $band = Band::where('stripe_subscription_id', $subscriptionId)->first();
-        if (!$band) {
-            throw new \Exception('Band not found for subscription: ' . $subscriptionId);
+        // Find the band subscription
+        $bandSubscription = BandSubscription::where('stripe_subscription_id', $subscriptionId)->first();
+        if (!$bandSubscription) {
+            throw new \Exception('Band subscription not found for subscription: ' . $subscriptionId);
         }
 
-        // Verify payment amount
-        $expectedAmount = 1000; // $10.00 in cents
-        if ($invoice->amount_paid !== $expectedAmount) {
-            Log::error('Unexpected payment amount', [
-                'expected' => $expectedAmount,
-                'received' => $invoice->amount_paid,
-                'subscription_id' => $subscriptionId
-            ]);
-            throw new \Exception('Invalid payment amount received');
-        }
+        ray('Found band subscription', [
+            'band_id' => $bandSubscription->band_id,
+            'current_status' => $bandSubscription->stripe_status
+        ]);
 
         // Update subscription status
-        $band->update([
-            'subscription_status' => 'active',
-            'subscription_ends_at' => null
+        $bandSubscription->update([
+            'stripe_status' => 'active',
+            'ends_at' => null
         ]);
+
+        ray('Updated band subscription status to active');
 
         return ['status' => 'success', 'message' => 'Payment success handled'];
     }

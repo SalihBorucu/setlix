@@ -16,57 +16,71 @@ class StripeService
         Stripe::setApiKey(config('services.stripe.secret'));
     }
 
-    public function createSubscription(Band $band, User $user, array $paymentData)
+    public function createSubscription(Band $band, User $user, array $paymentData): array
     {
         try {
+            ray('Creating subscription with data:', [
+                'band_id' => $band->id,
+                'user_id' => $user->id,
+                'payment_data' => $paymentData
+            ]);
+
             // Generate idempotency key based on band and user
             $idempotencyKey = md5($band->id . '_' . $user->id . '_' . time());
 
             // Create or retrieve Stripe customer
             $customer = $this->getOrCreateCustomer($user);
+            ray('Customer:', $customer->toArray());
 
             $priceId = config('services.stripe.price_id');
             if (!$priceId) {
                 throw new \Exception('Stripe price ID is not configured');
             }
 
+            ray('Price ID:', $priceId);
+
             // Create subscription with immediate payment and idempotency key
-            $subscription = \Stripe\Subscription::create([
+            $subscriptionData = [
                 'customer' => $customer->id,
                 'items' => [
                     [
                         'price' => $priceId,
                     ],
                 ],
-                'payment_behavior' => 'default_incomplete',
+                'payment_behavior' => 'error_if_incomplete',
                 'expand' => ['latest_invoice.payment_intent'],
                 'metadata' => [
                     'band_id' => $band->id,
                     'user_id' => $user->id,
                     'idempotency_key' => $idempotencyKey
                 ],
-            ], [
+            ];
+
+            // Add payment method if provided
+            if (!empty($paymentData['payment_method'])) {
+                $subscriptionData['default_payment_method'] = $paymentData['payment_method'];
+            }
+
+            ray('Subscription data:', $subscriptionData);
+
+            $subscription = \Stripe\Subscription::create($subscriptionData, [
                 'idempotency_key' => $idempotencyKey
             ]);
+
+            ray('Stripe response:', $subscription->toArray());
 
             // Validate subscription creation
             if (!$subscription->id || !$subscription->latest_invoice->payment_intent) {
                 throw new \Exception('Invalid subscription response from Stripe');
             }
 
-            // Store subscription ID and metadata immediately
-            $band->update([
-                'stripe_subscription_id' => $subscription->id,
-                'subscription_status' => 'incomplete', // Will be updated to 'active' after payment success
-                'idempotency_key' => $idempotencyKey
-            ]);
-
-            // Log subscription creation attempt
-            \Log::info('Subscription creation initiated', [
+            // Create band subscription record
+            \App\Models\BandSubscription::create([
                 'band_id' => $band->id,
                 'user_id' => $user->id,
-                'subscription_id' => $subscription->id,
-                'idempotency_key' => $idempotencyKey
+                'stripe_subscription_id' => $subscription->id,
+                'stripe_price_id' => $priceId,
+                'stripe_status' => 'incomplete'
             ]);
 
             return [
@@ -101,22 +115,44 @@ class StripeService
 
     protected function getOrCreateCustomer(User $user)
     {
-        if ($user->stripe_customer_id) {
-            return Customer::retrieve($user->stripe_customer_id);
+        try {
+            ray('Getting or creating customer for user:', [
+                'user_id' => $user->id,
+                'stripe_id' => $user->stripe_id
+            ]);
+
+            // If user already has a Stripe ID, retrieve the customer
+            if ($user->stripe_id) {
+                ray('Retrieving existing customer');
+                $customer = Customer::retrieve($user->stripe_id);
+                ray('Retrieved customer:', $customer->toArray());
+                return $customer;
+            }
+
+            // Create a new customer
+            ray('Creating new customer');
+            $customer = Customer::create([
+                'email' => $user->email,
+                'name' => $user->name,
+                'metadata' => [
+                    'user_id' => $user->id
+                ]
+            ]);
+
+            // Update user with new Stripe ID
+            $user->stripe_id = $customer->id;
+            $user->save();
+
+            ray('Created new customer:', $customer->toArray());
+            return $customer;
+
+        } catch (\Exception $e) {
+            ray('Error in getOrCreateCustomer:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
-
-        $customer = Customer::create([
-            'email' => $user->email,
-            'name' => $user->name,
-            'metadata' => [
-                'user_id' => $user->id
-            ]
-        ]);
-
-        // Save Stripe customer ID to user
-        $user->update(['stripe_customer_id' => $customer->id]);
-
-        return $customer;
     }
 
     /**
@@ -140,7 +176,7 @@ class StripeService
             $cancelledSubscription = $subscription->cancel();
 
             // Log the cancellation
-            \Log::info('Subscription cancelled successfully', [
+            ray('Subscription cancelled successfully', [
                 'band_id' => $band->id,
                 'subscription_id' => $band->stripe_subscription_id,
                 'cancellation_date' => now(),
@@ -154,7 +190,7 @@ class StripeService
             ];
 
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            \Log::error('Stripe API error during subscription cancellation', [
+            ray('Stripe API error during subscription cancellation', [
                 'error' => $e->getMessage(),
                 'band_id' => $band->id,
                 'subscription_id' => $band->stripe_subscription_id ?? 'not set'
@@ -162,4 +198,4 @@ class StripeService
             throw new \Exception('Failed to cancel subscription: ' . $e->getMessage());
         }
     }
-} 
+}
