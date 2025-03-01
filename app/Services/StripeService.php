@@ -165,12 +165,12 @@ class StripeService
     public function cancelSubscription(Band $band): array
     {
         try {
-            if (!$band->stripe_subscription_id) {
+            if (!$band->subscription->stripe_subscription_id) {
                 throw new \Exception('No active subscription found for this band');
             }
 
             // Retrieve the subscription from Stripe
-            $subscription = \Stripe\Subscription::retrieve($band->stripe_subscription_id);
+            $subscription = \Stripe\Subscription::retrieve($band->subscription->stripe_subscription_id);
 
             // Cancel the subscription at period end
             $cancelledSubscription = $subscription->cancel();
@@ -178,7 +178,7 @@ class StripeService
             // Log the cancellation
             ray('Subscription cancelled successfully', [
                 'band_id' => $band->id,
-                'subscription_id' => $band->stripe_subscription_id,
+                'subscription_id' => $band->subscription->stripe_subscription_id,
                 'cancellation_date' => now(),
                 'end_date' => Carbon::createFromTimestamp($cancelledSubscription->current_period_end)
             ]);

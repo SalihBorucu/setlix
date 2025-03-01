@@ -47,7 +47,7 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])->name('subscription.expired');
         Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])->name('subscription.checkout')->middleware('subscription.page.access');
         Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])->name('subscription.create');
-        Route::post('/subscription/cancel/{band}', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+        Route::delete('/subscription/cancel/{band}', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
         Route::post('/subscription/update-payment-method', [SubscriptionController::class, 'updatePaymentMethod'])->name('subscription.update-payment-method');
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscription.index');
     });

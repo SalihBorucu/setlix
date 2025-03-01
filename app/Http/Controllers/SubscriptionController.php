@@ -139,7 +139,7 @@ class SubscriptionController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        
+
         // Get all bands where user is admin, with their subscriptions
         $bands = $user->adminBands()
             ->with(['subscription.user'])
@@ -187,20 +187,17 @@ class SubscriptionController extends Controller
             }
 
             // Cancel the subscription at period end
-            $stripeSubscription = $user->subscription("band_{$band->id}");
+            $stripeSubscription = $user->bandSubscriptions()->where('band_id', $band->id)->first();
             if ($stripeSubscription) {
-                $stripeSubscription->cancelAt(Carbon::now()->addMonths(1));
+                $service = new StripeService();
+                $service->cancelSubscription($band);
+//                    $stripeSubscription->cancelAt(Carbon::now()->addMonths(1));
             }
 
             // Update local subscription record
             $subscription->update([
                 'ends_at' => Carbon::now()->addMonths(1),
                 'stripe_status' => 'cancelled'
-            ]);
-
-            // Update band subscription status
-            $band->update([
-                'subscription_status' => 'cancelled'
             ]);
 
             return redirect()->back()

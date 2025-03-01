@@ -35,7 +35,7 @@ const handleCancelClick = (subscription) => {
 // Handle confirmation of cancellation
 const handleConfirmCancel = () => {
     if (subscriptionToCancel.value) {
-        router.delete(route('subscriptions.cancel', subscriptionToCancel.value.id))
+        router.delete(route('subscription.cancel', subscriptionToCancel.value.id))
     }
 }
 
@@ -68,7 +68,7 @@ const formatDate = (dateString) => {
         </template>
 
         <!-- Total Monthly Fee - Only show if user has any subscriptions they're paying for -->
-        <div v-if="subscriptions.some(band => band.subscription?.is_owner)" 
+        <div v-if="subscriptions.some(band => band.subscription?.is_owner)"
              class="bg-white rounded-lg shadow p-6 mb-6">
             <h3 class="text-lg font-medium text-neutral-900 mb-2">Your Total Monthly Fee</h3>
             <p class="text-2xl font-bold text-primary-600">£{{ computed.totalMonthlyFee(subscriptions).toFixed(2) }}/month</p>
@@ -94,7 +94,7 @@ const formatDate = (dateString) => {
                             </p>
                             <!-- Show price info based on subscription ownership -->
                             <template v-if="band.subscription">
-                                <p v-if="band.subscription.is_owner" 
+                                <p v-if="band.subscription.is_owner"
                                    class="text-sm text-neutral-500">
                                     You are paying £{{ band.subscription.price }}/month
                                 </p>
@@ -103,12 +103,12 @@ const formatDate = (dateString) => {
                                 </p>
                             </template>
                             <!-- Show subscription end date for cancelled subscriptions -->
-                            <p v-if="getBandStatus(band) === 'cancelled' && band.subscription?.ends_at" 
+                            <p v-if="getBandStatus(band) === 'cancelled' && band.subscription?.ends_at"
                                class="text-sm text-neutral-500 mt-1">
                                 Access until: <span class="font-medium">{{ formatDate(band.subscription.ends_at) }}</span>
                             </p>
                         </div>
-                        
+
                         <div class="flex gap-3">
                             <!-- Only show action buttons if user is the subscription owner or there's no subscription -->
                             <template v-if="!band.subscription || band.subscription.is_owner">
@@ -165,4 +165,4 @@ const formatDate = (dateString) => {
             @confirm="handleConfirmCancel"
         />
     </AuthenticatedLayout>
-</template> 
+</template>
