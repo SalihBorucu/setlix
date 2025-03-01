@@ -54,6 +54,15 @@ class StripeWebhookController extends Controller
                         $bandSubscription->band->update([
                             'subscription_status' => $subscription->status
                         ]);
+
+                        $user = $bandSubscription->user;
+                        if ($user->is_trial) {
+                            $bandSubscription->user->update([
+                                'trial_started_at' => null,
+                                'trial_ends_at' => null,
+                                'is_trial' => false
+                            ]);
+                        }
                     } else {
                         $exception = new Exception('Band subscription not found for Stripe subscription: ' . $subscription->id);
                         report($exception);
@@ -71,4 +80,4 @@ class StripeWebhookController extends Controller
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
-} 
+}
