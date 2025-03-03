@@ -2,6 +2,7 @@
 import { DSButton, DSCard } from "@/Components/UI";
 import { Link } from '@inertiajs/vue3';
 import visitExternalLink from "@/Utilities/visitExternalLink.js";
+import axios from 'axios';
 
 const props = defineProps({
     band: {
@@ -44,19 +45,44 @@ const handleFileDownload = (file, song) => {
         true
     );
 };
+
+const handleExportPdf = async () => {
+    try {
+        const response = await axios.get(route('setlists.export', [props.band.id, props.setlist.id]));
+        if (response.data.success && response.data.download_url) {
+            visitExternalLink(response.data.download_url, false, true);
+        }
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+    }
+};
 </script>
 
 <template>
     <div class="space-y-6 flex justify-center">
         <DSCard bg-color="bg-gray-900 h-full lg:w-1/2 w-full">
             <div class="p-6">
-                <DSButton
-                    variant="primary"
-                    @click="$emit('exit')"
-                    class="w-full sm:w-auto mb-4"
-                >
-                    Exit Performance Mode
-                </DSButton>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <DSButton
+                        variant="primary"
+                        @click="$emit('exit')"
+                        class="w-full sm:w-auto"
+                    >
+                        Exit Performance Mode
+                    </DSButton>
+                    
+                    <DSButton
+                        variant="secondary"
+                        @click="handleExportPdf"
+                        class="w-full sm:w-auto"
+                    >
+                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export PDF
+                    </DSButton>
+                </div>
+                
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-2xl font-bold text-white">{{ setlist.name }}</h3>

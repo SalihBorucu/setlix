@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportSetlistToPdf;
 
 Route::get('/test', function () {
 //    Bugsnag::notifyException(new RuntimeException("Test error"));
@@ -80,6 +81,8 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::get('/bands/{band}/setlists/{setlist}/edit', [SetlistController::class, 'edit'])->name('setlists.edit');
         Route::put('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'update'])->name('setlists.update');
         Route::delete('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'destroy'])->name('setlists.destroy');
+        Route::get('/bands/{band}/setlists/{setlist}/export', ExportSetlistToPdf::class)->name('setlists.export');
+        Route::get('/bands/{band}/setlists/download/{filename}', [ExportSetlistToPdf::class, 'download'])->name('setlists.download');
 
         // Band Member Management
         Route::get('/bands/{band}/members', [BandMemberController::class, 'index'])->name('bands.members.index');
