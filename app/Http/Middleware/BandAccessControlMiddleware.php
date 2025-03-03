@@ -46,24 +46,8 @@ class BandAccessControlMiddleware
             ->latest()
             ->first();
 
-        // Detailed debugging
-        ray('Band Access Control Debug', [
-            'band_id' => $band->id,
-            'route' => $request->route()->getName(),
-            'subscription_exists' => $subscription ? true : false,
-            'subscription_details' => $subscription ? [
-                'id' => $subscription->id,
-                'stripe_status' => $subscription->stripe_status,
-                'ends_at' => $subscription->ends_at,
-                'is_active' => $subscription ? $subscription->isActive() : false
-            ] : null,
-            'band_has_active_subscription' => $band->hasActiveSubscription(),
-            'can_perform_write_ops' => $band->canPerformWriteOperations()
-        ]);
-
         // If no subscription at all, redirect to checkout
         if (!$subscription) {
-            ray('No subscription found - redirecting to checkout');
             return redirect()->route('subscription.checkout', $band)
                 ->with('error', 'Subscription required to access this band.');
         }
@@ -71,23 +55,17 @@ class BandAccessControlMiddleware
         // If subscription exists but is not active or incomplete, allow access
         // This ensures users can complete their subscription process
         if ($subscription->stripe_status === 'incomplete') {
-            ray('Incomplete subscription found - allowing access');
             return $next($request);
         }
 
         // If subscription exists but is not active (e.g., cancelled, expired)
         if (!$subscription->isActive()) {
-            ray('Subscription exists but not active', [
-                'stripe_status' => $subscription->stripe_status,
-                'ends_at' => $subscription->ends_at
-            ]);
             return redirect()->route('subscription.checkout', $band)
                 ->with('error', 'Your subscription has expired. Please renew to continue.');
         }
 
         // If band is in read-only mode (expired subscription), restrict write operations
         if ($this->isWriteOperation($request) && !$band->canPerformWriteOperations()) {
-            ray('Write operation blocked - band in read-only mode');
             return redirect()->back()
                 ->with('error', 'Band is in read-only mode. Please subscribe to make changes.');
         }

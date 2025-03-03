@@ -5,6 +5,7 @@ import { DSButton, DSCard, DSAlertModal } from '@/Components/UI'
 import PerformanceMode from '@/Components/Setlist/PerformanceMode.vue'
 import { ref, computed } from 'vue'
 import visitExternalLink from "@/Utilities/visitExternalLink.js";
+import axios from 'axios';
 
 const props = defineProps({
     band: {
@@ -63,6 +64,17 @@ const handleFileDownload = (file, song) => {
         true
     );
 };
+
+const handleExportPdf = async () => {
+    try {
+        const response = await axios.get(route('setlists.export', [props.band.id, props.setlist.id]));
+        if (response.data.success && response.data.download_url) {
+            visitExternalLink(response.data.download_url, false, true);
+        }
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+    }
+};
 </script>
 
 <template>
@@ -109,6 +121,18 @@ const handleFileDownload = (file, song) => {
                         </svg>
                         {{ performanceMode ? 'Exit Performance Mode' : 'Performance Mode' }}
                     </DSButton>
+
+                    <DSButton 
+                        variant="secondary" 
+                        class="w-full sm:w-auto"
+                        @click="handleExportPdf"
+                    >
+                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export PDF
+                    </DSButton>
+
                     <template v-if="isAdmin">
                         <Link :href="route('setlists.edit', [band.id, setlist.id])" class="w-full sm:w-auto">
                             <DSButton variant="secondary" class="w-full sm:w-auto" v-if="!performanceMode">
@@ -215,13 +239,13 @@ const handleFileDownload = (file, song) => {
                                         </span>
 
                                         <!-- Break Badge -->
-                                        <div v-if="item.type === 'break'" 
+                                        <div v-if="item.type === 'break'"
                                             class="flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-700"
                                         >
-                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
-                                            <span class="text-xs font-medium">BREAK</span>
+<!--                                            <span class="text-xs font-medium">BREAK</span>-->
                                         </div>
 
                                         <!-- Item Title -->
