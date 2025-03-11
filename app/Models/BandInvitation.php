@@ -15,11 +15,13 @@ class BandInvitation extends Model
         'email',
         'role',
         'token',
-        'expires_at'
+        'expires_at',
+        'accepted_at'
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'accepted_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -36,4 +38,4 @@ class BandInvitation extends Model
     {
         return $this->belongsTo(Band::class);
     }
-} 
+}

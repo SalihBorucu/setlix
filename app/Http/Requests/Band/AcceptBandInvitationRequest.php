@@ -34,7 +34,7 @@ class AcceptBandInvitationRequest extends FormRequest
 
     /**
      * Process the invitation acceptance
-     * 
+     *
      * @param string $token The invitation token from the route parameter
      * @return array{
      *  success: bool,
@@ -79,12 +79,12 @@ class AcceptBandInvitationRequest extends FormRequest
     protected function handleExistingUser(): array
     {
         $band = $this->invitation->band;
-        
+
         if ($band->members()->where('user_id', $this->invitedUser?->id ?? auth()->id())->exists()) {
             return [
                 'success' => false,
-                'redirect' => route('bands.show', $band),
-                'message' => "You have already joined the $band."
+                'redirect' => route('bands.show', $band->id),
+                'message' => "You have already joined the $band->name."
             ];
         }
 
@@ -92,15 +92,15 @@ class AcceptBandInvitationRequest extends FormRequest
             $this->invitedUser?->id ?? auth()->id(),
             ['role' => $this->invitation->role]
         );
-        
+
         // Mark as accepted and then delete
         $this->invitation->update(['accepted_at' => now()]);
-        $this->invitation->delete();
+//        $this->invitation->delete();
 
         return [
             'success' => true,
-            'redirect' => route('bands.show', $band),
-            'message' => "You have successfully joined the $band."
+            'redirect' => route('bands.show', $band->id),
+            'message' => "You have successfully joined the $band->name."
         ];
     }
 
@@ -127,10 +127,10 @@ class AcceptBandInvitationRequest extends FormRequest
             $this->invitedUser->id,
             ['role' => $this->invitation->role]
         );
-        
+
         // Mark as accepted and then delete
         $this->invitation->update(['accepted_at' => now()]);
-        $this->invitation->delete();
+//        $this->invitation->delete();
 
         return [
             'success' => true,
@@ -138,4 +138,4 @@ class AcceptBandInvitationRequest extends FormRequest
             'message' => 'Welcome to ' . $this->invitation->band->name . '! Please complete your profile setup.'
         ];
     }
-} 
+}
