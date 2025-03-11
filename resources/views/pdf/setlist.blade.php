@@ -5,7 +5,6 @@
     <style>
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            line-height: 1.6;
             color: #333;
             padding-left: 20px;
             padding-right: 20px;
@@ -15,7 +14,7 @@
         }
         .item {
             margin-bottom: 5px;
-            padding: 10px;
+            padding: 5px;
             border-bottom: 1px solid #eee;
         }
         .item-header {
@@ -25,7 +24,7 @@
         }
         .item-title {
             font-weight: bold;
-            font-size: 38px;
+            font-size: 32px;
         }
         .item-duration {
             color: #666;
@@ -36,7 +35,7 @@
             font-style: italic;
             color: #666;
             font-size: 16px;
-            margin-top: 8px;
+            margin-top: 2px;
         }
         .break-item {
             background-color: #f5f5f5;
