@@ -46,7 +46,7 @@ class AcceptBandInvitationRequest extends FormRequest
     {
         // Get and validate invitation
         $this->invitation = BandInvitation::where('token', $token)
-            ->whereNull('accepted_at')
+//            ->whereNull('accepted_at')
             ->where('expires_at', '>', now())
             ->firstOrFail();
 
