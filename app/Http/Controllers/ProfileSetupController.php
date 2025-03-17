@@ -26,14 +26,16 @@ class ProfileSetupController extends Controller
         ]);
 
         $user = auth()->user();
-        
+
         $user->update([
             'name' => $validated['name'],
             'password' => Hash::make($validated['password']),
             'password_set' => true,
         ]);
 
+        $user->invitations()->whereNotNull('accepted_at')->delete();
+
         return redirect()->route('dashboard')
             ->with('success', 'Profile setup completed successfully!');
     }
-} 
+}
