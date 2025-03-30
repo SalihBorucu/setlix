@@ -1,10 +1,16 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
+import PublicAccessToggle from './PublicAccessToggle.vue'
 
 defineProps({
     band: {
         type: Object,
         required: true
+    },
+    setlist: {
+        type: Object,
+        required: false,
+        default: null
     }
 })
 </script>
@@ -30,11 +36,14 @@ defineProps({
                 </Link>
             </div>
             <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                Create New Setlist
+                {{ setlist ? setlist.name : 'Create New Setlist' }}
             </h2>
-            <p class="mt-1 text-sm text-neutral-500">
-                Create a new setlist by dragging and dropping songs
+            <p v-if="setlist?.description" class="mt-1 text-sm text-neutral-500">
+                {{ setlist.description }}
             </p>
+        </div>
+        <div class="mt-4 flex md:ml-4 md:mt-0">
+            <PublicAccessToggle v-if="setlist" :band="band" :setlist="setlist" />
         </div>
     </div>
 </template> 
