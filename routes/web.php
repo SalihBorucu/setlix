@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Http\Controllers\LandingController;
 use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\SubscriptionPageAccessMiddleware;
@@ -26,13 +27,7 @@ Route::get('/test', function () {
 //    Bugsnag::notifyException(new RuntimeException("Test error"));
 });
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/dashboard');
-    }
-
-    return redirect('/login');
-})->middleware(EnsureProfileIsComplete::class);
+Route::get('/', [LandingController::class, 'index']);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])

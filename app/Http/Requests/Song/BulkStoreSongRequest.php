@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BulkStoreSongRequest extends FormRequest
 {
+    public Band $band;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -22,13 +23,13 @@ class BulkStoreSongRequest extends FormRequest
     public function rules(): array
     {
         // Get current song count and check trial status
-        $band = Band::findOrFail($this->route('band')->id);
-        $currentSongCount = $band->songs()->count();
-        $isSubscribed = $this->user()->trial?->isSubscribed ?? false;
-        
+        $this->band = Band::findOrFail($this->route('band')->id);
+        $currentSongCount = $this->band->songs()->count();
+        $isSubscribed = $this->band->isInTrial();
+
         // If on trial, limit total songs to 10
         $maxNewSongs = $isSubscribed ? 200 : (10 - $currentSongCount);
-        
+
         return [
             'songs' => ['required', 'array', 'min:1', "max:{$maxNewSongs}"],
             'songs.*.name' => ['required', 'string', 'max:255'],
@@ -43,11 +44,9 @@ class BulkStoreSongRequest extends FormRequest
      */
     public function messages(): array
     {
-        $isSubscribed = $this->user()->trial?->isSubscribed ?? false;
-        
         return [
             'songs.required' => 'At least one song is required.',
-            'songs.max' => $isSubscribed 
+            'songs.max' => $this->band->isInTrial()
                 ? 'You can only add up to 200 songs at once.'
                 : 'Free trial allows maximum 10 songs total. Please subscribe to add more songs.',
             'songs.*.name.required' => 'Each song must have a name.',
