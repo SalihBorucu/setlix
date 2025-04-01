@@ -1,1 +1,0 @@
-import{c as o,o as a,k as s,n as t}from"./app-By7LNvvF.js";const d={__name:"Card",props:{bgColor:{type:String,default:"bg-white"}},setup(e){return(r,l)=>(a(),o("div",{class:t(["rounded-lg shadow-sm border border-neutral-200 overflow-hidden",e.bgColor])},[s(r.$slots,"default")],2))}};export{d as _};
