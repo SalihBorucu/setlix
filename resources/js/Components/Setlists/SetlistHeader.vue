@@ -17,9 +17,9 @@ defineProps({
 
 <template>
     <div class="md:flex md:items-center md:justify-between">
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 flex-1 test">
             <div class="flex items-center">
-                <Link 
+                <Link
                     :href="route('bands.show', band.id)"
                     class="text-sm font-medium text-primary-600 hover:text-primary-700"
                 >
@@ -28,7 +28,7 @@ defineProps({
                 <svg class="mx-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <Link 
+                <Link
                     :href="route('setlists.index', band.id)"
                     class="text-sm font-medium text-primary-600 hover:text-primary-700"
                 >
@@ -46,4 +46,4 @@ defineProps({
             <PublicAccessToggle v-if="setlist" :band="band" :setlist="setlist" />
         </div>
     </div>
-</template> 
+</template>
