@@ -1,12 +1,22 @@
 <script setup>
 import { ref } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage, router } from '@inertiajs/vue3'
 import { DSButton } from '@/Components/UI'
 import TrialStatusBanner from '@/Components/UI/TrialStatusBanner.vue'
 import { FlashMessage } from '@/Components/UI'
+import axios from 'axios'
 
 const showingNavigationDropdown = ref(false)
 const { auth } = usePage().props
+
+const handleLogout = async () => {
+    try {
+        await axios.post(route('logout'))
+        window.location.href = '/'
+    } catch (error) {
+        console.error('Logout failed:', error)
+    }
+}
 
 // Basic routes that don't require band context
 const navigation = [
@@ -22,7 +32,7 @@ const bandNavigation = [
 const userNavigation = [
     { name: 'Your Profile', href: route('profile.edit') },
     { name: 'Subscriptions', href: route('subscription.index') },
-    { name: 'Sign out', href: route('logout'), method: 'post' }
+    { name: 'Sign out', action: handleLogout }
 ]
 
 // Get the current band ID from the route parameters
@@ -109,17 +119,24 @@ const currentBandId = route().params.band
                                 </div>
 
                                 <div class="py-1">
-                                    <Link
-                                        v-for="item in userNavigation"
-                                        :key="item.name"
-                                        :href="item.href"
-                                        :method="item.method"
-                                        as="button"
-                                        class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                                        role="menuitem"
-                                    >
-                                        {{ item.name }}
-                                    </Link>
+                                    <template v-for="item in userNavigation" :key="item.name">
+                                        <button
+                                            v-if="item.action"
+                                            @click="item.action"
+                                            class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                                            role="menuitem"
+                                        >
+                                            {{ item.name }}
+                                        </button>
+                                        <Link
+                                            v-else
+                                            :href="item.href"
+                                            class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                                            role="menuitem"
+                                        >
+                                            {{ item.name }}
+                                        </Link>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -218,15 +235,22 @@ const currentBandId = route().params.band
                     </div>
 
                     <div class="mt-3 space-y-1">
-                        <Link
-                            v-for="item in userNavigation"
-                            :key="item.name"
-                            :href="item.href"
-                            :method="item.method"
-                            class="block px-4 py-2 text-base font-medium text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
-                        >
-                            {{ item.name }}
-                        </Link>
+                        <template v-for="item in userNavigation" :key="item.name">
+                            <button
+                                v-if="item.action"
+                                @click="item.action"
+                                class="block w-full text-left px-4 py-2 text-base font-medium text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
+                            >
+                                {{ item.name }}
+                            </button>
+                            <Link
+                                v-else
+                                :href="item.href"
+                                class="block w-full text-left px-4 py-2 text-base font-medium text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
+                            >
+                                {{ item.name }}
+                            </Link>
+                        </template>
                     </div>
                 </div>
             </div>
