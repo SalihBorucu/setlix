@@ -10,13 +10,13 @@
         </div>
 
         <div class="mt-10">
-            <div class="relative">
-                <div class="relative h-64 sm:h-72 md:h-96">
-                    <img class="absolute inset-0 w-full h-full object-cover rounded-lg shadow-lg" 
-                         src="{{ asset('images/who-its-for.jpg') }}" 
-                         alt="Musician using Setlix">
+            <div>
+                <div class="h-64 sm:h-72 md:h-96 w-full">
+                    <img class="w-full h-full object-cover object-[15%] rounded-lg shadow-lg"
+                         src="{{ asset('images/setlix-ui.png') }}"
+                         alt="Setlix UI">
                 </div>
             </div>
         </div>
     </div>
-</section> 
+</section>

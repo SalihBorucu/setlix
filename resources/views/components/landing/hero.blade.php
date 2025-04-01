@@ -25,8 +25,8 @@
         </div>
     </div>
     <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-        <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" 
-             src="{{ asset('images/hero-image.jpg') }}" 
+        <img class="w-full object-cover sm:h-72 md:h-96 lg:w-[750px] lg:h-full lg:ml-10"
+             src="{{ asset('images/hero-image.png') }}"
              alt="A worn-out, beer-stained paper setlist next to a clean, digital Setlix setlist on a phone/tablet">
     </div>
-</section> 
+</section>
