@@ -30,6 +30,8 @@ const form = useForm({
     band_id: props.band.id,
     name: props.setlist.name,
     description: props.setlist.description,
+    target_duration: '',
+    target_duration_seconds: props.setlist.target_duration,
     items: [],
     total_duration: props.setlist.total_duration
 })
@@ -123,6 +125,7 @@ const updateNotes = ({ index, notes }) => {
     }
 }
 
+// Update submit to use target_duration_seconds
 const submit = () => {
     form.items = selectedItems.value.map(item => {
         const formattedItem = {
@@ -156,7 +159,7 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <SetlistHeader :band="band" />
+            <SetlistHeader :band="band" :setlist="setlist" />
         </template>
 
         <div class="max-w-7xl">

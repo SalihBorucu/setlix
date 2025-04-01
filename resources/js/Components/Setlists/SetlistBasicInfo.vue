@@ -1,12 +1,14 @@
 <script setup>
-import { DSInput, DSCard } from '@/Components/UI'
+import { DSInput, DSCard, DSDurationInput } from '@/Components/UI'
 
-defineProps({
+const props = defineProps({
     form: {
         type: Object,
         required: true
     }
 })
+
+const emit = defineEmits(['update:targetDuration'])
 </script>
 
 <template>
@@ -42,6 +44,19 @@ defineProps({
                 </div>
                 <p class="mt-1 text-sm text-neutral-500">
                     Add any notes or context about this setlist
+                </p>
+            </div>
+
+            <div>
+                <DSDurationInput
+                    v-model="form.target_duration"
+                    @update:seconds="(seconds) => form.target_duration_seconds = seconds"
+                    label="Target Duration"
+                    :error="form.errors.target_duration"
+                    required
+                />
+                <p class="mt-1 text-sm text-neutral-500">
+                    Set the target duration for this event
                 </p>
             </div>
         </div>

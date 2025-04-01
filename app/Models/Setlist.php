@@ -22,6 +22,12 @@ class Setlist extends Model
         'description',
         'total_duration',
         'song_order',
+        'is_public',
+        'public_slug',
+        'target_duration',
+        'client_name',
+        'client_email',
+        'submitted_at'
     ];
 
     /**
@@ -32,6 +38,8 @@ class Setlist extends Model
     protected $casts = [
         'song_order' => 'array',
         'total_duration' => 'integer',
+        'is_public' => 'boolean',
+        'submitted_at' => 'datetime'
     ];
 
     /**

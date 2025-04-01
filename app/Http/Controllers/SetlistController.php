@@ -6,6 +6,7 @@ use App\Http\Requests\Setlist\StoreSetlistRequest;
 use App\Models\Band;
 use App\Models\Setlist;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -58,6 +59,7 @@ class SetlistController extends Controller
             'band_id' => $request->band_id,
             'name' => $request->name,
             'description' => $request->description,
+            'target_duration' => $request->target_duration_seconds,
             'total_duration' => $request->total_duration
         ]);
 
@@ -133,6 +135,7 @@ class SetlistController extends Controller
         $setlist->update([
             'name' => $request->name,
             'description' => $request->description,
+            'target_duration' => $request->target_duration_seconds,
             'total_duration' => $request->total_duration
         ]);
 
@@ -168,5 +171,41 @@ class SetlistController extends Controller
         $setlist->delete();
 
         return redirect()->route('setlists.index', ['band' => $band->id]);
+    }
+
+    /**
+     * Make a setlist public and generate a shareable link.
+     */
+    public function makePublic(Band $band, Setlist $setlist): JsonResponse
+    {
+        $this->authorize('update', $band);
+
+        $setlist->update([
+            'is_public' => true,
+            'public_slug' => PublicSetlistController::generatePublicSlug()
+        ]);
+
+        return response()->json([
+            'message' => 'Setlist is now public. Share the link with your client.',
+            'setlist' => $setlist
+        ]);
+    }
+
+    /**
+     * Make a setlist private.
+     */
+    public function makePrivate(Band $band, Setlist $setlist): JsonResponse
+    {
+        $this->authorize('update', $band);
+
+        $setlist->update([
+            'is_public' => false,
+            'public_slug' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Setlist is now private.',
+            'setlist' => $setlist
+        ]);
     }
 }

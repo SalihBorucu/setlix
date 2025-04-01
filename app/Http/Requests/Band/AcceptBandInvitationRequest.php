@@ -36,11 +36,6 @@ class AcceptBandInvitationRequest extends FormRequest
      * Process the invitation acceptance
      *
      * @param string $token The invitation token from the route parameter
-     * @return array{
-     *  success: bool,
-     *  redirect: string,
-     *  message: string
-     * }
      */
     public function process(string $token): array
     {
@@ -95,7 +90,6 @@ class AcceptBandInvitationRequest extends FormRequest
 
         // Mark as accepted and then delete
         $this->invitation->update(['accepted_at' => now()]);
-//        $this->invitation->delete();
 
         return [
             'success' => true,

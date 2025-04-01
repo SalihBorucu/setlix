@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\SpotifyController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Http\Controllers\LandingController;
 use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\SubscriptionPageAccessMiddleware;
@@ -20,18 +21,13 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportSetlistToPdf;
+use App\Http\Controllers\PublicSetlistController;
 
 Route::get('/test', function () {
 //    Bugsnag::notifyException(new RuntimeException("Test error"));
 });
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/dashboard');
-    }
-
-    return redirect('/login');
-})->middleware(EnsureProfileIsComplete::class);
+Route::get('/', [LandingController::class, 'index']);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
@@ -83,6 +79,8 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::delete('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'destroy'])->name('setlists.destroy');
         Route::get('/bands/{band}/setlists/{setlist}/export', ExportSetlistToPdf::class)->name('setlists.export');
         Route::get('/bands/{band}/setlists/download/{filename}', [ExportSetlistToPdf::class, 'download'])->name('setlists.download');
+        Route::post('/bands/{band}/setlists/{setlist}/make-public', [SetlistController::class, 'makePublic'])->name('setlists.make-public');
+        Route::post('/bands/{band}/setlists/{setlist}/make-private', [SetlistController::class, 'makePrivate'])->name('setlists.make-private');
 
         // Band Member Management
         Route::get('/bands/{band}/members', [BandMemberController::class, 'index'])->name('bands.members.index');
@@ -110,6 +108,10 @@ Route::middleware([
 
 // Public route for accepting invitations
 Route::get('/invitations/{token}', [BandMemberController::class, 'acceptInvitation'])->name('invitations.accept');
+
+// Public routes for setlist access
+Route::get('/setlist/{slug}', [PublicSetlistController::class, 'show'])->name('public.setlist.show');
+Route::post('/setlist/{slug}/submit', [PublicSetlistController::class, 'submit'])->name('public.setlist.submit');
 
 // Stripe webhook
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('cashier.webhook');

@@ -160,4 +160,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new VerifyEmail);
     }
+
+    public function invitations()
+    {
+        return $this->hasMany(BandInvitation::class);
+    }
 }
