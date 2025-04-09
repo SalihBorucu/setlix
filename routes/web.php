@@ -12,19 +12,16 @@ use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\LandingController;
 use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
-use App\Http\Middleware\SubscriptionPageAccessMiddleware;
-use App\Services\SpotifyService;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
 
-Route::get('/test', function () {
-    Bugsnag\BugsnagLaravel\Facades\Bugsnag::notifyException(new RuntimeException("Test asdasd12"));
-});
+if (env('APP_ENV') !== 'production') {
+    Route::get('/test', function () {
+        
+    });
+}
 
 Route::get('/', [LandingController::class, 'index']);
 
