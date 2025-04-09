@@ -14,7 +14,6 @@ use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\SubscriptionPageAccessMiddleware;
 use App\Services\SpotifyService;
-use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -24,7 +23,7 @@ use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
 
 Route::get('/test', function () {
-//    Bugsnag::notifyException(new RuntimeException("Test error"));
+    Bugsnag\BugsnagLaravel\Facades\Bugsnag::notifyException(new RuntimeException("Test asdasd12"));
 });
 
 Route::get('/', [LandingController::class, 'index']);
