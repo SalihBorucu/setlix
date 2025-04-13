@@ -47,4 +47,8 @@ return [
         'price_id' => env('STRIPE_PRICE_ID'),
     ],
 
+    'maxmind' => [
+        'license_key' => env('MAXMIND_LICENSE_KEY'),
+    ],
+
 ];

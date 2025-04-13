@@ -31,6 +31,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_started_at',
         'trial_ends_at',
         'is_trial',
+        'country_code',
+        'location_detected_at',
+        'detected_ip',
     ];
 
     /**
@@ -53,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_ends_at' => 'datetime',
         'password' => 'hashed',
         'password_set' => 'boolean',
+        'location_detected_at' => 'datetime',
     ];
 
     /**

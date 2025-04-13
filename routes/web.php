@@ -16,18 +16,31 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
+use Illuminate\Http\Request;
+use App\Services\GeolocationService;
 
 if (env('APP_ENV') !== 'production') {
-    Route::get('/test', function () {
+    Route::get('/test', function (Request $request) {
+        $geoService = app(GeolocationService::class);
         
+        $clientIp = $geoService->getClientIp();
+        $countryCode = $geoService->detectCountry($clientIp);
+        
+        return [
+            'ip' => $clientIp,
+            'country_code' => $countryCode,
+            'session_country' => session('country_code'),
+            'user_country' => auth()->user()?->country_code,
+        ];
     });
 }
 
-Route::get('/', [LandingController::class, 'index']);
-
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
-    ->name('dashboard');
+Route::middleware(['web', 'detect.geolocation'])->group(function () {
+    Route::get('/', [LandingController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
+        ->name('dashboard');
+});
 
 Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     // Profile routes
