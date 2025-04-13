@@ -26,7 +26,7 @@
                 <p class="text-sm text-gray-500">Monthly Subscription</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-gray-900">£10.00</p>
+                <p class="text-lg font-bold text-gray-900">{{ formattedPrice }}</p>
                 <p class="text-sm text-gray-500">per month</p>
               </div>
             </div>
@@ -82,7 +82,7 @@
               :disabled="isLoading"
             >
               <span v-if="isLoading">Processing...</span>
-              <span v-else>Subscribe Now • £10/month</span>
+              <span v-else>Subscribe Now • {{ formattedPrice }}/month</span>
             </DSButton>
           </form>
 
@@ -127,7 +127,28 @@ const props = defineProps({
   clientSecret: {
     type: String,
     required: true
+  },
+  formattedPrice: {
+    type: String,
+    required: true
+  },
+  pricing: {
+    type: Object,
+    required: true,
+    default: () => ({})
+  },
+  priceId: {
+    type: String,
+    required: true
   }
+});
+
+// Debug log
+console.log('Checkout props:', {
+  band: props.band,
+  pricing: props.pricing,
+  priceId: props.priceId,
+  formattedPrice: props.formattedPrice
 });
 
 const error = ref(null);
@@ -198,15 +219,21 @@ const handleSubmit = async () => {
       throw new Error(setupError.message);
     }
 
-    console.log('Payment method created:', setupIntent.payment_method);
-
-    // Create subscription with the payment method
-    const { data } = await axios.post(route('subscription.create'), {
+    // Prepare subscription data
+    const subscriptionData = {
       band_id: props.band.id,
       payment_method: setupIntent.payment_method,
-    });
+      price_id: props.priceId
+    };
 
-    console.log('Subscription response:', data);
+    // Only add pricing details if they exist
+    if (props.pricing?.currency) {
+      subscriptionData.currency = props.pricing.currency;
+      subscriptionData.amount = props.pricing.amount;
+    }
+
+    // Create subscription with the payment method
+    const { data } = await axios.post(route('subscription.create'), subscriptionData);
 
     if (data.status === 'requires_action') {
       // Handle additional payment action if needed
@@ -216,8 +243,8 @@ const handleSubmit = async () => {
       }
     }
 
-    // Redirect to band page on success
-    router.visit(route('bands.show', props.band.id), {
+    // Redirect to subscription index on success
+    router.visit(route('subscription.index'), {
       preserveScroll: true
     });
 

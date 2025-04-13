@@ -10,6 +10,14 @@ defineProps({
     subscriptions: {
         type: Array,
         required: true
+    },
+    pricing: {
+        type: Object,
+        required: true
+    },
+    formattedPrice: {
+        type: String,
+        required: true
     }
 })
 
@@ -71,7 +79,7 @@ const formatDate = (dateString) => {
         <div v-if="subscriptions.some(band => band.subscription?.is_owner)"
              class="bg-white rounded-lg shadow p-6 mb-6">
             <h3 class="text-lg font-medium text-neutral-900 mb-2">Your Total Monthly Fee</h3>
-            <p class="text-2xl font-bold text-primary-600">£{{ computed.totalMonthlyFee(subscriptions).toFixed(2) }}/month</p>
+            <p class="text-2xl font-bold text-primary-600">{{ pricing.symbol }}{{ computed.totalMonthlyFee(subscriptions).toFixed(2) }}/month</p>
         </div>
 
         <!-- Subscriptions List -->
@@ -96,7 +104,7 @@ const formatDate = (dateString) => {
                             <template v-if="band.subscription">
                                 <p v-if="band.subscription.is_owner"
                                    class="text-sm text-neutral-500">
-                                    You are paying £{{ band.subscription.price }}/month
+                                    You are paying {{ band.subscription.formatted_price }}/month
                                 </p>
                                 <p v-else class="text-sm text-neutral-500">
                                     Subscription managed by {{ band.subscription.owner_name }}

@@ -49,13 +49,25 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Subscription routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])->name('subscription.expired');
-        Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])->name('subscription.checkout')->middleware('subscription.page.access');
-        Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])->name('subscription.create');
-        Route::delete('/subscription/cancel/{band}', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
-        Route::post('/subscription/update-payment-method', [SubscriptionController::class, 'updatePaymentMethod'])->name('subscription.update-payment-method');
-        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::middleware(['auth', 'verified'])->group(function () {
+        // Subscription management
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])
+            ->name('subscription.index');
+            
+        Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
+            ->name('subscription.expired');
+        
+        Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])
+            ->name('subscription.checkout');
+        
+        Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])
+            ->name('subscription.create');
+        
+        Route::post('/subscription/update-payment', [SubscriptionController::class, 'updatePaymentMethod'])
+            ->name('subscription.update-payment');
+        
+        Route::delete('/subscription/{band}/cancel', [SubscriptionController::class, 'cancel'])
+            ->name('subscription.cancel');
     });
 
     // Band routes with access control

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Band;
+use App\Services\PricingService;
 use App\Services\StripeService;
 use Carbon\Carbon;
 use Exception;
@@ -15,6 +16,13 @@ use Laravel\Cashier\Exceptions\IncompletePayment;
 
 class SubscriptionController extends Controller
 {
+    private PricingService $pricingService;
+
+    public function __construct(PricingService $pricingService)
+    {
+        $this->pricingService = $pricingService;
+    }
+
     /**
      * Show the subscription expired page
      */
@@ -26,30 +34,39 @@ class SubscriptionController extends Controller
     /**
      * Show the checkout page for a specific band
      */
-    public function checkout(Band $band): Response|RedirectResponse
+    public function checkout(Request $request, Band $band): Response|RedirectResponse
     {
         try {
-            $user = auth()->user();
+            $user = $request->user();
 
             if (!$band->isAdmin($user)) {
                 return redirect()->route('dashboard')
                     ->with('error', 'You do not have permission to subscribe this band.');
             }
 
+            // Get pricing based on user's location
+            $countryCode = $user->country_code ?? session('country_code');
+            $pricing = $this->pricingService->getPricing($countryCode);
+
+            // Get the appropriate Stripe Price ID based on currency
+            $priceId = config("subscription.stripe_prices.{$pricing['currency']}");
+
             // Create or get Stripe customer
             if (!$user->stripe_id) {
-                $stripeCustomer = $user->createAsStripeCustomer();
-                ray('Created customer:', $stripeCustomer->toArray());
+                $user->createAsStripeCustomer();
             }
 
             // Create setup intent
             $intent = $user->createSetupIntent();
-            ray('Created setup intent:', $intent->toArray());
 
             return Inertia::render('Subscription/Checkout', [
                 'band' => $band->only(['id', 'name', 'created_at']),
+                'trialDaysLeft' => $user->getRemainingTrialDays(),
                 'stripeKey' => config('cashier.key'),
                 'clientSecret' => $intent->client_secret,
+                'pricing' => $pricing,
+                'formattedPrice' => $this->pricingService->formatPrice($pricing),
+                'priceId' => $priceId
             ]);
 
         } catch (\Exception $e) {
@@ -73,17 +90,12 @@ class SubscriptionController extends Controller
         $request->validate([
             'band_id' => 'required|exists:bands,id',
             'payment_method' => 'required|string',
+            'price_id' => 'required|string'
         ]);
 
         try {
             $user = auth()->user();
             $band = Band::findOrFail($request->band_id);
-
-            ray('User and Band:', [
-                'user_id' => $user->id,
-                'band_id' => $band->id,
-                'stripe_id' => $user->stripe_id
-            ]);
 
             if (!$band->isAdmin($user)) {
                 return response()->json([
@@ -91,30 +103,25 @@ class SubscriptionController extends Controller
                 ], 403);
             }
 
-            // Ensure customer exists and update payment method
-            if (!$user->stripe_id) {
-                ray('Creating new customer for subscription');
-                $user->createAsStripeCustomer();
-            }
+            // Get pricing based on user's location
+            $countryCode = $user->country_code ?? session('country_code');
+            $pricing = app(PricingService::class)->getPricing($countryCode);
 
-            ray('Updating payment method');
+            // Update payment method
             $user->updateDefaultPaymentMethod($request->payment_method);
 
-            // Create subscription using StripeService
-            $stripeService = app(StripeService::class);
-            $result = $stripeService->createSubscription($band, $user, [
-                'payment_method' => $request->payment_method,
+            // Create subscription
+            $subscription = $user->subscribeBand($band, $request->price_id, [
+                'currency' => $pricing['currency'],
+                'amount' => $pricing['amount']
             ]);
-
-            ray('Subscription created:', $result);
 
             return response()->json([
                 'status' => 'success',
-                'subscription' => $result,
+                'subscription' => $subscription
             ]);
 
-        } catch (\Laravel\Cashier\Exceptions\IncompletePayment $exception) {
-            ray('Incomplete payment exception:', $exception->getMessage());
+        } catch (IncompletePayment $exception) {
             return response()->json([
                 'status' => 'requires_action',
                 'payment_intent_client_secret' => $exception->payment->clientSecret(),
@@ -139,12 +146,16 @@ class SubscriptionController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
+        
+        // Get user's pricing based on location
+        $countryCode = $user->country_code ?? session('country_code');
+        $pricing = $this->pricingService->getPricing($countryCode);
 
         // Get all bands where user is admin, with their subscriptions
         $bands = $user->adminBands()
             ->with(['subscription.user'])
             ->get()
-            ->map(function ($band) use ($user) {
+            ->map(function ($band) use ($user, $pricing) {
                 $subscription = $band->subscription;
                 return [
                     'id' => $band->id,
@@ -153,7 +164,10 @@ class SubscriptionController extends Controller
                     'subscription' => $subscription ? [
                         'id' => $subscription->id,
                         'status' => $subscription->stripe_status,
-                        'price' => config('subscription.monthly_price'), // Fixed price for now
+                        'price' => $pricing['amount'],
+                        'currency' => $pricing['currency'],
+                        'symbol' => $pricing['symbol'],
+                        'formatted_price' => $this->pricingService->formatPrice($pricing),
                         'ends_at' => $subscription->ends_at,
                         'trial_ends_at' => $subscription->trial_ends_at,
                         'is_owner' => $subscription->user_id === $user->id,
@@ -163,7 +177,9 @@ class SubscriptionController extends Controller
             });
 
         return Inertia::render('Subscriptions/Index', [
-            'subscriptions' => $bands
+            'subscriptions' => $bands,
+            'pricing' => $pricing,
+            'formattedPrice' => $this->pricingService->formatPrice($pricing)
         ]);
     }
 
@@ -180,25 +196,35 @@ class SubscriptionController extends Controller
                     ->with('error', 'You do not have permission to cancel this subscription.');
             }
 
-            $subscription = $band->subscription;
-            if (!$subscription) {
+            // Get both subscription records
+            $bandSubscription = $band->subscription;
+            $stripeSubscription = $user->bandSubscriptions()
+                ->where('band_id', $band->id)
+                ->first();
+
+            if (!$bandSubscription || !$stripeSubscription) {
                 return redirect()->back()
                     ->with('error', 'No active subscription found.');
             }
 
-            // Cancel the subscription at period end
-            $stripeSubscription = $user->bandSubscriptions()->where('band_id', $band->id)->first();
-            if ($stripeSubscription) {
-                $service = new StripeService();
-                $service->cancelSubscription($band);
-//                    $stripeSubscription->cancelAt(Carbon::now()->addMonths(1));
-            }
+            // Cancel the Stripe subscription
+            $service = new StripeService();
+            $service->cancelSubscription($band);
 
-            // Update local subscription record
-            $subscription->update([
-                'ends_at' => Carbon::now()->addMonths(1),
+            // Calculate end date (1 month from now)
+            $endDate = Carbon::now()->addMonths(1);
+
+            // Update both subscription records
+            $bandSubscription->update([
+                'ends_at' => $endDate,
                 'stripe_status' => 'cancelled'
             ]);
+
+            // Update Cashier subscription record
+            $cashierSubscription = $user->subscription("band_{$band->id}");
+            if ($cashierSubscription) {
+                $cashierSubscription->cancelAt($endDate);
+            }
 
             return redirect()->back()
                 ->with('success', 'Your subscription has been cancelled and will end at the end of the billing period.');
@@ -242,6 +268,31 @@ class SubscriptionController extends Controller
             return response()->json([
                 'message' => 'Unable to update payment method. Please try again.'
             ], 500);
+        }
+    }
+
+    public function subscribe(Request $request, Band $band)
+    {
+        $user = $request->user();
+        $countryCode = $user->country_code ?? session('country_code');
+        $pricing = $this->pricingService->getPricing($countryCode);
+        
+        // Get the appropriate Stripe Price ID based on currency
+        $priceId = config("subscription.stripe_prices.{$pricing['currency']}");
+
+        try {
+            // Create the subscription
+            $subscription = $user->subscribeBand($band, $priceId, [
+                'currency' => $pricing['currency'],
+                'amount' => $pricing['amount']
+            ]);
+
+            return redirect()->route('dashboard')->with('success', 'Subscription created successfully!');
+        } catch (IncompletePayment $exception) {
+            return redirect()->route('cashier.payment', [
+                $exception->payment->id,
+                'redirect' => route('dashboard')
+            ]);
         }
     }
 }

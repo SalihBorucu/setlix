@@ -1,3 +1,5 @@
+@props(['formattedPrice', 'pricing'])
+
 <section class="py-12 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
@@ -5,7 +7,7 @@
                 One Simple Price, No Surprises
             </h2>
             <p class="mt-4 text-lg text-gray-500">
-                £10/month per band. One flat fee covers your whole band—no extra costs.
+                {{ $formattedPrice }}/month per band. One flat fee covers your whole band—no extra costs.
             </p>
         </div>
 
@@ -15,7 +17,7 @@
                     <div class="text-center">
                         <h3 class="text-2xl font-bold text-gray-900">Band Plan</h3>
                         <div class="mt-4 flex items-center justify-center">
-                            <span class="text-4xl font-extrabold text-gray-900">£10</span>
+                            <span class="text-4xl font-extrabold text-gray-900">{{ $formattedPrice }}</span>
                             <span class="ml-1 text-xl font-medium text-gray-500">/month</span>
                         </div>
                         <p class="mt-4 text-sm text-gray-500">Per band, unlimited members</p>

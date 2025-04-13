@@ -12,7 +12,7 @@
     <x-landing.why-choose />
 
     <!-- Pricing Section -->
-    <x-landing.pricing />
+    <x-landing.pricing :formattedPrice="$formattedPrice" :pricing="$pricing" />
 
     <!-- Get Started Section -->
     <section class="py-12 bg-sky-50">

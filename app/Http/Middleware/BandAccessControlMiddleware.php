@@ -25,47 +25,38 @@ class BandAccessControlMiddleware
             return $next($request);
         }
 
-        if ($request->user()->is_trial) {
-            return $next($request);
-        }
-
         // Skip checks for subscription-related routes to prevent redirect loops
         if ($this->isSubscriptionRoute($request)) {
             return $next($request);
         }
 
-        $user = $request->user();
+        // Allow access during trial period
+        if ($request->user()->is_trial) {
+            return $next($request);
+        }
 
-        // Get any subscription (including incomplete ones)
-        $subscription = $band->subscriptions()
-            ->whereNull('ends_at')
-            ->where(function($query) {
-                $query->where('stripe_status', 'active')
-                      ->orWhere('stripe_status', 'incomplete');
-            })
-            ->latest()
-            ->first();
+        // Get active subscription
+        $subscription = $band->subscription;
 
-        // If no subscription at all, redirect to checkout
+        // If no active subscription, redirect to checkout
         if (!$subscription) {
             return redirect()->route('subscription.checkout', $band)
                 ->with('error', 'Subscription required to access this band.');
         }
 
-        // If subscription exists but is not active or incomplete, allow access
-        // This ensures users can complete their subscription process
+        // If subscription is incomplete, allow access to complete the process
         if ($subscription->stripe_status === 'incomplete') {
             return $next($request);
         }
 
-        // If subscription exists but is not active (e.g., cancelled, expired)
-        if (!$subscription->isActive()) {
+        // If subscription exists but is not active, redirect to checkout
+        if (!$subscription->active()) {
             return redirect()->route('subscription.checkout', $band)
                 ->with('error', 'Your subscription has expired. Please renew to continue.');
         }
 
-        // If band is in read-only mode (expired subscription), restrict write operations
-        if ($this->isWriteOperation($request) && !$band->canPerformWriteOperations()) {
+        // If attempting write operation without active subscription or trial
+        if ($this->isWriteOperation($request) && !$band->hasActiveSubscription()) {
             return redirect()->back()
                 ->with('error', 'Band is in read-only mode. Please subscribe to make changes.');
         }
