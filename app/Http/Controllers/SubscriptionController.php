@@ -196,35 +196,26 @@ class SubscriptionController extends Controller
                     ->with('error', 'You do not have permission to cancel this subscription.');
             }
 
-            // Get both subscription records
-            $bandSubscription = $band->subscription;
-            $stripeSubscription = $user->bandSubscriptions()
-                ->where('band_id', $band->id)
-                ->first();
+            // Get the subscription
+            $subscription = $user->getBandSubscription($band);
 
-            if (!$bandSubscription || !$stripeSubscription) {
+            if (!$subscription) {
                 return redirect()->back()
                     ->with('error', 'No active subscription found.');
             }
 
-            // Cancel the Stripe subscription
+            // Cancel the subscription at period end
             $service = new StripeService();
             $service->cancelSubscription($band);
 
             // Calculate end date (1 month from now)
             $endDate = Carbon::now()->addMonths(1);
 
-            // Update both subscription records
-            $bandSubscription->update([
+            // Update subscription record
+            $subscription->update([
                 'ends_at' => $endDate,
                 'stripe_status' => 'cancelled'
             ]);
-
-            // Update Cashier subscription record
-            $cashierSubscription = $user->subscription("band_{$band->id}");
-            if ($cashierSubscription) {
-                $cashierSubscription->cancelAt($endDate);
-            }
 
             return redirect()->back()
                 ->with('success', 'Your subscription has been cancelled and will end at the end of the billing period.');

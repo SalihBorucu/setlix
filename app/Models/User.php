@@ -82,8 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function bandSubscriptions(): HasMany
     {
-        return $this->hasMany(\Laravel\Cashier\Subscription::class)
-            ->where('name', 'like', 'band_%');
+        return $this->hasMany(\Laravel\Cashier\Subscription::class);
     }
 
     /**
@@ -99,11 +98,22 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasBandSubscription(Band $band): bool
     {
-        return $this->subscriptions()
+        return $this->bandSubscriptions()
             ->where('band_id', $band->id)
             ->where('stripe_status', 'active')
             ->whereNull('ends_at')
             ->exists();
+    }
+
+    /**
+     * Get a specific band's subscription
+     */
+    public function getBandSubscription(Band $band): ?\Laravel\Cashier\Subscription
+    {
+        return $this->bandSubscriptions()
+            ->where('band_id', $band->id)
+            ->latest()
+            ->first();
     }
 
     /**
