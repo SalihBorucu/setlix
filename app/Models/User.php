@@ -31,6 +31,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_started_at',
         'trial_ends_at',
         'is_trial',
+        'country_code',
+        'location_detected_at',
+        'detected_ip',
     ];
 
     /**
@@ -53,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_ends_at' => 'datetime',
         'password' => 'hashed',
         'password_set' => 'boolean',
+        'location_detected_at' => 'datetime',
     ];
 
     /**
@@ -78,7 +82,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function bandSubscriptions(): HasMany
     {
-        return $this->hasMany(BandSubscription::class);
+        return $this->hasMany(\Laravel\Cashier\Subscription::class)
+            ->where('name', 'like', 'band_%');
     }
 
     /**
@@ -90,12 +95,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if a band has an active subscription
+     * Check if user has an active subscription for a band
      */
     public function hasBandSubscription(Band $band): bool
     {
-        return $this->bandSubscriptions()
+        return $this->subscriptions()
             ->where('band_id', $band->id)
+            ->where('stripe_status', 'active')
             ->whereNull('ends_at')
             ->exists();
     }
@@ -105,13 +111,19 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function subscribeBand(Band $band, string $priceId, array $options = []): \Laravel\Cashier\Subscription
     {
-        return $this->newSubscription("band_{$band->id}", $priceId)
+        $subscription = $this->newSubscription("band_{$band->id}", $priceId)
             ->create(null, array_merge([
                 'metadata' => [
                     'band_id' => $band->id,
                     'user_id' => $this->id,
                 ]
             ], $options));
+
+        // Update the local subscription with band_id
+        $subscription->band_id = $band->id;
+        $subscription->save();
+
+        return $subscription;
     }
 
     /**

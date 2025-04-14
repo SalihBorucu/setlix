@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'trial.limits' => \App\Http\Middleware\EnforceTrialLimits::class,
             'subscription.page.access' => \App\Http\Middleware\SubscriptionPageAccessMiddleware::class,
             'band.access' => \App\Http\Middleware\BandAccessControlMiddleware::class,
+            'detect.geolocation' => \App\Http\Middleware\DetectGeolocation::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

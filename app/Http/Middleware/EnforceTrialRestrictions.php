@@ -3,35 +3,30 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use App\Services\BandSubscriptionService;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class EnforceTrialRestrictions
 {
-    public function __construct(private BandSubscriptionService $subscriptionService)
-    {}
-
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $band = $request->route('band');
+        $user = $request->user();
         
-        if (!$band) {
+        if (!$user->is_trial) {
             return $next($request);
         }
 
-        $status = $this->subscriptionService->getStatus($band);
-        
-        if ($status['isReadOnly']) {
-            if ($request->isMethod('GET')) {
-                return $next($request);
-            }
-            return redirect()->back()->with('error', 'Your trial has expired. Band is in read-only mode.');
-        }
+        // Check if trial has expired
+        if ($user->trial_ends_at && $user->trial_ends_at->isPast()) {
+            $user->update(['is_trial' => false]);
+            
+            // Update any bands owned by this user
+            $user->adminBands()->update([
+                'trial_ends_at' => null
+            ]);
 
-        if ($status['isInTrial']) {
-            $limits = $this->subscriptionService->checkTrialLimits($band);
-            if ($limits['anyLimitReached'] && !$request->isMethod('GET')) {
-                return redirect()->back()->with('error', 'Trial limits reached. Please subscribe to continue.');
-            }
+            return redirect()->route('subscription.expired')
+                ->with('error', 'Your trial period has expired.');
         }
 
         return $next($request);

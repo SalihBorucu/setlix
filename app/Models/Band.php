@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Cashier\Subscription;
 
 class Band extends Model
 {
@@ -116,21 +117,34 @@ class Band extends Model
     }
 
     /**
-     * Get the active subscription for the band
+     * Get the active subscription for this band
      */
     public function subscription(): HasOne
     {
-        return $this->hasOne(BandSubscription::class)
-            ->whereNull('ends_at')
-            ->where('stripe_status', 'active');
+        return $this->hasOne(\Laravel\Cashier\Subscription::class)
+            ->where('stripe_status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', now());
+            });
     }
 
     /**
-     * Get all subscriptions for the band
+     * Check if the band has an active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription()
+            ->where('stripe_status', 'active')
+            ->exists();
+    }
+
+    /**
+     * Get all subscriptions (including ended ones) for this band
      */
     public function subscriptions(): HasMany
     {
-        return $this->hasMany(BandSubscription::class);
+        return $this->hasMany(\Laravel\Cashier\Subscription::class);
     }
 
     /**
@@ -141,31 +155,6 @@ class Band extends Model
         $subscription = $this->subscription;
 
         return $subscription && $subscription->stripe_status === 'active';
-    }
-
-    /**
-     * Check if band has active subscription
-     */
-    public function hasActiveSubscription(): bool
-    {
-        $subscription = $this->subscription;
-        return $subscription ? $subscription->isActive() : false;
-    }
-
-    /**
-     * Check if band is in read-only mode
-     */
-    public function isReadOnly(): bool
-    {
-        return !$this->hasActiveSubscription() && !$this->isInTrial();
-    }
-
-    /**
-     * Check if band can perform write operations
-     */
-    public function canPerformWriteOperations(): bool
-    {
-        return $this->hasActiveSubscription() || $this->isInTrial();
     }
 
     /**

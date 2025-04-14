@@ -2,35 +2,32 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Band;
-use App\Services\BandSubscriptionService;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class ProcessExpiredTrials extends Command
 {
-    protected $signature = 'bands:process-expired-trials';
-    protected $description = 'Process expired trial bands for read-only mode and deletion';
+    protected $signature = 'trials:process-expired';
+    protected $description = 'Process expired trials and update user statuses';
 
-    public function handle(BandSubscriptionService $subscriptionService)
+    public function handle()
     {
-        $bands = Band::withTrashed()->get();
+        $expiredTrialUsers = User::where('is_trial', true)
+            ->where('trial_ends_at', '<', now())
+            ->get();
 
-        foreach ($bands as $band) {
-            $status = $subscriptionService->getStatus($band);
+        foreach ($expiredTrialUsers as $user) {
+            $user->update([
+                'is_trial' => false
+            ]);
 
-            if ($status['isReadOnly'] && !$band->trashed()) {
-                // Move to soft-deleted state
-                $band->delete();
-                // Notify users
-                // TODO: Add notification
-            }
-
-            if ($status['isSoftDeleted'] && $band->trashed()) {
-                // Permanently delete
-                $band->forceDelete();
-                // Notify users
-                // TODO: Add notification
-            }
+            // Update any bands owned by this user
+            $user->adminBands()->update([
+                'trial_ends_at' => null
+            ]);
         }
+
+        $this->info("Processed {$expiredTrialUsers->count()} expired trials.");
     }
 } 

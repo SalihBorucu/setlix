@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Models\Band;
 use App\Models\BandSubscription;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Cashier\Subscription;
 use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
@@ -36,37 +38,7 @@ class StripeWebhookController extends Controller
                 case 'customer.subscription.created':
                 case 'customer.subscription.updated':
                 case 'customer.subscription.deleted':
-                    $subscription = $event->data->object;
-                    $bandSubscription = BandSubscription::where('stripe_subscription_id', $subscription->id)->first();
-
-                    if ($bandSubscription) {
-                        ray('Updating band subscription:', [
-                            'id' => $bandSubscription->id,
-                            'new_status' => $subscription->status
-                        ]);
-
-                        $bandSubscription->update([
-                            'stripe_status' => $subscription->status,
-                            'ends_at' => $subscription->cancel_at ? Carbon::createFromTimestamp($subscription->cancel_at) : null,
-                        ]);
-
-                        // Update band status as well
-                        $bandSubscription->band->update([
-                            'subscription_status' => $subscription->status
-                        ]);
-
-                        $user = $bandSubscription->user;
-                        if ($user->is_trial) {
-                            $bandSubscription->user->update([
-                                'trial_started_at' => null,
-                                'trial_ends_at' => null,
-                                'is_trial' => false
-                            ]);
-                        }
-                    } else {
-                        $exception = new Exception('Band subscription not found for Stripe subscription: ' . $subscription->id);
-                        report($exception);
-                    }
+                    $this->handleSubscriptionUpdated($event->data->toArray());
                     break;
             }
 
@@ -78,6 +50,53 @@ class StripeWebhookController extends Controller
             ]);
 
             return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    protected function handleSubscriptionUpdated(array $payload)
+    {
+        $stripeSubscription = $payload['object'];
+        
+        // Find subscription by Stripe ID
+        $subscription = Subscription::where('stripe_id', $stripeSubscription['id'])->first();
+        
+        if ($subscription) {
+            ray('Subscription updated', [
+                'id' => $subscription->id,
+                'status' => $stripeSubscription['status']
+            ]);
+
+            // If band_id is not set but exists in metadata, update it
+            if (!$subscription->band_id && isset($stripeSubscription['metadata']['band_id'])) {
+                $subscription->band_id = $stripeSubscription['metadata']['band_id'];
+            }
+
+            $subscription->update([
+                'stripe_status' => $stripeSubscription['status'],
+                'ends_at' => isset($stripeSubscription['cancel_at']) 
+                    ? Carbon::createFromTimestamp($stripeSubscription['cancel_at']) 
+                    : null
+            ]);
+
+            // Update band trial status if needed
+            if ($subscription->band_id) {
+                $band = Band::find($subscription->band_id);
+                if ($band) {
+                    $band->update([
+                        'trial_ends_at' => null
+                    ]);
+                }
+            }
+
+            // Update user trial status if needed
+            $user = $subscription->user;
+            if ($user && $user->is_trial) {
+                $user->update([
+                    'trial_started_at' => null,
+                    'trial_ends_at' => null,
+                    'is_trial' => false
+                ]);
+            }
         }
     }
 }

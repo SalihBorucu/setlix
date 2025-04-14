@@ -18,4 +18,11 @@ return [
 
     // Grace period after subscription ends (in days)
     'grace_period_days' => 3,
+
+    // Stripe price IDs for each currency
+    'stripe_prices' => [
+        'GBP' => env('STRIPE_PRICE_GBP_ID'),
+        'EUR' => env('STRIPE_PRICE_EUR_ID'),
+        'USD' => env('STRIPE_PRICE_USD_ID'),
+    ],
 ]; 

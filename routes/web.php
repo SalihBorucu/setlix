@@ -16,18 +16,31 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
+use Illuminate\Http\Request;
+use App\Services\GeolocationService;
 
 if (env('APP_ENV') !== 'production') {
-    Route::get('/test', function () {
+    Route::get('/test', function (Request $request) {
+        $geoService = app(GeolocationService::class);
         
+        $clientIp = $geoService->getClientIp();
+        $countryCode = $geoService->detectCountry($clientIp);
+        
+        return [
+            'ip' => $clientIp,
+            'country_code' => $countryCode,
+            'session_country' => session('country_code'),
+            'user_country' => auth()->user()?->country_code,
+        ];
     });
 }
 
-Route::get('/', [LandingController::class, 'index']);
-
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
-    ->name('dashboard');
+Route::middleware(['web', 'detect.geolocation'])->group(function () {
+    Route::get('/', [LandingController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
+        ->name('dashboard');
+});
 
 Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     // Profile routes
@@ -36,13 +49,25 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Subscription routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])->name('subscription.expired');
-        Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])->name('subscription.checkout')->middleware('subscription.page.access');
-        Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])->name('subscription.create');
-        Route::delete('/subscription/cancel/{band}', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
-        Route::post('/subscription/update-payment-method', [SubscriptionController::class, 'updatePaymentMethod'])->name('subscription.update-payment-method');
-        Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::middleware(['auth', 'verified'])->group(function () {
+        // Subscription management
+        Route::get('/subscriptions', [SubscriptionController::class, 'index'])
+            ->name('subscription.index');
+            
+        Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
+            ->name('subscription.expired');
+        
+        Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])
+            ->name('subscription.checkout');
+        
+        Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])
+            ->name('subscription.create');
+        
+        Route::post('/subscription/update-payment', [SubscriptionController::class, 'updatePaymentMethod'])
+            ->name('subscription.update-payment');
+        
+        Route::delete('/subscription/{band}/cancel', [SubscriptionController::class, 'cancel'])
+            ->name('subscription.cancel');
     });
 
     // Band routes with access control
