@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Console\Tasks\TrialTasks;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Jobs\UpdateExpiredSubscriptionsStatus;
 
 class Kernel extends ConsoleKernel
 {
@@ -34,6 +35,8 @@ class Kernel extends ConsoleKernel
         // Handle trial-related tasks
         $trialTasks = new TrialTasks();
         $trialTasks->schedule($schedule);
+
+        $schedule->job(new UpdateExpiredSubscriptionsStatus)->daily();
     }
 
     /**

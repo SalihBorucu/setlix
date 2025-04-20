@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\Band;
-use App\Models\BandSubscription;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Cashier\Subscription;
@@ -56,10 +54,10 @@ class StripeWebhookController extends Controller
     protected function handleSubscriptionUpdated(array $payload)
     {
         $stripeSubscription = $payload['object'];
-        
+
         // Find subscription by Stripe ID
         $subscription = Subscription::where('stripe_id', $stripeSubscription['id'])->first();
-        
+
         if ($subscription) {
             ray('Subscription updated', [
                 'id' => $subscription->id,
@@ -73,8 +71,8 @@ class StripeWebhookController extends Controller
 
             $subscription->update([
                 'stripe_status' => $stripeSubscription['status'],
-                'ends_at' => isset($stripeSubscription['cancel_at']) 
-                    ? Carbon::createFromTimestamp($stripeSubscription['cancel_at']) 
+                'ends_at' => isset($stripeSubscription['cancel_at'])
+                    ? Carbon::createFromTimestamp($stripeSubscription['cancel_at'])
                     : null
             ]);
 

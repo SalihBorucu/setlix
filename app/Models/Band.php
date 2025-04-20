@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Types\StripeStatusTypes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -123,6 +124,7 @@ class Band extends Model
     {
         return $this->hasOne(\Laravel\Cashier\Subscription::class)
             ->where('stripe_status', 'active')
+            ->latest()
             ->where(function ($query) {
                 $query->whereNull('ends_at')
                     ->orWhere('ends_at', '>', now());
@@ -135,7 +137,7 @@ class Band extends Model
     public function hasActiveSubscription(): bool
     {
         return $this->subscription()
-            ->where('stripe_status', 'active')
+            ->where('stripe_status', StripeStatusTypes::_ACTIVE)
             ->exists();
     }
 

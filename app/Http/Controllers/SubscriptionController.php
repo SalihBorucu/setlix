@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Band;
 use App\Services\PricingService;
 use App\Services\StripeService;
+use App\Types\StripeStatusTypes;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -146,7 +147,7 @@ class SubscriptionController extends Controller
     public function index(): Response
     {
         $user = auth()->user();
-        
+
         // Get user's pricing based on location
         $countryCode = $user->country_code ?? session('country_code');
         $pricing = $this->pricingService->getPricing($countryCode);
@@ -197,25 +198,20 @@ class SubscriptionController extends Controller
             }
 
             // Get the subscription
-            $subscription = $user->getBandSubscription($band);
+            $subscription = $band->subscription;
 
             if (!$subscription) {
                 return redirect()->back()
                     ->with('error', 'No active subscription found.');
             }
 
-            // Cancel the subscription at period end
-            $service = new StripeService();
-            $service->cancelSubscription($band);
+            // Cancel the subscription at period end using Cashier
+            $subscription->cancel();
 
-            // Calculate end date (1 month from now)
-            $endDate = Carbon::now()->addMonths(1);
-
-            // Update subscription record
-            $subscription->update([
-                'ends_at' => $endDate,
-                'stripe_status' => 'cancelled'
-            ]);
+            // Update the stripe_status to indicate it will end
+//            $subscription->update([
+//                'stripe_status' => StripeStatusTypes::_CANCELLED
+//            ]);
 
             return redirect()->back()
                 ->with('success', 'Your subscription has been cancelled and will end at the end of the billing period.');
@@ -267,7 +263,7 @@ class SubscriptionController extends Controller
         $user = $request->user();
         $countryCode = $user->country_code ?? session('country_code');
         $pricing = $this->pricingService->getPricing($countryCode);
-        
+
         // Get the appropriate Stripe Price ID based on currency
         $priceId = config("subscription.stripe_prices.{$pricing['currency']}");
 
