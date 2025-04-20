@@ -15,9 +15,11 @@
         "intervention/image": "^3.11",
         "laravel/cashier": "^15.6",
         "laravel/framework": "^11.31",
+        "laravel/horizon": "^5.31",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.29",
+        "predis/predis": "^2.3",
         "spatie/laravel-ray": "^1.39",
         "stripe/stripe-php": "^16.5",
         "tightenco/ziggy": "^2.0"

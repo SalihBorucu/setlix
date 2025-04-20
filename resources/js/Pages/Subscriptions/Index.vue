@@ -50,7 +50,7 @@ const handleConfirmCancel = () => {
 // Get subscription status for a band
 const getBandStatus = (band) => {
     if (!band.subscription) return 'inactive'
-    return band.subscription.status || 'inactive'
+    return band.subscription.status.replaceAll('_', ' ') || 'inactive'
 }
 
 // Format date to human readable format
@@ -97,6 +97,7 @@ const formatDate = (dateString) => {
                                     'text-yellow-600': getBandStatus(band) === 'trialing',
                                     'text-red-600': getBandStatus(band) === 'inactive',
                                     'text-orange-600': getBandStatus(band) === 'payment_failed',
+                                    'text-orange-600': getBandStatus(band) === 'active_until_end',
                                     'text-gray-600': getBandStatus(band) === 'cancelled'
                                 }">{{ getBandStatus(band) }}</span>
                             </p>
@@ -111,7 +112,7 @@ const formatDate = (dateString) => {
                                 </p>
                             </template>
                             <!-- Show subscription end date for cancelled subscriptions -->
-                            <p v-if="getBandStatus(band) === 'cancelled' && band.subscription?.ends_at"
+                            <p v-if="getBandStatus(band) === 'active' && band.subscription?.ends_at"
                                class="text-sm text-neutral-500 mt-1">
                                 Access until: <span class="font-medium">{{ formatDate(band.subscription.ends_at) }}</span>
                             </p>
@@ -141,7 +142,7 @@ const formatDate = (dateString) => {
 
                                 <!-- Cancel button for active subscriptions -->
                                 <DSButton
-                                    v-if="getBandStatus(band) === 'active'"
+                                    v-if="getBandStatus(band) === 'active' && !band.subscription?.ends_at"
                                     variant="danger"
                                     @click="handleCancelClick(band)"
                                 >
