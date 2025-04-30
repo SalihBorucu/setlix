@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as t,o as s,b as c}from"./app-DBENn6a9.js";const r={},a={class:"flex justify-center"};function n(i,e){return s(),t("div",a,e[0]||(e[0]=[c("img",{class:"h-20 w-auto",src:"/images/text_logo.svg",alt:"Setlix"},null,-1)]))}const f=o(r,[["render",n]]);export{f as A};
