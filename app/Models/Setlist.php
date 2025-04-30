@@ -55,9 +55,7 @@ class Setlist extends Model
      */
     public function songs(): BelongsToMany
     {
-        return $this->belongsToMany(Song::class)
-            ->withTimestamps()
-            ->withPivot('order', 'notes');
+        return $this->belongsToMany(Song::class, 'setlist_song');
     }
 
     /**
@@ -78,7 +76,7 @@ class Setlist extends Model
     {
         $minutes = floor($this->total_duration / 60);
         $seconds = $this->total_duration % 60;
-        
+
         return sprintf('%d:%02d', $minutes, $seconds);
     }
 

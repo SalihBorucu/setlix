@@ -180,7 +180,7 @@ class SongController extends Controller
     public function downloadDocument(Band $band, Song $song, SongFile $file): mixed
     {
         $this->authorize('view', $band);
-        
+
         try {
             $url = $this->fileService->getTemporaryUrl($file);
             return redirect($url);
@@ -209,7 +209,7 @@ class SongController extends Controller
         $validated = $request->validated();
 
         $songs = [];
-        collect($validated['songs'])->map(function ($song) use ($band, &$songs) {
+        foreach ($validated['songs'] as $song) {
             $songs[] = [
                 'name' => $song['name'],
                 'duration_seconds' => $song['duration_seconds'],
@@ -219,6 +219,11 @@ class SongController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+        }
+
+        $existingSongs = $band->songs;
+        $songs = array_filter($songs, function ($song) use ($existingSongs, $band) {
+            return !$existingSongs->where('name', $song['name'])->first();
         });
 
         Song::insert($songs);
@@ -248,7 +253,7 @@ class SongController extends Controller
     public function downloadFile(Band $band, Song $song, SongFile $file): mixed
     {
         $this->authorize('view', $band);
-        
+
         try {
             $url = $this->fileService->getTemporaryUrl($file);
             return redirect($url);

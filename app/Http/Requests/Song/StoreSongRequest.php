@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Song;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSongRequest extends FormRequest
 {
@@ -23,7 +24,14 @@ class StoreSongRequest extends FormRequest
     {
         return [
             'band_id' => ['required', 'exists:bands,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('songs')->where(function ($query) {
+                    return $query->where('band_id', $this->band_id);
+                })
+            ],
             'duration_seconds' => ['required', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
             'url' => ['nullable', 'url'],

@@ -26,13 +26,11 @@ class SetlistController extends Controller
     public function index(Band $band): Response
     {
         $this->authorize('view', $band);
+        $band->setlists->load('items');
 
         return Inertia::render('Setlists/Index', [
             'band' => $band->load('members'),
-            'setlists' => $band->setlists()
-                ->with('songs')
-                ->orderBy('name')
-                ->get(),
+            'setlists' => $band->setlists,
             'isAdmin' => $band->isAdmin(auth()->user())
         ]);
     }
@@ -45,7 +43,7 @@ class SetlistController extends Controller
         $this->authorize('update', $band);
 
         return Inertia::render('Setlists/Create', [
-            'band' => $band,    
+            'band' => $band,
             'songs' => $band->songs()->orderBy('name')->get()
         ]);
     }
@@ -92,7 +90,7 @@ class SetlistController extends Controller
         $setlist->load([
             'items.song.files', // Load files for songs
         ]);
-        
+
         $setlist->formatted_created_at = $setlist->created_at->format('d M Y');
 
         return Inertia::render('Setlists/Show', [

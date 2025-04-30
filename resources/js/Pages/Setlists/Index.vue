@@ -64,7 +64,7 @@ const formatDuration = (seconds) => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -185,7 +185,7 @@ const formatDuration = (seconds) => {
                                         <svg class="mr-1.5 h-4 w-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                         </svg>
-                                        {{ setlist.songs?.length || 0 }} songs
+                                        {{ setlist.items?.length || 0 }} songs
                                     </div>
                                     <div class="flex items-center">
                                         <svg class="mr-1.5 h-4 w-4 flex-shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,14 +194,16 @@ const formatDuration = (seconds) => {
                                         {{ formatDuration(setlist.total_duration) }}
                                     </div>
                                 </div>
-                                <Link
-                                    :href="route('setlists.show', [band.id, setlist.id])"
-                                    class="text-primary-600 hover:text-primary-700"
-                                >
-                                    <DSButton variant="outline" size="sm">
-                                        View Setlist
-                                    </DSButton>
-                                </Link>
+                                <div>
+                                    <Link
+                                        :href="route('setlists.show', [band.id, setlist.id])"
+                                        class="text-primary-600 hover:text-primary-700"
+                                    >
+                                        <DSButton variant="outline" size="sm">
+                                            View
+                                        </DSButton>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </DSCard>
@@ -219,4 +221,4 @@ const formatDuration = (seconds) => {
             @confirm="handleDelete"
         />
     </AuthenticatedLayout>
-</template> 
+</template>
