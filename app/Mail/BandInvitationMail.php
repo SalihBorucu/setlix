@@ -40,9 +40,9 @@ class BandInvitationMail extends Mailable
             with: [
                 'bandName' => $this->invitation->band->name,
                 'role' => $this->invitation->role,
-                'acceptUrl' => route('invitations.accept', $this->invitation->token),
+                'acceptUrl' => route('invitations.accept', $this->invitation->token, ['redirect_from' => encrypt('email')]),
                 'expiresAt' => $this->invitation->expires_at->format('F j, Y'),
             ],
         );
     }
-} 
+}

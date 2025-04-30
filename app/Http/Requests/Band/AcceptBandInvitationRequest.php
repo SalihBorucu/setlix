@@ -29,7 +29,9 @@ class AcceptBandInvitationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return []; // No validation needed here as token comes from route parameter
+        return [
+            'redirect_from' => ['nullable', 'boolean'],
+        ]; // No validation needed here as token comes from route parameter
     }
 
     /**
@@ -103,12 +105,15 @@ class AcceptBandInvitationRequest extends FormRequest
      */
     protected function handleNewUser(): array
     {
+        $emailVerified = $this->redirect_from && decrypt($this->redirect_from) === 'email';
+
         // Create a new user with a temporary password
         $tempPassword = Str::random(16);
         $this->invitedUser = User::create([
             'name' => explode('@', $this->invitation->email)[0], // Use email prefix as temporary name
             'email' => $this->invitation->email,
             'is_subscribed' => true,
+            'email_verified_at' => $emailVerified ? now() : null,
             'password' => Hash::make($tempPassword),
             'password_set' => false, // Set this to false for new users
         ]);
