@@ -102,7 +102,7 @@ const handleExportPdf = async () => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </div>
-                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight test">
                         {{ setlist.name }}
                     </h2>
                     <p class="mt-1 text-sm text-neutral-500">
@@ -122,8 +122,8 @@ const handleExportPdf = async () => {
                         {{ performanceMode ? 'Exit Performance Mode' : 'Performance Mode' }}
                     </DSButton>
 
-                    <DSButton 
-                        variant="secondary" 
+                    <DSButton
+                        variant="secondary"
                         class="w-full sm:w-auto"
                         @click="handleExportPdf"
                     >
