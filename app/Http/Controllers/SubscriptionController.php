@@ -111,6 +111,10 @@ class SubscriptionController extends Controller
                 'amount' => $pricing['amount']
             ]);
 
+            if ($user->isInTrialPeriod()) {
+                $user->finishTrialPeriod();
+            }
+
             return response()->json([
                 'status' => 'success',
                 'subscription' => $subscription

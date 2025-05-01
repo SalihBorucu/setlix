@@ -150,6 +150,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->trial_ends_at && $this->trial_ends_at->isPast() && !$this->is_trial;
     }
 
+    public function finishTrialPeriod(): void
+    {
+        $this->update([
+            'is_trial' => false,
+        ]);
+    }
+
     public function getRemainingTrialDays(): int
     {
         if (!$this->trial_ends_at) {
