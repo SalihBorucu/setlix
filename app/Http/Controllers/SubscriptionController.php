@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Band;
 use App\Services\PricingService;
-use App\Services\StripeService;
-use App\Types\StripeStatusTypes;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -71,10 +68,7 @@ class SubscriptionController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            ray('Error in checkout:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            report($e);
 
             return redirect()->route('dashboard')
                 ->with('error', 'Unable to initialize checkout. Please try again.');
@@ -128,10 +122,7 @@ class SubscriptionController extends Controller
                 'payment_intent_client_secret' => $exception->payment->clientSecret(),
             ]);
         } catch (\Exception $e) {
-            ray('Subscription creation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            report($e);
 
             return response()->json([
                 'message' => 'Unable to process subscription. Please try again.',
@@ -217,11 +208,7 @@ class SubscriptionController extends Controller
                 ->with('success', 'Your subscription has been cancelled and will end at the end of the billing period.');
 
         } catch (Exception $e) {
-            ray('Subscription cancellation failed', [
-                'error' => $e->getMessage(),
-                'band_id' => $band->id,
-                'user_id' => auth()->id()
-            ]);
+            report($e);
 
             return redirect()->back()
                 ->with('error', 'Unable to cancel subscription. Please try again or contact support.');
@@ -247,10 +234,7 @@ class SubscriptionController extends Controller
             ]);
 
         } catch (Exception $e) {
-            ray('Payment method update failed', [
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-            ]);
+            report($e);
 
             return response()->json([
                 'message' => 'Unable to update payment method. Please try again.'
@@ -276,6 +260,7 @@ class SubscriptionController extends Controller
 
             return redirect()->route('dashboard')->with('success', 'Subscription created successfully!');
         } catch (IncompletePayment $exception) {
+            report($exception);
             return redirect()->route('cashier.payment', [
                 $exception->payment->id,
                 'redirect' => route('dashboard')
