@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Song;
 
 use App\Models\Song;
+use App\Services\SongFileService;
 use App\Services\SpotifyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -66,6 +67,9 @@ class StoreSongRequest extends FormRequest
         ];
     }
 
+    /**
+     * @throws \Exception
+     */
     public function importFromSpotify(): Song
     {
         $service = new SpotifyService();
@@ -77,5 +81,28 @@ class StoreSongRequest extends FormRequest
         ]);
 
         return $song;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function createSong(SongFileService $fileService): Song
+    {
+        $validated = $this->validated();
+        $files = $validated['files'] ?? [];
+        unset($validated['files']);
+
+        $song = Song::create($validated);
+
+        // Handle file uploads
+        if (!empty($files)) {
+            foreach ($files as $fileData) {
+                $fileService->store(
+                    $song,
+                    $fileData['file'],
+                    $fileData['type']
+                );
+            }
+        }
     }
 }
