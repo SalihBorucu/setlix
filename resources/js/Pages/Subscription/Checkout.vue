@@ -43,7 +43,7 @@
         <!-- Right Column: Payment Form -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 class="text-xl font-semibold text-gray-900 mb-4">Payment Information</h2>
-          
+
           <form @submit.prevent="handleSubmit">
             <!-- Card Holder Name -->
             <div class="mb-4">
@@ -64,12 +64,12 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Card Details
               </label>
-              <div 
+              <div
                 ref="cardElement"
                 class="p-3 border rounded-md border-gray-300 bg-white"
               ></div>
-              <div 
-                v-if="cardError" 
+              <div
+                v-if="cardError"
                 class="mt-1 text-sm text-red-600"
               >{{ cardError }}</div>
             </div>
@@ -174,7 +174,7 @@ onMounted(() => {
   // Initialize Stripe
   stripe.value = Stripe(props.stripeKey);
   elements.value = stripe.value.elements();
-  
+
   const card = elements.value.create('card', {
     style: {
       base: {
@@ -186,9 +186,9 @@ onMounted(() => {
       },
     },
   });
-  
+
   card.mount(cardElement.value);
-  
+
   card.on('change', (event) => {
     cardError.value = event.error ? event.error.message : '';
   });
@@ -196,7 +196,7 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   if (isLoading.value) return;
-  
+
   isLoading.value = true;
   cardError.value = null;
   error.value = null;

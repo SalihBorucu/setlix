@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Song;
 
+use App\Models\Song;
+use App\Services\SpotifyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,16 +25,16 @@ class StoreSongRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'spotify_link' => ['nullable', 'url'],
             'band_id' => ['required', 'exists:bands,id'],
             'name' => [
-                'required',
-                'string',
+                'required_if:spotify_link,null',
                 'max:255',
                 Rule::unique('songs')->where(function ($query) {
                     return $query->where('band_id', $this->band_id);
                 })
             ],
-            'duration_seconds' => ['required', 'integer', 'min:0'],
+            'duration_seconds' => ['required_if:spotify_link,null', 'min:0'],
             'notes' => ['nullable', 'string'],
             'url' => ['nullable', 'url'],
             'artist' => ['nullable', 'string', 'max:255'],
@@ -62,5 +64,18 @@ class StoreSongRequest extends FormRequest
             'files.*.file.mimes' => 'Files must be PDF or TXT format.',
             'files.*.type.in' => 'File type must be one of: lyrics, notes, chords, tabs, sheet music, or other.',
         ];
+    }
+
+    public function importFromSpotify(): Song
+    {
+        $service = new SpotifyService();
+        $trackDetails = $service->getTrack($this->spotify_link);
+
+        $song = Song::create([
+            ...$trackDetails,
+            'band_id' => $this->band_id,
+        ]);
+
+        return $song;
     }
 }

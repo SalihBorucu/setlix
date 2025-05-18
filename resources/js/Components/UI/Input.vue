@@ -4,6 +4,10 @@ const props = defineProps({
         type: String,
         default: 'text'
     },
+    placeholder: {
+        type: String,
+        default: ''
+    },
     modelValue: {
         type: [String, Number],
         default: ''
@@ -35,7 +39,8 @@ defineEmits(['update:modelValue'])
                 'focus:border-primary-500 focus:ring-primary-500',
                 { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
             ]"
+            :placeholder="placeholder"
         />
         <p v-if="error" class="text-sm text-error-500">{{ error }}</p>
     </div>
-</template> 
+</template>

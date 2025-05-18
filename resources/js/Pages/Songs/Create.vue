@@ -2,7 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI'
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
 import { DSDurationInput } from '@/Components/UI'
 
 const props = defineProps({
@@ -14,14 +14,15 @@ const props = defineProps({
 
 const form = useForm({
     band_id: props.band.id,
-    name: '',
-    duration: '',
-    duration_seconds: '',
-    notes: '',
-    url: '',
-    bpm: '',
-    artist: '',
-    files: []
+    name: null,
+    duration: null,
+    duration_seconds: null,
+    notes: null,
+    url: null,
+    bpm: null,
+    artist: null,
+    files: [],
+    spotify_link: null
 })
 
 const fileGroups = ref([])
@@ -57,12 +58,16 @@ const submit = () => {
 
     form.post(route('songs.store', props.band.id))
 }
+
+const anyDataHasChanged = computed(() => {
+    return !!form.name || !!form.duration || !!form.notes || !!form.url || !!form.artist || !!form.bpm
+});
 </script>
 
 <template>
     <Head title="Add New Song" />
 
-    <AuthenticatedLayout>
+    <AuthenticatedLayout class="space-y-2">
         <template #header>
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
@@ -93,8 +98,32 @@ const submit = () => {
             </div>
         </template>
 
-        <DSCard class="max-w-2xl">
+        <DSCard class="max-w-2xl space-y-6 p-6 mb-4" :disabled="anyDataHasChanged">
+            <p class="text-sm text-gray-600">Enter a Spotify track URL to import its details.</p>
+            <DSInput
+                v-model="form.spotify_link"
+                type="url"
+                placeholder="https://open.spotify.com/track/abc123"
+                label="Spotify Link"
+                :error="form.errors.spotify_link"
+                required
+            />
+
+            <div class="flex justify-end space-x-3">
+                <DSButton
+                    @click="submit"
+                    variant="primary"
+                    :disabled="form.processing"
+                >
+                    <span v-if="form.processing">Importing...</span>
+                    <span v-else>Import Song</span>
+                </DSButton>
+            </div>
+        </DSCard>
+
+        <DSCard class="max-w-2xl" :disabled="!!form.spotify_link">
             <form @submit.prevent="submit" class="space-y-6 p-6">
+                <p class="text-sm text-gray-600">Or manually add a song's for your list.</p>
                 <!-- Error Message -->
                 <DSAlert
                     v-if="Object.keys(form.errors).length > 0"
@@ -197,9 +226,9 @@ const submit = () => {
                     </div>
 
                     <div class="space-y-2">
-                        <div 
-                            v-for="(group, index) in fileGroups" 
-                            :key="index" 
+                        <div
+                            v-for="(group, index) in fileGroups"
+                            :key="index"
                             class="flex items-center gap-4 border rounded-md p-3"
                         >
                             <div class="flex-1">

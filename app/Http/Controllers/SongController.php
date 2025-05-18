@@ -66,20 +66,24 @@ class SongController extends Controller
      */
     public function store(StoreSongRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        $files = $validated['files'] ?? [];
-        unset($validated['files']);
+        if ($request->spotify_link) {
+            $song = $request->importFromSpotify();
+        } else {
+            $validated = $request->validated();
+            $files = $validated['files'] ?? [];
+            unset($validated['files']);
 
-        $song = Song::create($validated);
+            $song = Song::create($validated);
 
-        // Handle file uploads
-        if (!empty($files)) {
-            foreach ($files as $fileData) {
-                $this->fileService->store(
-                    $song,
-                    $fileData['file'],
-                    $fileData['type']
-                );
+            // Handle file uploads
+            if (!empty($files)) {
+                foreach ($files as $fileData) {
+                    $this->fileService->store(
+                        $song,
+                        $fileData['file'],
+                        $fileData['type']
+                    );
+                }
             }
         }
 

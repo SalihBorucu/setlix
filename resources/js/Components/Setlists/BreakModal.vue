@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
 import { DSButton, DSInput, DSDurationInput } from '@/Components/UI'
 
 const props = defineProps({
@@ -28,13 +28,17 @@ const submit = () => {
     form.value = { title: '', duration: '', duration_seconds: '', notes: '' }
     emit('close')
 }
+
+const buttonEnabled = computed(() => {
+    return form.value.title && form.value.duration_seconds
+})
 </script>
 
 <template>
     <div v-if="isOpen" class="fixed inset-0 bg-neutral-900/50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <h3 class="text-lg font-medium text-neutral-900 mb-4">Add Break</h3>
-            
+
             <form @submit.prevent="submit" class="space-y-4">
                 <DSInput
                     v-model="form.title"
@@ -73,6 +77,7 @@ const submit = () => {
                     <DSButton
                         type="submit"
                         variant="primary"
+                        :disabled="!buttonEnabled"
                     >
                         Add Break
                     </DSButton>
@@ -80,4 +85,4 @@ const submit = () => {
             </form>
         </div>
     </div>
-</template> 
+</template>
