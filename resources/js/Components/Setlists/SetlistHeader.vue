@@ -11,6 +11,10 @@ defineProps({
         type: Object,
         required: false,
         default: null
+    },
+    form: {
+        type: Object,
+        required: true
     }
 })
 </script>
@@ -43,7 +47,7 @@ defineProps({
             </p>
         </div>
         <div class="mt-4 flex md:ml-4 md:mt-0">
-            <PublicAccessToggle v-if="setlist" :band="band" :setlist="setlist" />
+            <PublicAccessToggle v-if="setlist" :band="band" :setlist="setlist" :is-possible="form.target_duration_seconds > 0" />
         </div>
     </div>
 </template>

@@ -176,6 +176,13 @@ class SetlistController extends Controller
      */
     public function makePublic(Band $band, Setlist $setlist): JsonResponse
     {
+        if (!$setlist->target_duration) {
+            return response()->json([
+                'message' => 'Setlist must have a target duration to be shared with clients. Make sure the target duration is saved before sharing.',
+                'setlist' => $setlist
+            ], 400);
+        }
+
         $this->authorize('update', $band);
 
         $setlist->update([
