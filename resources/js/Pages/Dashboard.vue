@@ -160,10 +160,10 @@ const isBandDisabled = (band) => {
                         <!-- Show disabled state for non-admin members -->
                         <div v-else class="group block relative">
                             <DSCard class="h-full opacity-50 relative">
-                                <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
+                                <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg h-full">
                                     <img
                                         :src="band.cover_image_thumbnail_path || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
-                                        class="object-cover"
+                                        class="object-cover h-full"
                                         :alt="band.name"
                                     />
                                 </div>
