@@ -268,7 +268,7 @@ const handleExportPdf = async () => {
 
                                 <!-- Actions (only for songs) -->
                                 <div v-if="item.type === 'song'" class="ml-4 flex items-center space-x-2">
-                                    <Link
+                                    <a
                                         v-if="item.song.url"
                                         :href="item.song.url"
                                         target="_blank"
@@ -277,7 +277,7 @@ const handleExportPdf = async () => {
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                    </Link>
+                                    </a>
 
                                     <button
                                         v-if="item.type === 'song'"

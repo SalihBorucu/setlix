@@ -9,16 +9,16 @@
             <p class="text-sm text-gray-500">
                 Share this link with your client to let them customize the setlist:
             </p>
-            <div class="flex rounded-md shadow-sm">
+            <div class="flex rounded-md">
                 <input
                     type="text"
                     :value="shareUrl"
                     readonly
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 >
                 <button
                     @click="copyToClipboard"
-                    class="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    class="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                     Copy
                 </button>
@@ -27,13 +27,12 @@
 
         <template #footer>
             <div class="flex justify-end">
-                <button
-                    type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                <DSButton
+                    variant="outline"
                     @click="$emit('close')"
                 >
                     Close
-                </button>
+                </DSButton>
             </div>
         </template>
     </Modal>
@@ -42,6 +41,8 @@
 <script setup>
 import { computed } from 'vue'
 import Modal from '@/Components/Modal.vue'
+import { DSButton } from '@/Components/UI'
+
 
 const props = defineProps({
     show: {
@@ -82,4 +83,4 @@ const copyToClipboard = async () => {
         console.error('Failed to copy text: ', err)
     }
 }
-</script> 
+</script>

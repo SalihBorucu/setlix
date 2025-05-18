@@ -12,12 +12,14 @@
             </button>
         </div>
         <div v-else>
-            <button
+            <Button
+                variant="secondary"
                 @click="makePublic"
                 class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                :disabled="!isPossible"
             >
                 Share with Client
-            </button>
+            </Button>
         </div>
 
         <ShareSetlistModal
@@ -32,13 +34,20 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import ShareSetlistModal from './ShareSetlistModal.vue'
+import Button from "@/Components/UI/Button.vue";
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     setlist: Object,
-    band: Object
+    band: Object,
+    isPossible: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const isShareModalOpen = ref(false)
+const page = usePage();
 
 const makePublic = () => {
     axios.post(route('setlists.make-public', [props.band.id, props.setlist.id]))
@@ -48,6 +57,9 @@ const makePublic = () => {
             props.setlist.public_slug = response.data.setlist.public_slug
             isShareModalOpen.value = true
         })
+        .catch(error => {
+            page.props.flash.error = error.response.data.message;
+        });
 }
 
 const makePrivate = () => {
@@ -62,4 +74,4 @@ const makePrivate = () => {
 const closeShareModal = () => {
     isShareModalOpen.value = false
 }
-</script> 
+</script>

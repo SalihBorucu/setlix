@@ -56,9 +56,9 @@ const emit = defineEmits(['update:targetDuration'])
                     required
                 />
                 <p class="mt-1 text-sm text-neutral-500">
-                    Set the target duration for this event
+                    Set the target duration for this event (required for sharing with clients so that your clients know how long your performance will be).
                 </p>
             </div>
         </div>
     </DSCard>
-</template> 
+</template>

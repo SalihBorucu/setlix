@@ -65,7 +65,7 @@ const handleInput = (value) => {
 
     // Keep only the last 4 digits entered
     const digits = value.replace(/[^0-9]/g, '').slice(-4)
-    
+
     if (!digits) {
         displayValue.value = ''
         emit('update:modelValue', '')
@@ -74,15 +74,15 @@ const handleInput = (value) => {
 
     let formattedValue = ''
 
-    if (digits.length >= 3) {
+    if (digits.length >= 1) {
         // Format as MM:SS
-        const minutes = parseInt(digits.slice(0, -2))
-        const seconds = parseInt(digits.slice(-2))
-        
+        const minutes = parseInt(digits.slice(0, -2)) || 0;
+        const seconds = parseInt(digits.slice(-2)) || 0;
+
         // Enforce limits
         const validMinutes = Math.min(minutes, 59)
         const validSeconds = Math.min(seconds, 59)
-        
+
         formattedValue = `${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
     } else {
         formattedValue = digits
@@ -130,4 +130,4 @@ const handleKeydown = (event) => {
         :placeholder="placeholder"
         maxlength="5"
     />
-</template> 
+</template>
