@@ -1,7 +1,7 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import {Head, Link, useForm, usePage} from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { DSButton, DSInput, DSCard, DSAlert } from '@/Components/UI'
+import {DSButton, DSInput, DSCard, DSAlert, DSTooltip} from '@/Components/UI'
 import {computed, ref} from 'vue'
 import { DSDurationInput } from '@/Components/UI'
 
@@ -62,6 +62,15 @@ const submit = () => {
 const anyDataHasChanged = computed(() => {
     return !!form.name || !!form.duration || !!form.notes || !!form.url || !!form.artist || !!form.bpm
 });
+
+const page = usePage()
+const trial = computed(() => page.props.trial || {})
+
+// Trial limit check
+const canAddSongs = computed(() => {
+    if (trial.value?.isSubscribed) return true
+    return props.songs.length < 10
+})
 </script>
 
 <template>
@@ -69,7 +78,7 @@ const anyDataHasChanged = computed(() => {
 
     <AuthenticatedLayout class="space-y-2">
         <template #header>
-            <div class="md:flex md:items-center md:justify-between">
+            <div class="md:flex md:items-center md:justify-between max-w-2xl">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
                         <Link
@@ -88,9 +97,32 @@ const anyDataHasChanged = computed(() => {
                             Songs
                         </Link>
                     </div>
-                    <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                        Add New Song
-                    </h2>
+                    <div class="flex flex-col sm:flex-row sm:justify-between">
+                        <h2 class="mt-1 text-2xl font-bold leading-7 text-neutral-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                            Add New Song
+                        </h2>
+                        <div class="py-2">
+                            <DSTooltip v-if="!canAddSongs">
+                                <DSButton variant="secondary" class="w-full sm:w-auto" disabled>
+                                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Add Multiple Songs
+                                </DSButton>
+                                <template #content>
+                                    Free trial allows maximum 10 songs. Please subscribe to add more.
+                                </template>
+                            </DSTooltip>
+                            <Link v-else :href="route('songs.bulk-create', band.id)">
+                                <DSButton variant="secondary" class="w-full sm:w-auto">
+                                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Add Multiple Songs
+                                </DSButton>
+                            </Link>
+                        </div>
+                    </div>
                     <p class="mt-1 text-sm text-neutral-500">
                         Add a new song to your band's library
                     </p>
