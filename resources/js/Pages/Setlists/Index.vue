@@ -147,7 +147,7 @@ const formatDuration = (seconds) => {
                         :key="setlist.id"
                         class="hover:shadow-lg transition-shadow duration-200"
                     >
-                        <div class="p-6">
+                        <div class="p-6 flex flex-col justify-between h-full">
                             <div class="flex items-start justify-between">
                                 <div class="min-w-0 flex-1">
                                     <Link
