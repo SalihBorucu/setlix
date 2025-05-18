@@ -31,8 +31,8 @@ const canCreateBand = computed(() => {
 // Helper function to check admin status
 const hasAdminRole = (band) => {
     // Check both is_admin and roles/pivot data since Laravel might send it in different ways
-    return band.is_admin || 
-           (band.pivot && band.pivot.role === 'admin') || 
+    return band.is_admin ||
+           (band.pivot && band.pivot.role === 'admin') ||
            (band.roles && band.roles.includes('admin'))
 }
 
@@ -92,22 +92,22 @@ const isBandDisabled = (band) => {
         <template v-else>
             <!-- Bands Grid -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <div 
-                    v-for="band in bands" 
-                    :key="band.id" 
+                <div
+                    v-for="band in bands"
+                    :key="band.id"
                     class="group relative"
                 >
                     <template v-if="isBandDisabled(band)">
-                        <Link 
+                        <Link
                             v-if="hasAdminRole(band)"
                             :href="getSubscriptionUrl(band)"
-                            class="group block relative"
+                            class="group block relative h-full"
                         >
-                            <DSCard class="h-full opacity-50 hover:opacity-100 relative">
-                                <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
+                            <DSCard class="h-full opacity-50 hover:opacity-100 relative flex flex-col justify-between">
+                                <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg h-full">
                                     <img
                                         :src="band.cover_image_thumbnail_path || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
-                                        class="object-cover"
+                                        class="object-cover h-full"
                                         :alt="band.name"
                                     />
                                 </div>
@@ -130,13 +130,13 @@ const isBandDisabled = (band) => {
                                         {{ band.members_count }} members
                                     </div>
                                     <div class="mt-4 flex space-x-3">
-                                        <Link 
+                                        <Link
                                             :href="route('songs.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
                                             View Songs
                                         </Link>
-                                        <Link 
+                                        <Link
                                             :href="route('setlists.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
@@ -186,13 +186,13 @@ const isBandDisabled = (band) => {
                                         {{ band.members_count }} members
                                     </div>
                                     <div class="mt-4 flex space-x-3">
-                                        <Link 
+                                        <Link
                                             :href="route('songs.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
                                             View Songs
                                         </Link>
-                                        <Link 
+                                        <Link
                                             :href="route('setlists.index', { band: band.id })"
                                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                         >
@@ -211,12 +211,12 @@ const isBandDisabled = (band) => {
                         </div>
                     </template>
 
-                    <Link 
+                    <Link
                         v-else
                         :href="route('bands.show', band.id)"
-                        class="group"
+                        class="group h-full"
                     >
-                        <DSCard class="h-full transition-shadow hover:shadow-lg">
+                        <DSCard class="h-full transition-shadow hover:shadow-lg flex flex-col justify-between">
                             <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
                                 <img
                                     :src="band.cover_image_thumbnail_path || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
@@ -243,13 +243,13 @@ const isBandDisabled = (band) => {
                                     {{ band.members_count }} members
                                 </div>
                                 <div class="mt-4 flex space-x-3">
-                                    <Link 
+                                    <Link
                                         :href="route('songs.index', { band: band.id })"
                                         class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                     >
                                         View Songs
                                     </Link>
-                                    <Link 
+                                    <Link
                                         :href="route('setlists.index', { band: band.id })"
                                         class="text-sm font-medium text-primary-600 hover:text-primary-700"
                                     >

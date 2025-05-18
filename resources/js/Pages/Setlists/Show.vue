@@ -198,15 +198,16 @@ const handleExportPdf = async () => {
                                 {{ setlist.formatted_created_at }}
                             </dd>
                         </div>
+
+                        <!-- Description -->
+                        <div class="py-4">
+                            <h4 class="text-sm font-medium text-neutral-500">Description</h4>
+                            <p class="mt-2 text-sm text-neutral-900 whitespace-pre-line">
+                                {{ setlist.description || 'No description provided.' }}
+                            </p>
+                        </div>
                     </dl>
 
-                    <!-- Description -->
-                    <div class="mt-6">
-                        <h4 class="text-sm font-medium text-neutral-500">Description</h4>
-                        <p class="mt-2 text-sm text-neutral-900 whitespace-pre-line">
-                            {{ setlist.description || 'No description provided.' }}
-                        </p>
-                    </div>
                 </div>
             </DSCard>
 
@@ -227,7 +228,7 @@ const handleExportPdf = async () => {
                             :key="item.id"
                             :class="[
                                 'py-4',
-                                item.type === 'break' ? 'bg-neutral-50 -mx-6 px-6' : ''
+                                item.type === 'break' ? 'bg-neutral-50 px-2 rounded' : ''
                             ]"
                         >
                             <div class="flex items-start justify-between">
@@ -240,7 +241,7 @@ const handleExportPdf = async () => {
 
                                         <!-- Break Badge -->
                                         <div v-if="item.type === 'break'"
-                                            class="flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-700"
+                                            class="flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-700 mx-2"
                                         >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

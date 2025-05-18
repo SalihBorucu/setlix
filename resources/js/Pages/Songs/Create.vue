@@ -69,7 +69,7 @@ const trial = computed(() => page.props.trial || {})
 // Trial limit check
 const canAddSongs = computed(() => {
     if (trial.value?.isSubscribed) return true
-    return props.songs.length < 10
+    return props.songs?.length < 10
 })
 </script>
 
