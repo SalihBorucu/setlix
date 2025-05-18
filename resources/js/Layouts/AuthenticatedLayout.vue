@@ -45,18 +45,21 @@ const scrollToTop = () => {
     });
 };
 
+let unsubscribe;
+
 onMounted(() => {
-    router.on('error', (event) => {
-        nextTick(() => {
-            if (event?.errors && Object.keys(event?.errors).length > 0) {
-                scrollToTop();
-            }
-        });
+    // According to the docs, router.on() returns a function to remove the listener
+    unsubscribe = router.on('error', (errors) => {
+        if (Object.keys(errors).length > 0) {
+            scrollToTop();
+        }
     });
 });
 
 onUnmounted(() => {
-    router.off('error', handleError);
+    if (unsubscribe) {
+        unsubscribe();
+    }
 });
 </script>
 
