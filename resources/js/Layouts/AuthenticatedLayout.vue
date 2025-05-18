@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import {nextTick, onMounted, onUnmounted, ref} from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import { DSButton } from '@/Components/UI'
 import TrialStatusBanner from '@/Components/UI/TrialStatusBanner.vue'
@@ -37,6 +37,27 @@ const userNavigation = [
 
 // Get the current band ID from the route parameters
 const currentBandId = route().params.band
+
+const scrollToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+};
+
+onMounted(() => {
+    router.on('error', (event) => {
+        nextTick(() => {
+            if (event?.errors && Object.keys(event?.errors).length > 0) {
+                scrollToTop();
+            }
+        });
+    });
+});
+
+onUnmounted(() => {
+    router.off('error', handleError);
+});
 </script>
 
 <template>
