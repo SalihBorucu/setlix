@@ -217,10 +217,10 @@ const isBandDisabled = (band) => {
                         class="group h-full"
                     >
                         <DSCard class="h-full transition-shadow hover:shadow-lg flex flex-col justify-between">
-                            <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg">
+                            <div class="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-t-lg h-full">
                                 <img
                                     :src="band.cover_image_thumbnail_path || 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'"
-                                    class="object-cover transition-transform group-hover:scale-105"
+                                    class="object-cover transition-transform group-hover:scale-105 h-full"
                                     :alt="band.name"
                                 />
                             </div>
