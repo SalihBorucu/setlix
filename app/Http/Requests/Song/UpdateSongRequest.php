@@ -62,43 +62,4 @@ class UpdateSongRequest extends FormRequest
             'files.*.type.in' => 'File type must be one of: lyrics, notes, chords, tabs, sheet music, or other.',
         ];
     }
-
-    /**
-     * @throws \Exception
-     */
-    public function importFromSpotify(): Song
-    {
-        $service = new SpotifyService();
-        $trackDetails = $service->getTrack($this->spotify_link);
-
-        $song = Song::create([
-            ...$trackDetails,
-            'band_id' => $this->band_id,
-        ]);
-
-        return $song;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function createSong(SongFileService $fileService): Song
-    {
-        $validated = $this->validated();
-        $files = $validated['files'] ?? [];
-        unset($validated['files']);
-
-        $song = Song::create($validated);
-
-        // Handle file uploads
-        if (!empty($files)) {
-            foreach ($files as $fileData) {
-                $fileService->store(
-                    $song,
-                    $fileData['file'],
-                    $fileData['type']
-                );
-            }
-        }
-    }
 }
