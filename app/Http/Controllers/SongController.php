@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Song\StoreSongRequest;
 use App\Http\Requests\Song\BulkStoreSongRequest;
+use App\Http\Requests\Song\UpdateSongRequest;
 use App\Models\Band;
 use App\Models\Song;
 use Illuminate\Http\RedirectResponse;
@@ -129,7 +130,7 @@ class SongController extends Controller
     /**
      * Update the specified song in storage.
      */
-    public function update(StoreSongRequest $request, Band $band, Song $song): RedirectResponse
+    public function update(UpdateSongRequest $request, Band $band, Song $song): RedirectResponse
     {
         $validated = $request->validated();
         $files = $validated['files'] ?? [];
