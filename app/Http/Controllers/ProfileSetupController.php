@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BandInvitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -33,7 +34,7 @@ class ProfileSetupController extends Controller
             'password_set' => true,
         ]);
 
-        $user->invitations()->whereNotNull('accepted_at')->delete();
+        BandInvitation::where('email', $user->email)->whereNotNull('accepted_at')->delete();
 
         return redirect()->route('dashboard')
             ->with('success', 'Profile setup completed successfully!');
