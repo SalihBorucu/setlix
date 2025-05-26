@@ -70,7 +70,7 @@ const handleExportPdf = async () => {
                     >
                         Exit Performance Mode
                     </DSButton>
-                    
+
                     <DSButton
                         variant="secondary"
                         @click="handleExportPdf"
@@ -82,7 +82,7 @@ const handleExportPdf = async () => {
                         Export PDF
                     </DSButton>
                 </div>
-                
+
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-2xl font-bold text-white">{{ setlist.name }}</h3>
@@ -138,14 +138,14 @@ const handleExportPdf = async () => {
 
                             <!-- Song Actions -->
                             <div v-if="item.type === 'song'" class="flex flex-wrap gap-1.5">
-                                <Link
+                                <a
                                     v-if="item.song.url"
                                     :href="item.song.url"
                                     target="_blank"
                                     class="inline-flex items-center px-2 py-1 text-xs font-medium text-primary-400 hover:text-primary-300"
                                 >
                                     → Url
-                                </Link>
+                                </a>
 
                                 <button
                                     @click="visitLyricsUrl(item.song)"
