@@ -284,9 +284,10 @@ const handleExportPdf = async () => {
                                         @click="visitLyricsUrl(item.song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                        <img class="mr-2 h-5 w-auto text-neutral-400"
+                                             src="/images/instruments/microphone.svg"
+                                             alt="microphone"
+                                        />
                                     </button>
 
                                     <button
@@ -295,7 +296,13 @@ const handleExportPdf = async () => {
                                         @click="handleFileDownload(file, item.song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <img v-if="file.instrument"
+                                             class="mr-2 h-5 w-auto text-neutral-400"
+                                             :src="`/images/instruments/${file.instrument}.svg`"
+                                             :alt="file.instrument"
+                                        />
+                                        <svg v-else
+                                             class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                         </svg>
                                     </button>
