@@ -1,18 +1,18 @@
 <template>
     <div class="p-4">
-        <h1 class="text-2xl font-bold mb-4">MusicXML Viewer</h1>
+        <h1 class="text-2xl font-bold mb-4">{{ song.name }}</h1>
 
         <div class="mb-4 flex flex-wrap gap-2">
-            <DSButton :disabled="loading" @click="zoomOut">- Zoom Out</DSButton>
-            <DSButton :disabled="loading" @click="zoomIn">+ Zoom In</DSButton>
-            <DSButton :disabled="loading" variant="secondary" @click="transposeDown">↓ Transpose Down</DSButton>
-            <DSButton :disabled="loading" variant="secondary" @click="transposeUp">↑ Transpose Up</DSButton>
-            <DSButton :disabled="loading" variant="outline" @click="resetTranspose">Reset Transpose</DSButton>
+            <DSButton :disabled="pageIsLoading" @click="zoomOut">- Zoom Out</DSButton>
+            <DSButton :disabled="pageIsLoading" @click="zoomIn">+ Zoom In</DSButton>
+            <DSButton :disabled="pageIsLoading" variant="secondary" @click="transposeDown">↓ Transpose Down</DSButton>
+            <DSButton :disabled="pageIsLoading" variant="secondary" @click="transposeUp">↑ Transpose Up</DSButton>
+            <DSButton :disabled="pageIsLoading" variant="outline" @click="resetTranspose">Reset Transpose</DSButton>
         </div>
-        <span v-if="transposeValue" class="px-3 py-1">Transposed: {{ transposeValue }} Semitones</span>
 
         <div class="mb-2 text-sm text-gray-600">
-            Page {{ currentPage }} of {{ totalPages }}
+            <span>Page {{ currentPage }} of {{ totalPages }} -- Zoom: {{ scale }} %</span>
+            <span v-if="transposeValue"> -- Transposed: {{ transposeValue }} Semitones</span>
         </div>
 
         <div ref="notation" class="music-container"></div>
@@ -35,7 +35,8 @@ import {useWindowSize} from "@/Composables/useWindowSize.js";
 
 // Props passed from Inertia
 const props = defineProps({
-    music: String
+    music: String,
+    song: Object
 })
 
 const notation = ref(null)
@@ -229,17 +230,12 @@ const handleScroll = () => {
 }
 
 const renderMusic = () => {
-    decideOnInitialZoomWithCategories()
-
     loadMusicData()
 }
 
 const zoomIn = () => {
-    loading.value = true
     scale.value += 10
     renderMusic()
-
-    loading.value = false
 }
 
 const zoomOut = () => {
@@ -265,6 +261,7 @@ const resetTranspose = () => {
 onMounted(() => {
     setTimeout(() => {
         originalData.value = props.music
+        decideOnInitialZoomWithCategories()
         renderMusic()
 
         nextTick(() => {

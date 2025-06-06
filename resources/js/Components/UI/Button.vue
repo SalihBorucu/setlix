@@ -18,7 +18,7 @@ defineProps({
 </script>
 
 <template>
-    <button 
+    <button
         :class="[
             'inline-flex items-center justify-center rounded-lg transition-colors duration-200 font-medium',
             // Variants
@@ -44,4 +44,4 @@ defineProps({
     >
         <slot></slot>
     </button>
-</template> 
+</template>

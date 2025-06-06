@@ -23,7 +23,8 @@ class MusicXmlViewer extends Controller
         $music = Storage::disk('s3')->get($songFile->file_path);
 
         return Inertia::render('MusicXmlViewer', [
-            'music' => $music
+            'music' => $music,
+            'song' => $songFile->song
         ]);
     }
 }
