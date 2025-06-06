@@ -47,7 +47,7 @@ class StoreSongRequest extends FormRequest
             'files.*.file' => [
                 'required_with:files',
                 'file',
-                'mimes:pdf,txt',
+                'mimes:pdf,txt,musicxml,xml',
                 'max:10240', // 10MB
             ],
         ];
@@ -63,7 +63,6 @@ class StoreSongRequest extends FormRequest
         return [
             'files.max' => 'You can upload a maximum of 10 files.',
             'files.*.file.max' => 'Each file must not exceed 10MB.',
-            'files.*.file.mimes' => 'Files must be PDF or TXT format.',
             'files.*.type.in' => 'File type must be one of: lyrics, notes, chords, tabs, sheet music, or other.',
         ];
     }

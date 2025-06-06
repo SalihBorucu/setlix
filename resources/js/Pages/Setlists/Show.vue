@@ -6,6 +6,9 @@ import PerformanceMode from '@/Components/Setlist/PerformanceMode.vue'
 import { ref, computed } from 'vue'
 import visitExternalLink from "@/Utilities/visitExternalLink.js";
 import axios from 'axios';
+import MusicFileButton from "@/Components/MusicFileButton.vue";
+import MicrophoneIcon from '@/Components/Icons/Instruments/microphone.svg';
+
 
 const props = defineProps({
     band: {
@@ -56,14 +59,6 @@ const visitLyricsUrl = (song) => {
 
     return visitExternalLink(url, true);
 }
-
-const handleFileDownload = (file, song) => {
-    visitExternalLink(
-        route('songs.files.download', [props.band.id, song.id, file.id]),
-        true,
-        true
-    );
-};
 
 const handleExportPdf = async () => {
     try {
@@ -139,6 +134,7 @@ const handleExportPdf = async () => {
                                 <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
+
                                 Edit Setlist
                             </DSButton>
                         </Link>
@@ -284,28 +280,15 @@ const handleExportPdf = async () => {
                                         @click="visitLyricsUrl(item.song)"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
-                                        <img class="mr-2 h-5 w-auto text-neutral-400"
-                                             src="/images/instruments/microphone.svg"
-                                             alt="microphone"
-                                        />
+                                        <MicrophoneIcon class="h-4 w-4 text-neutral-700 hover:text-neutral-800" />
                                     </button>
 
-                                    <button
-                                        v-for="file in item.song.files"
-                                        :key="file.id"
-                                        @click="handleFileDownload(file, item.song)"
-                                        class="text-neutral-400 hover:text-neutral-500"
-                                    >
-                                        <img v-if="file.instrument"
-                                             class="mr-2 h-5 w-auto text-neutral-400"
-                                             :src="`/images/instruments/${file.instrument}.svg`"
-                                             :alt="file.instrument"
-                                        />
-                                        <svg v-else
-                                             class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                    </button>
+                                    <MusicFileButton v-for="file in item.song.files"
+                                                     :key="file.id"
+                                                     :file="file"
+                                                     :song="item.song"
+                                                     :band="band"
+                                    />
                                 </div>
                             </div>
                         </div>

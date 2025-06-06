@@ -5,6 +5,7 @@ import { DSButton, DSCard, DSAlert } from '@/Components/UI'
 import AlertModal from '@/Components/UI/AlertModal.vue'
 import visitExternalLink from '@/Utilities/visitExternalLink'
 import { ref } from 'vue'
+import MusicFileButton from "@/Components/MusicFileButton.vue";
 
 const props = defineProps({
     band: {
@@ -150,16 +151,11 @@ const handleDownload = (file) => {
                                     class="flex items-center justify-between rounded-md border border-neutral-200 p-2"
                                 >
                                     <div class="flex items-center">
-                                        <img v-if="file.instrument"
-                                             class="mr-2 h-5 w-auto text-neutral-400"
-                                             :src="`/images/instruments/${file.instrument}.svg`"
-                                             :alt="file.instrument"
+                                        <MusicFileButton :key="file.id"
+                                                         :file="file"
+                                                         :song="song"
+                                                         :band="band"
                                         />
-
-                                        <svg v-else
-                                             class="mr-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
                                         <div>
                                             <span class="text-sm font-medium text-neutral-900">
                                                 {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}

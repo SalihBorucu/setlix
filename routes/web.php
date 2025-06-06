@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MusicXmlViewer;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BandController;
 use App\Http\Controllers\SongController;
@@ -18,20 +19,12 @@ use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
 use Illuminate\Http\Request;
 use App\Services\GeolocationService;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 if (env('APP_ENV') !== 'production') {
     Route::get('/test', function (Request $request) {
-        $geoService = app(GeolocationService::class);
-        
-        $clientIp = $geoService->getClientIp();
-        $countryCode = $geoService->detectCountry($clientIp);
-        
-        return [
-            'ip' => $clientIp,
-            'country_code' => $countryCode,
-            'session_country' => session('country_code'),
-            'user_country' => auth()->user()?->country_code,
-        ];
+
     });
 }
 
@@ -53,19 +46,19 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         // Subscription management
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])
             ->name('subscription.index');
-            
+
         Route::get('/subscription/expired', [SubscriptionController::class, 'expired'])
             ->name('subscription.expired');
-        
+
         Route::get('/subscription/checkout/{band}', [SubscriptionController::class, 'checkout'])
             ->name('subscription.checkout');
-        
+
         Route::post('/subscription/create', [SubscriptionController::class, 'createSubscription'])
             ->name('subscription.create');
-        
+
         Route::post('/subscription/update-payment', [SubscriptionController::class, 'updatePaymentMethod'])
             ->name('subscription.update-payment');
-        
+
         Route::delete('/subscription/{band}/cancel', [SubscriptionController::class, 'cancel'])
             ->name('subscription.cancel');
     });
@@ -86,6 +79,9 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::patch('/bands/{band}/songs/{song}', [SongController::class, 'update'])->name('songs.update');
         Route::delete('/bands/{band}/songs/{song}', [SongController::class, 'destroy'])->name('songs.destroy');
         Route::get('/bands/{band}/songs/{song}/document', [SongController::class, 'downloadDocument'])->name('songs.document');
+
+        Route::get('/music-xml-viewer/{songFile}', MusicXmlViewer::class)->name('songs.music-xml-viewer');
+
         Route::delete('/bands/{band}/songs/{song}/files/{file}', [SongController::class, 'deleteFile'])
             ->name('songs.files.destroy');
         Route::get('/bands/{band}/songs/{song}/files/{file}/download', [SongController::class, 'downloadFile'])

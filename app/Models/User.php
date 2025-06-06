@@ -70,6 +70,11 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function isMemberOf(int $bandId): bool
+    {
+        return $this->bands()->where('band_id', $bandId)->exists();
+    }
+
     /**
      * Get bands where the user is an admin
      */

@@ -1,8 +1,8 @@
 <script setup>
 import { DSButton, DSCard } from "@/Components/UI";
-import { Link } from '@inertiajs/vue3';
 import visitExternalLink from "@/Utilities/visitExternalLink.js";
 import axios from 'axios';
+import MusicFileButton from "@/Components/MusicFileButton.vue";
 
 const props = defineProps({
     band: {
@@ -37,14 +37,6 @@ const visitLyricsUrl = (song) => {
     url += "+lyrics"
     return visitExternalLink(url, true);
 }
-
-const handleFileDownload = (file, song) => {
-    visitExternalLink(
-        route('songs.files.download', [props.band.id, song.id, file.id]),
-        true,
-        true
-    );
-};
 
 const handleExportPdf = async () => {
     try {
@@ -154,14 +146,13 @@ const handleExportPdf = async () => {
                                     ○ Lyrics
                                 </button>
 
-                                <button
-                                    v-for="file in item.song.files"
-                                    :key="file.id"
-                                    @click="handleFileDownload(file, item.song)"
-                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-primary-400 hover:text-primary-300"
-                                >
-                                    □ {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}
-                                </button>
+                                <MusicFileButton v-for="file in item.song.files"
+                                                 :key="file.id"
+                                                 :file="file"
+                                                 :song="item.song"
+                                                 :band="band"
+                                                 classes="text-primary-400 hover:text-primary-300 h-5 w-auto"
+                                />
                             </div>
                         </div>
                     </div>
