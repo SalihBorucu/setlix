@@ -1,1 +1,0 @@
-const a=(n,o=!1,l=!1)=>{if(o){window.open(n,"_blank");return}const e=document.createElement("a");if(e.style.display="none",l){let t=n.split("/"),d=t.length;e.download=t[d-1]}document.body.appendChild(e),e.href=n,e.click(),window.URL.revokeObjectURL(e.href),document.body.removeChild(e)};export{a as v};
