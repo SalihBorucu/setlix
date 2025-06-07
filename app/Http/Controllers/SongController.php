@@ -8,6 +8,7 @@ use App\Http\Requests\Song\UpdateSongRequest;
 use App\Models\Band;
 use App\Models\Song;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -67,16 +68,23 @@ class SongController extends Controller
      */
     public function store(StoreSongRequest $request): RedirectResponse
     {
+        DB::beginTransaction();
         if ($request->spotify_link) {
             try {
                 $song = $request->importFromSpotify();
+                DB::commit();
             } catch (\Exception $e) {
+                DB::rollBack();
                 return redirect()->back()->with('error', "There was an error importing this song. Please check the link and try again.");
             }
         } else {
             try {
                 $song = $request->createSong($this->fileService);
+                DB::commit();
+
             } catch (\Exception $e) {
+                ray($e);
+                DB::rollBack();
                 return redirect()->back()->with('error', "There was an error creating this song. Please try again with different details.");
             }
         }
@@ -144,7 +152,8 @@ class SongController extends Controller
                 $this->fileService->store(
                     $song,
                     $fileData['file'],
-                    $fileData['type']
+                    $fileData['type'],
+                    $fileData['instrument']
                 );
             }
         }

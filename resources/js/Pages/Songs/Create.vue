@@ -53,9 +53,9 @@ const submit = () => {
         .filter(group => group.file && group.type) // Only include complete groups
         .map(group => ({
             type: group.type,
+            instrument: group.instrument,
             file: group.file
         }))
-
     form.post(route('songs.store', props.band.id))
 }
 
@@ -279,10 +279,32 @@ const canAddSongs = computed(() => {
                             </div>
 
                             <div class="flex-1">
+                                <select
+                                    v-model="group.instrument"
+                                    class="block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                >
+                                    <option value="">Select Instrument</option>
+                                    <option value="vocals">Vocals</option>
+                                    <option value="guitar">Guitar</option>
+                                    <option value="saxophone">Saxophone</option>
+                                    <option value="trumpet">Trumpet</option>
+                                    <option value="trombone">Trombone</option>
+                                    <option value="flute">Flute</option>
+                                    <option value="keyboard">Keyboard</option>
+                                    <option value="drums">Drums</option>
+                                    <option value="bass">Bass</option>
+                                    <option value="violin">Violin</option>
+                                    <option value="cello">Cello</option>
+                                    <option value="percussion">Percussion</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="flex-1">
                                 <input
                                     type="file"
                                     @change="handleFileUpload($event, index)"
-                                    accept=".pdf,.txt"
+                                    accept=".pdf,.txt,.musicxml"
                                     class="block w-full text-sm"
                                 >
                             </div>
@@ -300,7 +322,7 @@ const canAddSongs = computed(() => {
                         </div>
                     </div>
 
-                    <p class="text-sm text-neutral-500">PDF or TXT files up to 10MB</p>
+                    <p class="text-sm text-neutral-500">PDF or TXT or MusicXML files up to 10MB</p>
                 </div>
 
                 <!-- Submit Buttons -->

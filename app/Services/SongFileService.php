@@ -17,7 +17,7 @@ class SongFileService
     /**
      * Store a new file for a song
      */
-    public function store(Song $song, UploadedFile $file, string $type): SongFile
+    public function store(Song $song, UploadedFile $file, string $type, ?string $instrument = null): SongFile
     {
         // Validate file size
         if ($file->getSize() > self::MAX_FILE_SIZE) {
@@ -26,7 +26,7 @@ class SongFileService
 
         // Generate unique filename
         $filename = $this->generateUniqueFilename($file);
-        
+
         // Store file in S3
         $path = $file->storeAs(
             "songs/{$song->id}",
@@ -38,6 +38,7 @@ class SongFileService
         return SongFile::create([
             'song_id' => $song->id,
             'type' => $type,
+            'instrument' => $instrument,
             'file_path' => $path,
             'original_filename' => $file->getClientOriginalName(),
             'file_size' => $file->getSize()
@@ -75,4 +76,4 @@ class SongFileService
         $extension = $file->getClientOriginalExtension();
         return uniqid() . '_' . time() . '.' . $extension;
     }
-} 
+}

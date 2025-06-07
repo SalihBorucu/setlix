@@ -43,10 +43,11 @@ class StoreSongRequest extends FormRequest
             // New file upload rules
             'files' => ['nullable', 'array', 'max:10'], // Max 10 files
             'files.*.type' => ['required_with:files', 'string', 'in:lyrics,notes,chords,tabs,sheet_music,other'],
+            'files.*.instrument' => ['required_with:files', 'string'],
             'files.*.file' => [
                 'required_with:files',
                 'file',
-                'mimes:pdf,txt',
+                'mimes:pdf,txt,musicxml,xml',
                 'max:10240', // 10MB
             ],
         ];
@@ -62,7 +63,6 @@ class StoreSongRequest extends FormRequest
         return [
             'files.max' => 'You can upload a maximum of 10 files.',
             'files.*.file.max' => 'Each file must not exceed 10MB.',
-            'files.*.file.mimes' => 'Files must be PDF or TXT format.',
             'files.*.type.in' => 'File type must be one of: lyrics, notes, chords, tabs, sheet music, or other.',
         ];
     }
@@ -100,9 +100,12 @@ class StoreSongRequest extends FormRequest
                 $fileService->store(
                     $song,
                     $fileData['file'],
-                    $fileData['type']
+                    $fileData['type'],
+                    $fileData['instrument']
                 );
             }
         }
+
+        return $song;
     }
 }

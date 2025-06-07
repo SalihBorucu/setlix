@@ -25,6 +25,8 @@
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
         "floating-vue": "^5.2.2",
+        "verovio": "^5.3.1",
+        "vite-svg-loader": "^5.1.0",
         "vuedraggable": "^4.1.0"
     }
 }

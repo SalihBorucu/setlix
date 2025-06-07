@@ -2,6 +2,9 @@
     <!-- Hero Section -->
     <x-landing.hero />
 
+    <!-- Made by Musicians Tagline -->
+    <x-landing.made-by-musicians />
+
     <!-- How It Works Section -->
     <x-landing.how-it-works />
 
@@ -11,8 +14,11 @@
     <!-- Why Choose Setlix Section -->
     <x-landing.why-choose />
 
+    {{-- Blog Showcase Section moved here as a component --}}
+    @include('components.landing.blog-showcase', ['latestBlogs' => $latestBlogs])
+
     <!-- Pricing Section -->
-    <x-landing.pricing :formattedPrice="$formattedPrice" :pricing="$pricing" />
+    <x-landing.pricing :formattedPrice="$formattedPrice" :pricing="$pricing" id="pricing" />
 
     <!-- Get Started Section -->
     <section class="py-12 bg-sky-50">
@@ -32,4 +38,21 @@
             </div>
         </div>
     </section>
-</x-layouts.landing> 
+
+    <!-- Interactive Score Viewer Section -->
+    <x-landing.score-viewer />
+
+    <!-- See Setlix in Action Section -->
+{{--    <x-landing.see-in-action />--}}
+
+    <!-- Trusted by Musicians Section -->
+    <x-landing.trusted-by-musicians />
+
+    <!-- Support Section -->
+    <section id="support" class="py-8 bg-sky-50">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-lg text-gray-700 font-semibold mb-2">Need help or have a question?</p>
+            <p class="text-gray-600">Email us at <a href="mailto:setlix.app@gmail.com" class="text-sky-600 underline">setlix.app@gmail.com</a> and we'll get back to you as soon as we can!</p>
+        </div>
+    </section>
+</x-layouts.landing>

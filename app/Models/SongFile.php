@@ -13,6 +13,7 @@ class SongFile extends Model
         'file_path',
         'original_filename',
         'file_size',
+        'instrument',
     ];
 
     /**
@@ -22,4 +23,4 @@ class SongFile extends Model
     {
         return $this->belongsTo(Song::class);
     }
-} 
+}

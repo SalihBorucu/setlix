@@ -5,6 +5,7 @@ import { DSButton, DSCard, DSTooltip, DSAlertModal } from '@/Components/UI'
 import visitExternalLink from '@/Utilities/visitExternalLink'
 import { usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
+import MusicFileButton from "@/Components/MusicFileButton.vue";
 
 const props = defineProps({
     band: {
@@ -62,7 +63,7 @@ const handleDownload = (file, song) => {
             <div class="md:flex md:items-center md:justify-between">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center">
-                        <Link 
+                        <Link
                             :href="route('bands.show', band.id)"
                             class="text-sm font-medium text-primary-600 hover:text-primary-700"
                         >
@@ -201,13 +202,11 @@ const handleDownload = (file, song) => {
                                                 v-for="file in song.files"
                                                 :key="file.id"
                                                 class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 cursor-pointer"
-                                                @click="handleDownload(file, song)"
                                             >
-                                                <div class="inline-flex items-center">
-                                                    <svg class="-ml-0.5 mr-1.5 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                    </svg>
-                                                    {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}
+                                                <div class="inline-flex items-center space-x-2">
+                                                    <MusicFileButton :file="file" :song="song" :band="band" classes="h-5 w-auto text-primary-700 hover:text-primary-800">
+                                                        {{ file.type.charAt(0).toUpperCase() + file.type.slice(1) }}
+                                                    </MusicFileButton>
                                                 </div>
                                             </div>
                                             <a
@@ -273,4 +272,4 @@ const handleDownload = (file, song) => {
         :show-cancel="true"
         @confirm="confirmDelete"
     />
-</template> 
+</template>
