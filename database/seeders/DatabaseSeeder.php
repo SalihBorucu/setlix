@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             BandSeeder::class,
             SongSeeder::class,
             SetlistSeeder::class,
+            BlogSeeder::class, // Seed sample blog data
         ]);
     }
 }

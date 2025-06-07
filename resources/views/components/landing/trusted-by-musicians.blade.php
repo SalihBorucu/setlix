@@ -8,19 +8,19 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Testimonial 1 -->
             <div class="bg-sky-50 rounded-lg shadow p-6 flex flex-col items-center">
-                <img src="/images/band-groove-merchants.png" alt="The Groove Merchants" class="w-20 h-20 rounded-full mb-4 object-cover bg-gray-200" />
-                <blockquote class="text-gray-700 italic mb-2">“Setlix has been a game-changer for our wedding band. We can quickly build custom setlists for clients and share them with the whole band instantly. No more confusion or out-of-date setlists!”</blockquote>
-                <div class="text-sky-700 font-semibold">— The Groove Merchants</div>
+                <img src="/images/tbb-square.png" alt="The Barefoot Bandit" class="w-20 h-20 rounded-full mb-4 object-cover bg-gray-200" />
+                <blockquote class="text-gray-700 italic mb-2">“Setlix has been a game-changer for us. We can quickly build custom setlists on the spot and share it with each other. No more confusion on stage or out-of-date setlists!”</blockquote>
+                <div class="text-sky-700 font-semibold">— The Barefoot Bandit</div>
             </div>
             <!-- Testimonial 2 -->
             <div class="bg-sky-50 rounded-lg shadow p-6 flex flex-col items-center">
-                <img src="/images/band-atlantic-avenue.png" alt="Atlantic Avenue" class="w-20 h-20 rounded-full mb-4 object-cover bg-gray-200" />
+                <img src="/images/sponge-square.jpg" alt="Sponge Collective" class="w-20 h-20 rounded-full mb-4 object-cover bg-gray-200" />
                 <blockquote class="text-gray-700 italic mb-2">“The ability to have our setlists, lyrics, and charts all in one place is massive. It saves us so much time and hassle before and during a gig.”</blockquote>
-                <div class="text-sky-700 font-semibold">— Atlantic Avenue</div>
+                <div class="text-sky-700 font-semibold">— Sponge Collective</div>
             </div>
         </div>
         <p class="mt-8 text-sm text-gray-500">
             <em>Photos: Bands in action (replace with real images as available).</em>
         </p>
     </div>
-</section> 
+</section>

@@ -14,6 +14,9 @@
     <!-- Why Choose Setlix Section -->
     <x-landing.why-choose />
 
+    {{-- Blog Showcase Section moved here as a component --}}
+    @include('components.landing.blog-showcase', ['latestBlogs' => $latestBlogs])
+
     <!-- Pricing Section -->
     <x-landing.pricing :formattedPrice="$formattedPrice" :pricing="$pricing" />
 
@@ -40,7 +43,7 @@
     <x-landing.score-viewer />
 
     <!-- See Setlix in Action Section -->
-    <x-landing.see-in-action />
+{{--    <x-landing.see-in-action />--}}
 
     <!-- Trusted by Musicians Section -->
     <x-landing.trusted-by-musicians />
@@ -52,4 +55,4 @@
             <p class="text-gray-600">Email us at <a href="mailto:setlix.app@gmail.com" class="text-sky-600 underline">setlix.app@gmail.com</a> and we'll get back to you as soon as we can!</p>
         </div>
     </section>
-</x-layouts.landing> 
+</x-layouts.landing>

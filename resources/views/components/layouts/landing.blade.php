@@ -15,7 +15,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen bg-gray-100 flex flex-col">
         <nav class="bg-white shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
@@ -24,6 +24,9 @@
                             <a href="/">
                                 <img class="h-12 w-auto" src="/images/text_logo.svg" alt="Setlix" />
                             </a>
+                        </div>
+                        <div class="flex items-center">
+                            <a href="{{ route('blog.index') }}" class="ml-8 text-gray-700 hover:text-gray-900">Blog</a>
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -43,9 +46,38 @@
         </nav>
 
         <!-- Main Content -->
-        <main>
+        <main class="flex-1">
             {{ $slot }}
         </main>
+
+        <!-- Blog Showcase Section -->
+        {{--
+            This section displays the latest two blog posts.
+            Make sure to pass a $latestBlogs variable (array of blog objects) to this view.
+            Each blog should have: id, title, excerpt, and a route to its detail page.
+        --}}
+        @if(isset($latestBlogs) && count($latestBlogs) > 0)
+        <section class="bg-white py-12 border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Latest from our Blog</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    @foreach($latestBlogs as $blog)
+                        <div class="p-6 bg-gray-50 rounded-lg shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ $blog->title }}</h3>
+                                <p class="text-gray-600 mb-4">{{ $blog->excerpt }}</p>
+                            </div>
+                            <a href="{{ route('blog.show', $blog->id) }}" class="text-sky-600 hover:underline mt-auto">Read more &rarr;</a>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mt-8 text-center">
+                    <a href="{{ route('blog.index') }}" class="inline-block px-6 py-2 bg-sky-500 text-white rounded-md font-medium hover:bg-sky-600 transition">See all blogs</a>
+                </div>
+            </div>
+        </section>
+        @endif
+        <!-- End Blog Showcase Section -->
 
         <!-- Footer -->
         <footer class="bg-white border-t border-gray-200">

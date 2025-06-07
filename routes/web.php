@@ -133,4 +133,7 @@ Route::post('/setlist/{slug}/submit', [PublicSetlistController::class, 'submit']
 // Stripe webhook
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('cashier.webhook');
 
+// Blog routes for public blog section
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 require __DIR__.'/auth.php';
