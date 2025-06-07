@@ -27,6 +27,8 @@
                         </div>
                         <div class="flex items-center">
                             <a href="{{ route('blog.index') }}" class="ml-8 text-gray-700 hover:text-gray-900">Blog</a>
+                            <a href="#pricing" class="ml-8 text-gray-700 hover:text-gray-900" id="nav-pricing">Pricing</a>
+                            <a href="#support" class="ml-8 text-gray-700 hover:text-gray-900" id="nav-support">Support</a>
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -88,5 +90,41 @@
             </div>
         </footer>
     </div>
+    <script>
+    // Smooth scroll for anchor links if on landing page, otherwise redirect to landing with scrollTo param
+    function handleNavScroll(section) {
+        const onLanding = window.location.pathname === '/' || window.location.pathname === '/index';
+        if (onLanding) {
+            const target = document.getElementById(section);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            window.location.href = '/?scrollTo=' + section;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach click handlers for Pricing and Support nav links
+        document.getElementById('nav-pricing').addEventListener('click', function(e) {
+            e.preventDefault();
+            handleNavScroll('pricing');
+        });
+        document.getElementById('nav-support').addEventListener('click', function(e) {
+            e.preventDefault();
+            handleNavScroll('support');
+        });
+        // On landing, scroll to section if scrollTo param is present
+        const params = new URLSearchParams(window.location.search);
+        const scrollTo = params.get('scrollTo');
+        if (scrollTo) {
+            setTimeout(function() {
+                const target = document.getElementById(scrollTo);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 200); // slight delay to ensure DOM is ready
+        }
+    });
+    </script>
 </body>
 </html>
