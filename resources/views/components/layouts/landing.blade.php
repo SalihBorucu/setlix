@@ -27,8 +27,9 @@
                         </div>
                         <div class="flex items-center">
                             <a href="{{ route('blog.index') }}" class="ml-8 text-gray-700 hover:text-gray-900">Blog</a>
-                            <a href="#pricing" class="ml-8 text-gray-700 hover:text-gray-900" id="nav-pricing">Pricing</a>
-                            <a href="#support" class="ml-8 text-gray-700 hover:text-gray-900" id="nav-support">Support</a>
+                            <!-- Pricing and Support links: handle cross-page scroll/redirect; hidden on mobile -->
+                            <a href="#pricing" class="ml-8 text-gray-700 hover:text-gray-900 hidden sm:inline" id="nav-pricing">Pricing</a>
+                            <a href="#support" class="ml-8 text-gray-700 hover:text-gray-900 hidden sm:inline" id="nav-support">Support</a>
                         </div>
                     </div>
                     <div class="flex items-center">
