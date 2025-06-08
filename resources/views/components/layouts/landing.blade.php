@@ -85,6 +85,33 @@
         <!-- Footer -->
         <footer class="bg-white border-t border-gray-200">
             <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <!-- Social Links: Instagram, Facebook, TikTok -->
+                <div class="flex justify-center space-x-6 mb-4">
+                    <!-- Instagram -->
+                    <a href="https://instagram.com/setlix.app" target="_blank" rel="noopener" aria-label="Instagram" class="text-gray-400 hover:text-sky-500 transition">
+                        <!-- Instagram SVG Icon -->
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="20" height="20" x="2" y="2" rx="5" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="17" cy="7" r="1.5" fill="currentColor"/>
+                        </svg>
+                    </a>
+                    <!-- Facebook -->
+                    <a href="https://facebook.com/setlix" target="_blank" rel="noopener" aria-label="Facebook" class="text-gray-400 hover:text-sky-500 transition">
+                        <!-- Facebook SVG Icon -->
+                        <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 5 3.657 9.127 8.438 9.877v-6.987h-2.54v-2.89h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.242 0-1.632.771-1.632 1.562v1.875h2.773l-.443 2.89h-2.33v6.987C18.343 21.127 22 17 22 12"/>
+                        </svg>
+                    </a>
+                    <!-- TikTok -->
+                    <a href="https://tiktok.com/@setlix.app" target="_blank" rel="noopener" aria-label="TikTok" class="text-gray-400 hover:text-sky-500 transition">
+                        <!-- TikTok SVG Icon -->
+                        <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.75 2h3.25a.75.75 0 0 1 .75.75v2.5a3.75 3.75 0 0 0 3.75 3.75h1a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-.75.75h-1.25A6.25 6.25 0 1 1 9.5 17.25v-3a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v2.5a3.75 3.75 0 1 0 3.75-3.75h-1a.75.75 0 0 1-.75-.75v-7A.75.75 0 0 1 12.75 2z"/>
+                        </svg>
+                    </a>
+                </div>
+                <!-- End Social Links -->
                 <div class="text-center text-gray-500 text-sm">
                     &copy; {{ date('Y') }} Setlix. All rights reserved.
                 </div>
