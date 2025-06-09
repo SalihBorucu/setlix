@@ -109,13 +109,13 @@ const leaveBand = () => {
                     <div class="space-y-4">
                         <!-- Cover Image -->
                         <div v-if="band.cover_image" class="aspect-video w-full overflow-hidden rounded-lg">
-                            <img 
-                                :src="band.cover_image" 
+                            <img
+                                :src="band.cover_image"
                                 :alt="band.name"
                                 class="h-full w-full object-cover"
                             />
                         </div>
-                        
+
                         <!-- Description -->
                         <p class="text-neutral-600">
                             {{ band.description || 'No description provided.' }}
@@ -152,7 +152,7 @@ const leaveBand = () => {
                                     <p class="text-xs text-neutral-500">{{ member.email }}</p>
                                 </div>
                             </div>
-                            <span 
+                            <span
                                 v-if="member.pivot.role === 'admin'"
                                 class="inline-flex items-center rounded-full bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
                             >
@@ -234,23 +234,23 @@ const leaveBand = () => {
                             </div>
                         </div>
 
-                        <!-- Upcoming Shows -->
-                        <div class="h-full rounded-lg border border-neutral-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <h4 class="text-base font-medium text-neutral-900">Upcoming Shows</h4>
-                                <span class="text-2xl font-semibold text-neutral-900">0</span>
-                            </div>
-                            <p class="mt-1 text-sm text-neutral-500">Coming soon</p>
-                        </div>
+<!--                        &lt;!&ndash; Upcoming Shows &ndash;&gt;-->
+<!--                        <div class="h-full rounded-lg border border-neutral-200 p-6">-->
+<!--                            <div class="flex items-center justify-between">-->
+<!--                                <h4 class="text-base font-medium text-neutral-900">Upcoming Shows</h4>-->
+<!--                                <span class="text-2xl font-semibold text-neutral-900">0</span>-->
+<!--                            </div>-->
+<!--                            <p class="mt-1 text-sm text-neutral-500">Coming soon</p>-->
+<!--                        </div>-->
 
-                        <!-- Statistics -->
-                        <div class="h-full rounded-lg border border-neutral-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <h4 class="text-base font-medium text-neutral-900">Statistics</h4>
-                                <span class="text-2xl font-semibold text-neutral-900">-</span>
-                            </div>
-                            <p class="mt-1 text-sm text-neutral-500">Coming soon</p>
-                        </div>
+<!--                        &lt;!&ndash; Statistics &ndash;&gt;-->
+<!--                        <div class="h-full rounded-lg border border-neutral-200 p-6">-->
+<!--                            <div class="flex items-center justify-between">-->
+<!--                                <h4 class="text-base font-medium text-neutral-900">Statistics</h4>-->
+<!--                                <span class="text-2xl font-semibold text-neutral-900">-</span>-->
+<!--                            </div>-->
+<!--                            <p class="mt-1 text-sm text-neutral-500">Coming soon</p>-->
+<!--                        </div>-->
                     </div>
                 </div>
             </DSCard>
@@ -274,4 +274,4 @@ const leaveBand = () => {
             @confirm="leaveBand"
         />
     </AuthenticatedLayout>
-</template> 
+</template>
