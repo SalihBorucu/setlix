@@ -39,6 +39,7 @@ class UpdateSongRequest extends FormRequest
             // New file upload rules
             'files' => ['nullable', 'array', 'max:10'], // Max 10 files
             'files.*.type' => ['required_with:files', 'string', 'in:lyrics,notes,chords,tabs,sheet_music,other'],
+            'files.*.instrument' => ['required_with:files', 'string'],
             'files.*.file' => [
                 'required_with:files',
                 'file',

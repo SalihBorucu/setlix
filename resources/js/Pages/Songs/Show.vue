@@ -150,7 +150,7 @@ const handleDownload = (file) => {
                                     :key="file.id"
                                     class="flex items-center justify-between rounded-md border border-neutral-200 p-2"
                                 >
-                                    <div class="flex items-center">
+                                    <div class="flex items-center space-x-2">
                                         <MusicFileButton :key="file.id"
                                                          :file="file"
                                                          :song="song"
