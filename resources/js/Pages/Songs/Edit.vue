@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {Head, Link, router, useForm} from '@inertiajs/vue3';
 import { ref } from 'vue';
 import {DSInput, DSButton, DSCard, DSAlert, DSAlertModal, DSDurationInput} from "@/Components/UI";
+import AddFileSection from "@/Pages/Songs/AddFileSection.vue";
 
 // Move helper functions before they're used
 const formatDuration = (seconds) => {
@@ -46,6 +47,7 @@ const addFileGroup = () => {
     if (fileGroups.value.length < 10) {
         fileGroups.value.push({
             type: '',
+            instrument: null,
             file: null
         });
     }
@@ -94,6 +96,7 @@ const submit = () => {
         .filter(group => group.file && group.type)
         .forEach((group, index) => {
             formData.append(`files[${index}][type]`, group.type);
+            formData.append(`files[${index}][instrument]`, group.instrument);
             formData.append(`files[${index}][file]`, group.file);
         });
 
@@ -235,65 +238,71 @@ const submit = () => {
                                 </div>
                             </div>
 
+
+                            <AddFileSection :fileGroups="fileGroups"
+                                            @add-file-group="addFileGroup"
+                                            @remove-file-group="removeFileGroup"
+                                            @handle-file-upload="handleFileUpload"
+                            />
                             <!-- New Files -->
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-lg font-medium text-neutral-900">Add New Files</h3>
-                                    <DSButton
-                                        type="button"
-                                        variant="secondary"
-                                        @click="addFileGroup"
-                                        :disabled="fileGroups.length >= 10"
-                                    >
-                                        Add File
-                                    </DSButton>
-                                </div>
+<!--                            <div class="space-y-4">-->
+<!--                                <div class="flex justify-between items-center">-->
+<!--                                    <h3 class="text-lg font-medium text-neutral-900">Add New Files</h3>-->
+<!--                                    <DSButton-->
+<!--                                        type="button"-->
+<!--                                        variant="secondary"-->
+<!--                                        @click="addFileGroup"-->
+<!--                                        :disabled="fileGroups.length >= 10"-->
+<!--                                    >-->
+<!--                                        Add File-->
+<!--                                    </DSButton>-->
+<!--                                </div>-->
 
-                                <div class="space-y-2">
-                                    <div
-                                        v-for="(group, index) in fileGroups"
-                                        :key="index"
-                                        class="flex items-center gap-4 border rounded-md p-3"
-                                    >
-                                        <div class="flex-1">
-                                            <select
-                                                v-model="group.type"
-                                                class="block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                                            >
-                                                <option value="">Select Type</option>
-                                                <option value="lyrics">Lyrics</option>
-                                                <option value="notes">Notes</option>
-                                                <option value="chords">Chords</option>
-                                                <option value="tabs">Tabs</option>
-                                                <option value="sheet_music">Sheet Music</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        </div>
+<!--                                <div class="space-y-2">-->
+<!--                                    <div-->
+<!--                                        v-for="(group, index) in fileGroups"-->
+<!--                                        :key="index"-->
+<!--                                        class="flex items-center gap-4 border rounded-md p-3"-->
+<!--                                    >-->
+<!--                                        <div class="flex-1">-->
+<!--                                            <select-->
+<!--                                                v-model="group.type"-->
+<!--                                                class="block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"-->
+<!--                                            >-->
+<!--                                                <option value="">Select Type</option>-->
+<!--                                                <option value="lyrics">Lyrics</option>-->
+<!--                                                <option value="notes">Notes</option>-->
+<!--                                                <option value="chords">Chords</option>-->
+<!--                                                <option value="tabs">Tabs</option>-->
+<!--                                                <option value="sheet_music">Sheet Music</option>-->
+<!--                                                <option value="other">Other</option>-->
+<!--                                            </select>-->
+<!--                                        </div>-->
 
-                                        <div class="flex-1">
-                                            <input
-                                                type="file"
-                                                @change="handleFileUpload($event, index)"
-                                                accept=".pdf,.txt"
-                                                class="block w-full text-sm"
-                                            >
-                                        </div>
+<!--                                        <div class="flex-1">-->
+<!--                                            <input-->
+<!--                                                type="file"-->
+<!--                                                @change="handleFileUpload($event, index)"-->
+<!--                                                accept=".pdf,.txt"-->
+<!--                                                class="block w-full text-sm"-->
+<!--                                            >-->
+<!--                                        </div>-->
 
-                                        <button
-                                            type="button"
-                                            @click="removeFileGroup(index)"
-                                            class="text-neutral-400 hover:text-neutral-500"
-                                        >
-                                            <span class="sr-only">Remove</span>
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
+<!--                                        <button-->
+<!--                                            type="button"-->
+<!--                                            @click="removeFileGroup(index)"-->
+<!--                                            class="text-neutral-400 hover:text-neutral-500"-->
+<!--                                        >-->
+<!--                                            <span class="sr-only">Remove</span>-->
+<!--                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />-->
+<!--                                            </svg>-->
+<!--                                        </button>-->
+<!--                                    </div>-->
+<!--                                </div>-->
 
-                                <p class="text-sm text-neutral-500">PDF or TXT files up to 10MB</p>
-                            </div>
+<!--                                <p class="text-sm text-neutral-500">PDF or TXT files up to 10MB</p>-->
+<!--                            </div>-->
 
                             <!-- Submit Button -->
                             <div class="flex items-center justify-end gap-4">
