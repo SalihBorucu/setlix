@@ -29,7 +29,7 @@ class StoreBandRequest extends FormRequest
                 'nullable',
                 'image',
                 'mimes:jpeg,png,gif',
-                'max:10240', // 10MB
+                'max:2048', // 2MB
                 'dimensions:min_width=640,min_height=360,max_width=2000,max_height=1125',
                 function ($attribute, $value, $fail) {
                     if ($value) {
@@ -38,7 +38,7 @@ class StoreBandRequest extends FormRequest
                             $width = $image[0];
                             $height = $image[1];
                             $ratio = $width / $height;
-                            
+
                             // Allow aspect ratios between 1.7 and 1.78 (close to 16:9 = 1.77778)
                             if ($ratio < 1.7 || $ratio > 1.78) {
                                 $fail('The image must have an aspect ratio of 16:9 (like 1920x1080).');
@@ -58,7 +58,7 @@ class StoreBandRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'cover_image.max' => 'The cover image must not be larger than 10MB.',
+            'cover_image.max' => 'The cover image must not be larger than 2MB.',
             'cover_image.dimensions' => 'The cover image must be between 640x360 and 2000x1125 pixels with a 16:9 aspect ratio.',
             'cover_image.mimes' => 'The cover image must be a file of type: jpeg, png, gif.',
         ];
