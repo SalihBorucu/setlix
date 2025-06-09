@@ -42,7 +42,7 @@ const handleFileInput = (e) => {
 const handleDrop = (e) => {
     e.preventDefault()
     dragOver.value = false
-    
+
     const file = e.dataTransfer?.files?.[0]
     if (file?.type.startsWith('image/')) {
         emit('update:modelValue', file)
@@ -64,7 +64,7 @@ const handleDragLeave = () => {
         <DSAlert v-if="error" type="error" class="mb-4">
             {{ error }}
         </DSAlert>
-        
+
         <div
             class="relative flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors duration-200"
             :class="[
@@ -84,7 +84,7 @@ const handleDragLeave = () => {
                         alt="Cover preview"
                     />
                 </div>
-                
+
                 <!-- Upload Icon -->
                 <svg
                     v-else
@@ -100,7 +100,7 @@ const handleDragLeave = () => {
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                 </svg>
-                
+
                 <div class="mt-4 flex text-sm text-neutral-600">
                     <label
                         class="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500"
@@ -115,11 +115,11 @@ const handleDragLeave = () => {
                     </label>
                     <p class="pl-1">or drag and drop</p>
                 </div>
-                
+
                 <p class="text-xs text-neutral-500">
-                    PNG, JPG, GIF up to 10MB
+                    PNG, JPG, GIF up to 2MB
                 </p>
             </div>
         </div>
     </div>
-</template> 
+</template>
