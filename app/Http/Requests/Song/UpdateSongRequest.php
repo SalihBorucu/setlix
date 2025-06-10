@@ -43,7 +43,7 @@ class UpdateSongRequest extends FormRequest
             'files.*.file' => [
                 'required_with:files',
                 'file',
-                'mimes:pdf,txt',
+                'mimes:pdf,txt,musicxml,xml',
                 'max:10240', // 10MB
             ],
         ];
