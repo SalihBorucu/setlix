@@ -19,8 +19,5 @@
                 <div class="text-sky-700 font-semibold">— Sponge Collective</div>
             </div>
         </div>
-        <p class="mt-8 text-sm text-gray-500">
-            <em>Photos: Bands in action (replace with real images as available).</em>
-        </p>
     </div>
 </section>
