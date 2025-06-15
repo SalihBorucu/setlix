@@ -171,12 +171,36 @@ class SongController extends Controller
     {
         $this->authorize('update', $band);
 
-        // Delete all associated files
-        foreach ($song->files as $file) {
-            $this->fileService->delete($file);
-        }
+        try {
+            DB::beginTransaction();
+            // Delete all associated files
+            foreach ($song->files as $file) {
+                $this->fileService->delete($file);
+            }
 
-        $song->delete();
+            // remove from setlists
+            $setlistsForSong = $song->setlists()->get();
+            $setlistsToDelete = [];
+            foreach ($setlistsForSong as $setlist) {
+                if ($setlist->songs()->count() <= 1) {
+                    $setlistsToDelete[] = $setlist;
+                }
+            }
+
+            $song->setlists()->detach();
+            foreach ($setlistsToDelete as $setlist) {
+                $setlist->delete();
+            }
+
+            $song->delete();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            report($e);
+            return redirect()->back()->with('error', "There was an error importing this song. Please try again later.");
+        }
 
         return redirect()->route('songs.index', ['band' => $band->id]);
     }
