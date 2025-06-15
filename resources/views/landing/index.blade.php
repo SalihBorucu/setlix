@@ -43,7 +43,7 @@
     <x-landing.score-viewer />
 
     <!-- See Setlix in Action Section -->
-{{--    <x-landing.see-in-action />--}}
+    <x-landing.see-in-action />
 
     <!-- Trusted by Musicians Section -->
     <x-landing.trusted-by-musicians />
