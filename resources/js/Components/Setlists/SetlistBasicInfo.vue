@@ -52,6 +52,8 @@ const emit = defineEmits(['update:targetDuration'])
                     v-model="form.target_duration"
                     @update:seconds="(seconds) => form.target_duration_seconds = seconds"
                     label="Target Duration"
+                    placeholder="00:00:00"
+                    include-hours
                     :error="form.errors.target_duration"
                     required
                 />

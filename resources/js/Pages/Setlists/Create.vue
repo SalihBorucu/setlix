@@ -144,7 +144,7 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <SetlistHeader :band="band" />
+            <SetlistHeader :band="band" :form="form" />
         </template>
 
         <div class="max-w-7xl">
