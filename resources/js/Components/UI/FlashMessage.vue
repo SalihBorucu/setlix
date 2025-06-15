@@ -47,7 +47,10 @@ const isVisible = ref(false);
 let timeout = null;
 
 const message = computed(() => {
-    isVisible.value = true;
+    isVisible.value = !!(page.props.flash.success ||
+        page.props.flash.error ||
+        page.props.flash.info ||
+        page.props.flash.message);
 
     return page.props.flash.success ||
            page.props.flash.error ||

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { DSInput } from '@/Components/UI'
 
 const props = defineProps({
@@ -22,27 +22,55 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: '00:00'
+        default: null
+    },
+    includeHours: {
+        type: Boolean,
+        default: false
     }
 })
 
 const emit = defineEmits(['update:modelValue', 'update:seconds'])
 
-// Internal display value in MM:SS format
+// Internal display value
 const displayValue = ref('')
 
-// Convert seconds to MM:SS format
+// Computed placeholder based on format
+const computedPlaceholder = computed(() => {
+    if (props.placeholder) return props.placeholder
+    return props.includeHours ? '00:00:00' : '00:00'
+})
+
+// Computed max length based on format
+const computedMaxLength = computed(() => {
+    return props.includeHours ? 8 : 5
+})
+
+// Convert seconds to display format (MM:SS or HH:MM:SS)
 const secondsToDisplay = (seconds) => {
     if (!seconds) return ''
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+
+    if (props.includeHours) {
+        const hours = Math.floor(seconds / 3600)
+        const minutes = Math.floor((seconds % 3600) / 60)
+        const remainingSeconds = seconds % 60
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+    } else {
+        const minutes = Math.floor(seconds / 60)
+        const remainingSeconds = seconds % 60
+        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+    }
 }
 
-// Convert MM:SS to seconds
+// Convert display format to seconds
 const displayToSeconds = (value) => {
-    const [minutes, seconds] = value.split(':').map(Number)
-    return (minutes * 60) + seconds
+    if (props.includeHours) {
+        const [hours, minutes, seconds] = value.split(':').map(Number)
+        return (hours * 3600) + (minutes * 60) + seconds
+    } else {
+        const [minutes, seconds] = value.split(':').map(Number)
+        return (minutes * 60) + seconds
+    }
 }
 
 // Initialize display value from props
@@ -63,8 +91,9 @@ const handleInput = (value) => {
         return
     }
 
-    // Keep only the last 4 digits entered
-    const digits = value.replace(/[^0-9]/g, '').slice(-4)
+    // Keep only the last digits entered (4 for MM:SS, 6 for HH:MM:SS)
+    const maxDigits = props.includeHours ? 6 : 4
+    const digits = value.replace(/[^0-9]/g, '').slice(-maxDigits)
 
     if (!digits) {
         displayValue.value = ''
@@ -74,23 +103,42 @@ const handleInput = (value) => {
 
     let formattedValue = ''
 
-    if (digits.length >= 1) {
-        // Format as MM:SS
-        const minutes = parseInt(digits.slice(0, -2)) || 0;
-        const seconds = parseInt(digits.slice(-2)) || 0;
+    if (props.includeHours) {
+        // Format as HH:MM:SS
+        if (digits.length >= 1) {
+            const hours = parseInt(digits.slice(0, -4)) || 0
+            const minutes = parseInt(digits.slice(-4, -2)) || 0
+            const seconds = parseInt(digits.slice(-2)) || 0
 
-        // Enforce limits
-        const validMinutes = Math.min(minutes, 59)
-        const validSeconds = Math.min(seconds, 59)
+            // Enforce limits (no limit on hours, 59 max for minutes and seconds)
+            const validMinutes = Math.min(minutes, 59)
+            const validSeconds = Math.min(seconds, 59)
 
-        formattedValue = `${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
+            formattedValue = `${hours.toString().padStart(2, '0')}:${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
+        } else {
+            formattedValue = digits
+        }
     } else {
-        formattedValue = digits
+        // Format as MM:SS (original logic)
+        if (digits.length >= 1) {
+            const minutes = parseInt(digits.slice(0, -2)) || 0
+            const seconds = parseInt(digits.slice(-2)) || 0
+
+            // Enforce limits
+            const validMinutes = Math.min(minutes, 59)
+            const validSeconds = Math.min(seconds, 59)
+
+            formattedValue = `${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
+        } else {
+            formattedValue = digits
+        }
     }
 
     displayValue.value = formattedValue
 
-    if (formattedValue.includes(':')) {
+    // Check if we have a complete time format
+    const expectedColons = props.includeHours ? 2 : 1
+    if (formattedValue.split(':').length - 1 === expectedColons) {
         const seconds = displayToSeconds(formattedValue)
         emit('update:modelValue', formattedValue)
         emit('update:seconds', seconds)
@@ -127,7 +175,7 @@ const handleKeydown = (event) => {
         :label="label"
         :error="error"
         :required="required"
-        :placeholder="placeholder"
-        maxlength="5"
+        :placeholder="computedPlaceholder"
+        :maxlength="computedMaxLength"
     />
 </template>
