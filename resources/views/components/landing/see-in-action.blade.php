@@ -10,13 +10,14 @@
         </p>
         {{-- Video Embed Placeholder --}}
         <div class="flex justify-center">
-            <div class="max-w-2xl aspect-video bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
-                {{-- Replace the src below with your actual video link --}}
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/tsmDopZAaKs?si=kwnYSOaG-r66faWJ" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div class="max-w-2xl w-full aspect-video rounded-lg shadow-md overflow-hidden">
+                <iframe src="https://www.youtube.com/embed/tsmDopZAaKs?si=kwnYSOaG-r66faWJ"
+                        title="YouTube video player"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        class="w-full h-full"
+                        allowfullscreen></iframe>
             </div>
         </div>
-        <p class="mt-6 text-sm text-gray-500">
-            <em>Highlights: Creating a setlist, adding songs, using the score viewer, and performance mode.</em>
-        </p>
     </div>
 </section>
