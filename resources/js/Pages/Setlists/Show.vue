@@ -247,7 +247,7 @@ const handleExportPdf = async () => {
 
                                         <!-- Item Title -->
                                         <span class="text-sm font-medium text-neutral-900" :class="{ 'ml-2': item.type === 'song' }">
-                                            {{ item.type === 'break' ? item.title : item.song.name }}
+                                            {{ item.type === 'break' ? item.title : item.song?.name }}
                                         </span>
 
                                         <!-- Duration -->
@@ -265,8 +265,8 @@ const handleExportPdf = async () => {
                                 <!-- Actions (only for songs) -->
                                 <div v-if="item.type === 'song'" class="ml-4 flex items-center space-x-2">
                                     <a
-                                        v-if="item.song.url"
-                                        :href="item.song.url"
+                                        v-if="item.song?.url"
+                                        :href="item.song?.url"
                                         target="_blank"
                                         class="text-neutral-400 hover:text-neutral-500"
                                     >
@@ -283,7 +283,7 @@ const handleExportPdf = async () => {
                                         <MicrophoneIcon class="h-4 w-4 text-neutral-700 hover:text-neutral-800" />
                                     </button>
 
-                                    <MusicFileButton v-for="file in item.song.files"
+                                    <MusicFileButton v-for="file in item.song?.files"
                                                      :key="file.id"
                                                      :file="file"
                                                      :song="item.song"

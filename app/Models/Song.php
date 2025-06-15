@@ -93,7 +93,7 @@ class Song extends Model
      */
     public function setlists(): BelongsToMany
     {
-        return $this->belongsToMany(Setlist::class)
+        return $this->belongsToMany(Setlist::class, 'setlist_items')
             ->withPivot('order', 'notes')
             ->orderBy('pivot_order');
     }
