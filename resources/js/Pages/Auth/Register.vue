@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { DSButton, DSInput, DSForm, DSAlert } from '@/Components/UI'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
@@ -9,6 +9,10 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+})
+
+onMounted(() => {
+    fbq('track', 'Lead');
 })
 
 const submit = () => {
@@ -41,8 +45,8 @@ const submit = () => {
             <DSForm @submit="submit" class="mt-8">
                 <div class="space-y-6">
                     <!-- Error Message -->
-                    <DSAlert 
-                        v-if="Object.keys(form.errors).length > 0" 
+                    <DSAlert
+                        v-if="Object.keys(form.errors).length > 0"
                         type="error"
                     >
                         <ul class="list-disc list-inside">
