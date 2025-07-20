@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSCard, DSButton, DSTooltip } from '@/Components/UI'
 import { usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import {computed, onMounted} from 'vue'
 
 const props = defineProps({
     bands: {
@@ -22,6 +22,12 @@ const getSubscriptionUrl = (band) => {
     }
     return route('subscription.checkout', band.id)
 }
+
+onMounted(() => {
+    if (route().params.verified) {
+        fbq('track', 'CompleteVerification');
+    }
+})
 
 const canCreateBand = computed(() => {
     if (trial.value?.isSubscribed) return true
