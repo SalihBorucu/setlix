@@ -168,8 +168,11 @@
         fbq('init', '1452782776058339');
         fbq('track', 'PageView');
     </script>
-    <noscript><img height="1" width="1" style="display:none"
+    <noscript>
+        <img height="1" width="1" style="display:none"
                    src="https://www.facebook.com/tr?id=1452782776058339&ev=PageView&noscript=1"
-        /></noscript>
+        />
+    </noscript>
+
 </body>
 </html>
