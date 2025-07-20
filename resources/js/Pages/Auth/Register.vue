@@ -11,10 +11,6 @@ const form = useForm({
     password_confirmation: '',
 })
 
-onMounted(() => {
-    fbq('track', 'Lead');
-})
-
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
