@@ -10,6 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <meta name="facebook-domain-verification" content="s7n7k9isn8hzddsbln3y97jb8iuxho" />
 
     <!-- End Meta Pixel Code -->
     <!-- Scripts -->
