@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import {computed, onMounted} from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { DSButton, DSAlert } from '@/Components/UI';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
@@ -11,6 +11,10 @@ const props = defineProps({
 });
 
 const form = useForm({});
+
+onMounted(() => {
+    fbq('track', 'Lead');
+});
 
 const submit = () => {
     form.post(route('verification.send'));
@@ -48,7 +52,7 @@ const verificationLinkSent = computed(
                 </DSAlert>
 
                 <p class="text-sm text-neutral-600">
-                    Before getting started, please verify your email address by clicking on the link we just emailed to you. 
+                    Before getting started, please verify your email address by clicking on the link we just emailed to you.
                     If you didn't receive the email, we will gladly send you another one.
                 </p>
 
