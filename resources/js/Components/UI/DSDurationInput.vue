@@ -1,11 +1,11 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { DSInput } from '@/Components/UI'
+import IMask from 'imask'
 
 const props = defineProps({
     modelValue: {
         type: [String, Number],
-        required: true,
         default: ''
     },
     label: {
@@ -20,10 +20,6 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    placeholder: {
-        type: String,
-        default: null
-    },
     includeHours: {
         type: Boolean,
         default: false
@@ -32,150 +28,113 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:seconds'])
 
-// Internal display value
-const displayValue = ref('')
+const inputComponentRef = ref(null)
+let maskInstance = null
+// --- The flag to prevent feedback loops ---
+let isUpdatingInternally = false
 
-// Computed placeholder based on format
-const computedPlaceholder = computed(() => {
-    if (props.placeholder) return props.placeholder
-    return props.includeHours ? '00:00:00' : '00:00'
-})
-
-// Computed max length based on format
-const computedMaxLength = computed(() => {
-    return props.includeHours ? 8 : 5
-})
-
-// Convert seconds to display format (MM:SS or HH:MM:SS)
-const secondsToDisplay = (seconds) => {
-    if (!seconds) return ''
-
-    if (props.includeHours) {
-        const hours = Math.floor(seconds / 3600)
-        const minutes = Math.floor((seconds % 3600) / 60)
-        const remainingSeconds = seconds % 60
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-    } else {
-        const minutes = Math.floor(seconds / 60)
-        const remainingSeconds = seconds % 60
-        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-    }
-}
-
-// Convert display format to seconds
 const displayToSeconds = (value) => {
+    if (typeof value === 'number') return value;
+    if (!value || typeof value !== 'string' || value.indexOf(':') === -1) {
+        return 0
+    }
+    const parts = value.split(':').map(Number)
+    if (parts.length === 3) {
+        return (parts[0] * 3600) + (parts[1] * 60) + (parts[2] || 0)
+    }
+    return (parts[0] * 60) + (parts[1] || 0)
+}
+
+const secondsToDisplay = (totalSeconds) => {
+    if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) return ''
+
     if (props.includeHours) {
-        const [hours, minutes, seconds] = value.split(':').map(Number)
-        return (hours * 3600) + (minutes * 60) + seconds
+        const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0')
+        const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0')
+        const s = (totalSeconds % 60).toString().padStart(2, '0')
+        return `${h}:${m}:${s}`
     } else {
-        const [minutes, seconds] = value.split(':').map(Number)
-        return (minutes * 60) + seconds
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
+        const s = (totalSeconds % 60).toString().padStart(2, '0')
+        return `${m}:${s}`
     }
 }
 
-// Initialize display value from props
+const setupMask = () => {
+    if (maskInstance) {
+        maskInstance.destroy()
+    }
+
+    const inputEl = inputComponentRef.value?.$el?.querySelector('input') || inputComponentRef.value
+    if (!inputEl) return;
+
+    const hasInitialValue = props.modelValue != null && props.modelValue !== '';
+
+    const maskOptions = {
+        mask: props.includeHours ? 'HH:MM:SS' : 'MM:SS',
+        lazy: !hasInitialValue,
+        blocks: {
+            HH: { mask: IMask.MaskedRange, from: 0, to: 99, minLength: 2, autofix: 'pad' },
+            MM: { mask: IMask.MaskedRange, from: 0, to: props.includeHours ? 59 : 99, minLength: 2, autofix: 'pad' },
+            SS: { mask: IMask.MaskedRange, from: 0, to: 59, minLength: 2, autofix: 'pad' }
+        }
+    };
+
+    maskInstance = IMask(inputEl, maskOptions);
+
+    if (hasInitialValue) {
+        const initialSeconds = displayToSeconds(props.modelValue);
+        maskInstance.value = secondsToDisplay(initialSeconds);
+    }
+
+    maskInstance.on('accept', () => {
+        // Set the flag before emitting
+        isUpdatingInternally = true;
+
+        const maskedValue = maskInstance.value;
+        const totalSeconds = displayToSeconds(maskedValue);
+        emit('update:modelValue', maskedValue);
+        emit('update:seconds', totalSeconds);
+
+        // Unset the flag after the update cycle
+        nextTick(() => {
+            isUpdatingInternally = false;
+        });
+    });
+}
+
+// Watch for external changes to v-model
 watch(() => props.modelValue, (newValue) => {
-    if (typeof newValue === 'number') {
-        displayValue.value = secondsToDisplay(newValue)
-    } else {
-        displayValue.value = newValue
-    }
-}, { immediate: true })
-
-// Handle input changes
-const handleInput = (value) => {
-    // If empty, reset
-    if (!value) {
-        displayValue.value = ''
-        emit('update:modelValue', '')
-        return
+    // If the flag is set, it means the change came from our own component, so we ignore it.
+    if (isUpdatingInternally) {
+        return;
     }
 
-    // Keep only the last digits entered (4 for MM:SS, 6 for HH:MM:SS)
-    const maxDigits = props.includeHours ? 6 : 4
-    const digits = value.replace(/[^0-9]/g, '').slice(-maxDigits)
+    if (!maskInstance) return;
 
-    if (!digits) {
-        displayValue.value = ''
-        emit('update:modelValue', '')
-        return
+    const newSeconds = displayToSeconds(newValue || 0);
+    maskInstance.value = secondsToDisplay(newSeconds);
+
+}, { deep: true }); // Use deep or immediate to ensure it catches all cases
+
+watch(() => props.includeHours, setupMask);
+
+onMounted(setupMask);
+
+onUnmounted(() => {
+    if (maskInstance) {
+        maskInstance.destroy();
     }
-
-    let formattedValue = ''
-
-    if (props.includeHours) {
-        // Format as HH:MM:SS
-        if (digits.length >= 1) {
-            const hours = parseInt(digits.slice(0, -4)) || 0
-            const minutes = parseInt(digits.slice(-4, -2)) || 0
-            const seconds = parseInt(digits.slice(-2)) || 0
-
-            // Enforce limits (no limit on hours, 59 max for minutes and seconds)
-            const validMinutes = Math.min(minutes, 59)
-            const validSeconds = Math.min(seconds, 59)
-
-            formattedValue = `${hours.toString().padStart(2, '0')}:${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
-        } else {
-            formattedValue = digits
-        }
-    } else {
-        // Format as MM:SS (original logic)
-        if (digits.length >= 1) {
-            const minutes = parseInt(digits.slice(0, -2)) || 0
-            const seconds = parseInt(digits.slice(-2)) || 0
-
-            // Enforce limits
-            const validMinutes = Math.min(minutes, 59)
-            const validSeconds = Math.min(seconds, 59)
-
-            formattedValue = `${validMinutes.toString().padStart(2, '0')}:${validSeconds.toString().padStart(2, '0')}`
-        } else {
-            formattedValue = digits
-        }
-    }
-
-    displayValue.value = formattedValue
-
-    // Check if we have a complete time format
-    const expectedColons = props.includeHours ? 2 : 1
-    if (formattedValue.split(':').length - 1 === expectedColons) {
-        const seconds = displayToSeconds(formattedValue)
-        emit('update:modelValue', formattedValue)
-        emit('update:seconds', seconds)
-    } else {
-        emit('update:modelValue', formattedValue)
-    }
-}
-
-// Handle keydown to prevent invalid input
-const handleKeydown = (event) => {
-    // Allow: backspace, delete, tab, escape, enter
-    if ([46, 8, 9, 27, 13].indexOf(event.keyCode) !== -1 ||
-        // Allow: Ctrl+A, Command+A
-        (event.keyCode === 65 && (event.ctrlKey === true || event.metaKey === true)) ||
-        // Allow: home, end, left, right, down, up
-        (event.keyCode >= 35 && event.keyCode <= 40)) {
-        return
-    }
-    // Ensure that it is a number and stop the keypress if not
-    if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) &&
-        (event.keyCode < 96 || event.keyCode > 105)) {
-        event.preventDefault()
-    }
-}
+});
 </script>
 
 <template>
     <DSInput
-        :model-value="displayValue"
-        @update:model-value="handleInput"
-        @keydown="handleKeydown"
-        type="text"
-        inputmode="numeric"
+        ref="inputComponentRef"
         :label="label"
         :error="error"
         :required="required"
-        :placeholder="computedPlaceholder"
-        :maxlength="computedMaxLength"
+        :placeholder="props.includeHours ? '00:00:00' : '00:00'"
+        inputmode="numeric"
     />
 </template>
