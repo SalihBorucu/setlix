@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { DSInput } from '@/Components/UI'
-import IMask from 'imask'
+import {ref, watch, nextTick, computed} from 'vue'
+import Input from "@/Components/UI/Input.vue";
 
+// --- Component API (Props and Emits) ---
+// Unchanged
 const props = defineProps({
     modelValue: {
         type: [String, Number],
@@ -28,113 +29,188 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:seconds'])
 
-const inputComponentRef = ref(null)
-let maskInstance = null
-// --- The flag to prevent feedback loops ---
+
+// --- Internal State Management ---
+const hours = ref('')
+const minutes = ref('')
+const seconds = ref('')
+
+const hourInputRef = ref(null)
+const minuteInputRef = ref(null)
+const secondInputRef = ref(null)
+
 let isUpdatingInternally = false
 
-const displayToSeconds = (value) => {
-    if (typeof value === 'number') return value;
-    if (!value || typeof value !== 'string' || value.indexOf(':') === -1) {
-        return 0
-    }
-    const parts = value.split(':').map(Number)
-    if (parts.length === 3) {
-        return (parts[0] * 3600) + (parts[1] * 60) + (parts[2] || 0)
-    }
-    return (parts[0] * 60) + (parts[1] || 0)
-}
 
-const secondsToDisplay = (totalSeconds) => {
-    if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) return ''
+// --- Helper Functions ---
+const formatValue = (val) => String(val || '').padStart(2, '0');
 
-    if (props.includeHours) {
-        const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0')
-        const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0')
-        const s = (totalSeconds % 60).toString().padStart(2, '0')
-        return `${h}:${m}:${s}`
-    } else {
-        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
-        const s = (totalSeconds % 60).toString().padStart(2, '0')
-        return `${m}:${s}`
-    }
-}
+// --- START: Added logic for smarter label styling ---
+const isOptional = computed(() => {
+    // If required is true, it can't be optional. Otherwise check for the text.
+    return !props.required && props.label && props.label.includes('(Optional)');
+});
 
-const setupMask = () => {
-    if (maskInstance) {
-        maskInstance.destroy()
-    }
+const displayLabel = computed(() => {
+    if (!props.label) return '';
+    // Removes the optional tag for clean display
+    return props.label.replace('(Optional)', '').trim();
+});
+// --- END: Added logic for smarter label styling ---
 
-    const inputEl = inputComponentRef.value?.$el?.querySelector('input') || inputComponentRef.value
-    if (!inputEl) return;
 
-    const hasInitialValue = props.modelValue != null && props.modelValue !== '';
+// --- Synchronization Logic ---
 
-    const maskOptions = {
-        mask: props.includeHours ? 'HH:MM:SS' : 'MM:SS',
-        lazy: !hasInitialValue,
-        blocks: {
-            HH: { mask: IMask.MaskedRange, from: 0, to: 99, minLength: 2, autofix: 'pad' },
-            MM: { mask: IMask.MaskedRange, from: 0, to: props.includeHours ? 59 : 99, minLength: 2, autofix: 'pad' },
-            SS: { mask: IMask.MaskedRange, from: 0, to: 59, minLength: 2, autofix: 'pad' }
-        }
-    };
-
-    maskInstance = IMask(inputEl, maskOptions);
-
-    if (hasInitialValue) {
-        const initialSeconds = displayToSeconds(props.modelValue);
-        maskInstance.value = secondsToDisplay(initialSeconds);
-    }
-
-    maskInstance.on('accept', () => {
-        // Set the flag before emitting
-        isUpdatingInternally = true;
-
-        const maskedValue = maskInstance.value;
-        const totalSeconds = displayToSeconds(maskedValue);
-        emit('update:modelValue', maskedValue);
-        emit('update:seconds', totalSeconds);
-
-        // Unset the flag after the update cycle
-        nextTick(() => {
-            isUpdatingInternally = false;
-        });
-    });
-}
-
-// Watch for external changes to v-model
+// Watch for changes from the parent component (v-model)
 watch(() => props.modelValue, (newValue) => {
-    // If the flag is set, it means the change came from our own component, so we ignore it.
     if (isUpdatingInternally) {
         return;
     }
 
-    if (!maskInstance) return;
+    const parts = (newValue || '0:0').split(':').map(p => p || '0');
 
-    const newSeconds = displayToSeconds(newValue || 0);
-    maskInstance.value = secondsToDisplay(newSeconds);
+    if (props.includeHours) {
+        hours.value = parts[0] || '';
+        minutes.value = parts[1] || '';
+        seconds.value = parts[2] || '';
+    } else {
+        hours.value = '';
+        minutes.value = parts[0] || '';
+        seconds.value = parts[1] || '';
+    }
+}, {immediate: true})
 
-}, { deep: true }); // Use deep or immediate to ensure it catches all cases
+// Watch for user input to emit updates
+watch([hours, minutes, seconds], ([h, m, s]) => {
+    const currentHours = parseInt(h, 10) || 0;
+    const currentMinutes = parseInt(m, 10) || 0;
+    const currentSeconds = parseInt(s, 10) || 0;
 
-watch(() => props.includeHours, setupMask);
+    let displayValue = '';
+    let totalSeconds = 0;
 
-onMounted(setupMask);
+    if (props.includeHours) {
+        displayValue = `${formatValue(h)}:${formatValue(m)}:${formatValue(s)}`;
+        totalSeconds = (currentHours * 3600) + (currentMinutes * 60) + currentSeconds;
+    } else {
+        displayValue = `${formatValue(m)}:${formatValue(s)}`;
+        totalSeconds = (currentMinutes * 60) + currentSeconds;
+    }
 
-onUnmounted(() => {
-    if (maskInstance) {
-        maskInstance.destroy();
+    if (displayValue === props.modelValue) {
+        return;
+    }
+
+    isUpdatingInternally = true;
+    emit('update:modelValue', displayValue);
+    emit('update:seconds', totalSeconds);
+    nextTick(() => {
+        isUpdatingInternally = false;
+    });
+
+}, {deep: true})
+
+// Add immediate watchers for validation
+watch(minutes, (newValue) => {
+    if (parseInt(newValue, 10) > 59) {
+        minutes.value = '59';
     }
 });
+
+watch(seconds, (newValue) => {
+    if (parseInt(newValue, 10) > 59) {
+        seconds.value = '59';
+    }
+});
+
+
+// --- User Experience (UX) Handlers ---
+const handleInput = (part, nextElRef) => {
+    if (part.value.length === 2 && nextElRef?.value) {
+        nextElRef.value.focus();
+        nextElRef.value.select();
+    }
+}
+
+const handleKeydown = (event, prevElRef) => {
+    if (event.key === 'Backspace' && event.target.value === '' && prevElRef?.value) {
+        prevElRef.value.focus();
+    }
+}
+
+const handleBlur = (partRef) => {
+    if (partRef.value) {
+        partRef.value = partRef.value.padStart(2, '0');
+    }
+};
+
+// --- Common classes for the inputs to keep them consistent ---
+const inputClasses = "block w-14 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-center sm:text-sm";
+
 </script>
 
 <template>
-    <DSInput
-        ref="inputComponentRef"
-        :label="label"
-        :error="error"
-        :required="required"
-        :placeholder="props.includeHours ? '00:00:00' : '00:00'"
-        inputmode="numeric"
-    />
+    <div>
+        <label v-if="label" class="block text-sm font-medium text-neutral-700 text-left">
+            {{ label }}
+        </label>
+        <div
+            class="mt-1 flex items-center space-x-2"
+        >
+            <template v-if="props.includeHours">
+                <input
+                    ref="hourInputRef"
+                    v-model="hours"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="hh"
+                    :class="[
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'focus:border-primary-500 focus:ring-primary-500',
+                        { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
+                    ]"
+                    @input="handleInput(hours, minuteInputRef)"
+                    @blur="handleBlur(hours)"
+                />
+                <span class="text-gray-500 -ml-1">:</span>
+            </template>
+
+            <input
+                ref="minuteInputRef"
+                v-model="minutes"
+                type="text"
+                inputmode="numeric"
+                maxlength="2"
+                placeholder="mm"
+                :class="[
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'focus:border-primary-500 focus:ring-primary-500',
+                        { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
+                ]"
+                @input="handleInput(minutes, secondInputRef)"
+                @keydown="handleKeydown($event, hourInputRef)"
+                @blur="handleBlur(minutes)"
+            />
+
+            <span class="text-gray-500 -ml-1">:</span>
+
+            <input
+                ref="secondInputRef"
+                v-model="seconds"
+                type="text"
+                inputmode="numeric"
+                maxlength="2"
+                placeholder="ss"
+                :class="[
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'focus:border-primary-500 focus:ring-primary-500',
+                        { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
+                ]"
+                @keydown="handleKeydown($event, minuteInputRef)"
+                @blur="handleBlur(seconds)"
+            />
+        </div>
+        <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
+    </div>
 </template>
