@@ -60,15 +60,7 @@ const isBandDisabled = (band) => {
                     </h2>
                 </div>
                 <div class="mt-4 flex md:ml-4 md:mt-0">
-                    <DSTooltip v-if="!canCreateBand">
-                        <DSButton variant="primary" disabled>
-                            Create New Band
-                        </DSButton>
-                        <template #content>
-                            Free trial allows only one band. Please subscribe to create more.
-                        </template>
-                    </DSTooltip>
-                    <Link v-else :href="route('bands.create')">
+                    <Link :href="route('bands.create')">
                         <DSButton variant="primary">
                             Create New Band
                         </DSButton>

@@ -39,30 +39,30 @@ class BandController extends Controller
         $user = $request->user();
 
         // Check if user can create more bands
-        if ($user->is_trial && $user->bands()->count() >= 1) {
-            return back()->with('error', 'Free trial allows only one band. Please subscribe to create more.');
-        }
+//        if ($user->is_trial && $user->bands()->count() >= 1) {
+//            return back()->with('error', 'Free trial allows only one band. Please subscribe to create more.');
+//        }
 
         // Start trial on first band creation
         $this->trialService->startTrial($user);
 
         $validated = $request->validated();
-        
+
         // Create band with basic info
         $band = Band::create([
             'name' => $validated['name'],
             'description' => $validated['description'],
         ]);
-        
+
         // Process cover image if provided
         if ($request->hasFile('cover_image')) {
             $imagePaths = $this->imageService->processBandCoverImage($request->file('cover_image'));
             $band->update($imagePaths);
         }
-        
+
         // Attach the creator as an admin
         $band->members()->attach($request->user(), ['role' => 'admin']);
-        
+
         return redirect()->route('dashboard', $band)
             ->with('success', 'Band created successfully.');
     }
@@ -123,15 +123,15 @@ class BandController extends Controller
     public function update(StoreBandRequest $request, Band $band): RedirectResponse
     {
         $this->authorize('update', $band);
-        
+
         $validated = $request->validated();
-        
+
         // Update basic info
         $band->update([
             'name' => $validated['name'],
             'description' => $validated['description'],
         ]);
-        
+
         // Process new cover image if provided
         if ($request->hasFile('cover_image')) {
             // Delete old images
@@ -140,12 +140,12 @@ class BandController extends Controller
                 $band->cover_image_thumbnail_path,
                 $band->cover_image_small_path
             );
-            
+
             // Process and store new images
             $imagePaths = $this->imageService->processBandCoverImage($request->file('cover_image'));
             $band->update($imagePaths);
         }
-        
+
         return back()->with('success', 'Band updated successfully.');
     }
 
@@ -155,16 +155,16 @@ class BandController extends Controller
     public function destroy(Band $band): RedirectResponse
     {
         $this->authorize('delete', $band);
-        
+
         // Delete cover images if they exist
         $this->imageService->deleteBandCoverImages(
             $band->cover_image_path,
             $band->cover_image_thumbnail_path,
             $band->cover_image_small_path
         );
-        
+
         $band->delete();
-        
+
         return redirect()->route('dashboard')
             ->with('success', 'Band deleted successfully.');
     }
@@ -175,19 +175,19 @@ class BandController extends Controller
     public function leave(Band $band): RedirectResponse
     {
         $user = Auth::user();
-        
+
         // Check if user is a member and not an admin
         if (!$band->hasMember($user)) {
             abort(403, 'You are not a member of this band.');
         }
-        
+
         if ($band->isAdmin($user)) {
             abort(403, 'Admins cannot leave the band. Transfer admin role first.');
         }
-        
+
         // Remove the user from the band
         $band->members()->detach($user->id);
-        
+
         return redirect()->route('dashboard')
             ->with('success', 'You have left the band successfully.');
     }
@@ -198,7 +198,7 @@ class BandController extends Controller
 
         // Check member limit for trial
         if ($user->is_trial && $band->members()->count() >= 3) {
-            return back()->with('error', 'Free trial allows maximum 3 members. Please subscribe to add more.');
+//            return back()->with('error', 'Free trial allows maximum 3 members. Please subscribe to add more.');
         }
 
         // ... rest of add member logic

@@ -46,9 +46,7 @@ class BulkStoreSongRequest extends FormRequest
     {
         return [
             'songs.required' => 'At least one song is required.',
-            'songs.max' => $this->band->isInTrial()
-                ? 'You can only add up to 200 songs at once.'
-                : 'Free trial allows maximum 10 songs total. Please subscribe to add more songs.',
+            'songs.max' => 'You can only add up to 200 songs at once.',
             'songs.*.name.required' => 'Each song must have a name.',
             'songs.*.name.max' => 'Song names cannot be longer than 255 characters.',
             'songs.*.duration_seconds.required' => 'Each song must have a duration.',

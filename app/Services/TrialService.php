@@ -14,7 +14,7 @@ class TrialService
     {
         if (!$user->trial_started_at) {
             $user->trial_started_at = now();
-            $user->trial_ends_at = now()->addDays(14);
+            $user->trial_ends_at = now()->addDays(30);
             $user->save();
         }
     }
@@ -41,8 +41,8 @@ class TrialService
     public function getRemainingDays(User $user): int
     {
         if (!$user->trial_ends_at) {
-            return 14;
+            return 30;
         }
         return max(0, now()->diffInDays($user->trial_ends_at));
     }
-} 
+}

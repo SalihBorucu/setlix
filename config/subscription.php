@@ -14,7 +14,7 @@ return [
     'monthly_price' => 10.00,
 
     // Trial period in days (if applicable)
-    'trial_days' => 14,
+    'trial_days' => 30,
 
     // Grace period after subscription ends (in days)
     'grace_period_days' => 3,
@@ -25,4 +25,4 @@ return [
         'EUR' => env('STRIPE_PRICE_EUR_ID'),
         'USD' => env('STRIPE_PRICE_USD_ID'),
     ],
-]; 
+];

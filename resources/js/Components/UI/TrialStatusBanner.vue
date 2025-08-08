@@ -48,6 +48,7 @@ const bandId = computed(() => trial.value?.bandId);
 // Don't show banner on subscribe page
 const shouldShowBanner = computed(() => {
   const isSubscribePage = route().current('subscription.checkout');
-  return trial.value && !isSubscribed.value && !isSubscribePage && bandId.value;
+
+  return trial.value.remainingDays < 14 && !isSubscribed.value && !isSubscribePage && bandId.value;
 });
-</script> 
+</script>
