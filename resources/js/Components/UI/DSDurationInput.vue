@@ -69,15 +69,15 @@ watch(() => props.modelValue, (newValue) => {
 
     const parts = (newValue || '0:0').split(':').map(p => p || '0');
 
-    if (props.includeHours) {
-        hours.value = parts[0] || '';
-        minutes.value = parts[1] || '';
-        seconds.value = parts[2] || '';
-    } else {
-        hours.value = '';
-        minutes.value = parts[0] || '';
-        seconds.value = parts[1] || '';
-    }
+    // if (props.includeHours) {
+    //     hours.value = parts[0] || '';
+    //     minutes.value = parts[1] || '';
+    //     seconds.value = parts[2] || '';
+    // } else {
+    //     hours.value = '';
+    //     minutes.value = parts[0] || '';
+    //     seconds.value = parts[1] || '';
+    // }
 }, {immediate: true})
 
 // Watch for user input to emit updates
@@ -111,6 +111,12 @@ watch([hours, minutes, seconds], ([h, m, s]) => {
 }, {deep: true})
 
 // Add immediate watchers for validation
+watch(hours, (newValue) => {
+    if (parseInt(newValue, 10) > 59) {
+        hours.value = '99';
+    }
+});
+
 watch(minutes, (newValue) => {
     if (parseInt(newValue, 10) > 59) {
         minutes.value = '59';

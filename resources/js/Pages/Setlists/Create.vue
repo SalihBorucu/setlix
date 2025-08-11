@@ -26,7 +26,7 @@ const form = useForm({
     band_id: props.band.id,
     name: '',
     description: '',
-    target_duration: '',
+    target_duration: null,
     target_duration_seconds: 0,
     items: [],
     total_duration: 0

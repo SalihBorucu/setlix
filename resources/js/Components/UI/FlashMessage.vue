@@ -95,8 +95,15 @@ const title = computed(() => {
 });
 
 const message = computed(() => {
-    if (!type.value) return null;
-    return flash.value.success || flash.value.error || flash.value.info || flash.value.message;
+    isVisible.value = !!(page.props.flash.success ||
+        page.props.flash.error ||
+        page.props.flash.info ||
+        page.props.flash.message);
+
+    return page.props.flash.success ||
+        page.props.flash.error ||
+        page.props.flash.info ||
+        page.props.flash.message;
 });
 
 const typeClasses = computed(() => {

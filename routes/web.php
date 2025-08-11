@@ -13,22 +13,20 @@ use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\LandingController;
 use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportSetlistToPdf;
 use App\Http\Controllers\PublicSetlistController;
 use Illuminate\Http\Request;
-use App\Services\GeolocationService;
-use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 
 if (env('APP_ENV') !== 'production') {
     Route::get('/test', function (Request $request) {
-
+        Auth::loginUsingId(20);
     });
 }
 
-Route::middleware(['web', 'detect.geolocation'])->group(function () {
+Route::middleware(['web', 'detect.geolocation', 'onboarding'])->group(function () {
     Route::get('/', [LandingController::class, 'index']);
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware(['auth', 'verified', EnsureProfileIsComplete::class])
@@ -69,7 +67,7 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         Route::delete('bands/{band}/leave', [BandController::class, 'leave'])->name('bands.leave');
 
         // Song routes (nested under bands)
-        Route::get('/bands/{band}/songs', [SongController::class, 'index'])->name('songs.index');
+        Route::get('/bands/{band}/songs', [SongController::class, 'index'])->middleware('onboarding')->name('songs.index');
         Route::get('/bands/{band}/songs/create', [SongController::class, 'create'])->name('songs.create');
         Route::get('/bands/{band}/songs/bulk-create', [SongController::class, 'bulkCreate'])->name('songs.bulk-create');
         Route::post('/bands/{band}/songs/bulk-store', [SongController::class, 'bulkStore'])->name('songs.bulk-store');
@@ -90,7 +88,7 @@ Route::middleware(['auth', EnsureProfileIsComplete::class])->group(function () {
         // Setlist routes (nested under bands)
         Route::get('/bands/{band}/setlists', [SetlistController::class, 'index'])->name('setlists.index');
         Route::get('/bands/{band}/setlists/create', [SetlistController::class, 'create'])->name('setlists.create');
-        Route::get('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'show'])->name('setlists.show');
+        Route::get('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'show'])->middleware('onboarding')->name('setlists.show');
         Route::get('/bands/{band}/setlists/{setlist}/edit', [SetlistController::class, 'edit'])->name('setlists.edit');
         Route::put('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'update'])->name('setlists.update');
         Route::delete('/bands/{band}/setlists/{setlist}', [SetlistController::class, 'destroy'])->name('setlists.destroy');
