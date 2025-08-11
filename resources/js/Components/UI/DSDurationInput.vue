@@ -150,23 +150,23 @@ const inputClasses = "block w-14 rounded-md border-gray-300 shadow-sm focus:bord
 </script>
 
 <template>
-    <div>
+    <div class="space-y-1">
         <label v-if="label" class="block text-sm font-medium text-neutral-700 text-left">
             {{ label }}
         </label>
-        <div
-            class="mt-1 flex items-center space-x-2"
-        >
+        <div class="flex items-center space-x-2">
             <template v-if="props.includeHours">
                 <input
                     ref="hourInputRef"
                     v-model="hours"
-                    type="text"
+                    type="number"
+                    min="0"
+                    max="59"
                     inputmode="numeric"
                     maxlength="2"
                     placeholder="hh"
                     :class="[
-                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200 no-spinner',
                         'focus:border-primary-500 focus:ring-primary-500',
                         { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
                     ]"
@@ -179,12 +179,14 @@ const inputClasses = "block w-14 rounded-md border-gray-300 shadow-sm focus:bord
             <input
                 ref="minuteInputRef"
                 v-model="minutes"
-                type="text"
+                type="number"
+                min="0"
+                max="59"
                 inputmode="numeric"
                 maxlength="2"
                 placeholder="mm"
                 :class="[
-                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200 no-spinner',
                         'focus:border-primary-500 focus:ring-primary-500',
                         { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
                 ]"
@@ -198,12 +200,14 @@ const inputClasses = "block w-14 rounded-md border-gray-300 shadow-sm focus:bord
             <input
                 ref="secondInputRef"
                 v-model="seconds"
-                type="text"
+                type="number"
+                min="0"
+                max="59"
                 inputmode="numeric"
                 maxlength="2"
                 placeholder="ss"
                 :class="[
-                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200',
+                        'w-12 rounded-lg border-neutral-300 shadow-sm transition-colors duration-200 no-spinner',
                         'focus:border-primary-500 focus:ring-primary-500',
                         { 'border-error-500 focus:border-error-500 focus:ring-error-500': error }
                 ]"
@@ -214,3 +218,15 @@ const inputClasses = "block w-14 rounded-md border-gray-300 shadow-sm focus:bord
         <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
     </div>
 </template>
+
+<style scoped>
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner {
+    -moz-appearance: textfield; /* For Firefox */
+}
+</style>

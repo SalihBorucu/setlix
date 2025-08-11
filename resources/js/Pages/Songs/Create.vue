@@ -103,18 +103,7 @@ const canAddSongs = computed(() => {
                             Add New Song
                         </h2>
                         <div class="py-2">
-                            <DSTooltip v-if="!canAddSongs">
-                                <DSButton variant="secondary" class="w-full sm:w-auto" disabled>
-                                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Add Multiple Songs
-                                </DSButton>
-                                <template #content>
-                                    Free trial allows maximum 10 songs. Please subscribe to add more.
-                                </template>
-                            </DSTooltip>
-                            <Link v-else :href="route('songs.bulk-create', band.id)">
+                            <Link :href="route('songs.bulk-create', band.id)">
                                 <DSButton variant="secondary" class="w-full sm:w-auto">
                                     <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

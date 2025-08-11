@@ -195,4 +195,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new VerifyEmail);
     }
+
+    public function songs(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('songs')->get()->pluck('songs')->flatten();
+    }
+
+    public function setlists(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('setlists')->get()->pluck('setlists')->flatten();
+    }
+
+    public function bandMembers(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('members')->get()->pluck('members')->flatten();
+    }
 }
