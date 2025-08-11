@@ -167,7 +167,8 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!$this->trial_ends_at) {
             return 0;
         }
-        return max(0, now()->diffInDays($this->trial_ends_at));
+
+        return max(0, round(now()->diffInDays($this->trial_ends_at)));
     }
 
     public function canCreateMoreBands(): bool
