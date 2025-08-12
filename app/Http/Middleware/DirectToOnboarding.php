@@ -42,10 +42,10 @@ class DirectToOnboarding
             return redirect()->route('setlists.create', $band->id)->with('message', "Let's get started! Create your first setlist.");
         }
 
-        if ($bands->pluck('members')->flatten()->count() === 1 && $request->user()->created_at < now()->addDay()) {
+        if ($bands->pluck('members')->flatten()->count() === 1 && $request->user()->created_at > now()->addDay()) {
             session()->put('onboarding_completed_once', true);
             $band = $request->user()->bands->first();
-            return redirect()->route('bands.members.index', $band->id)->with('message', 'You are all set, why not invite your band members? This can be skipped or done later.');
+            return redirect()->route('bands.members.index', $band->id)->with('message', 'Would you like to invite your band members? They can join your band at any time at no cost.');
         }
 
         return $next($request);
