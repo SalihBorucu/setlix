@@ -18,7 +18,7 @@ class EnforceTrialLimits
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
-        
+
         if (!$user || !$user->is_trial) {
             return $next($request);
         }
@@ -33,29 +33,29 @@ class EnforceTrialLimits
         $limitMessage = '';
 
         // Band creation limit
-        if ($request->is('bands') && $request->isMethod('post')) {
-            if (!$user->canCreateMoreBands()) {
-                $limitReached = true;
-                $limitMessage = 'Free trial allows only one band. Please subscribe to create more.';
-            }
-        }
+//        if ($request->is('bands') && $request->isMethod('post')) {
+//            if (!$user->canCreateMoreBands()) {
+//                $limitReached = true;
+//                $limitMessage = 'Free trial allows only one band. Please subscribe to create more.';
+//            }
+//        }
 
         // Song creation limit
         if ($request->is('*/songs') && $request->isMethod('post')) {
             $bandId = $request->route('band');
             $band = Band::find($bandId);
-            
-            if ($band && $band->songs()->count() >= 10) {
-                $limitReached = true;
-                $limitMessage = 'Free trial allows maximum 10 songs. Please subscribe to add more.';
-            }
+
+//            if ($band && $band->songs()->count() >= 10) {
+//                $limitReached = true;
+//                $limitMessage = 'Free trial allows maximum 10 songs. Please subscribe to add more.';
+//            }
         }
 
         // Setlist creation limit
         if ($request->is('*/setlists') && $request->isMethod('post')) {
             $bandId = $request->route('band');
             $band = Band::find($bandId);
-            
+
             if ($band && $band->setlists()->count() >= 3) {
                 $limitReached = true;
                 $limitMessage = 'Free trial allows maximum 3 setlists. Please subscribe to add more.';
@@ -66,7 +66,7 @@ class EnforceTrialLimits
         if ($request->is('*/members/invite') && $request->isMethod('post')) {
             $bandId = $request->route('band');
             $band = Band::find($bandId);
-            
+
             if ($band) {
                 $totalMembers = $band->members()->count() + $band->invitations()->count();
                 if ($totalMembers >= 3) {
@@ -86,4 +86,4 @@ class EnforceTrialLimits
 
         return $next($request);
     }
-} 
+}

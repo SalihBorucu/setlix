@@ -154,16 +154,6 @@ class Band extends Model
      */
     public function isInTrial(): bool
     {
-        $subscription = $this->subscription;
-
-        return $subscription && $subscription->stripe_status === 'active';
-    }
-
-    /**
-     * Check if band requires subscription
-     */
-    public function requiresSubscription(): bool
-    {
-        return !$this->hasActiveSubscription() && (!$this->trial_ends_at || now()->gt($this->trial_ends_at));
+        return $this->members->some(fn ($member) => $member->is_trial);
     }
 }

@@ -22,16 +22,8 @@ class BulkStoreSongRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Get current song count and check trial status
-        $this->band = Band::findOrFail($this->route('band')->id);
-        $currentSongCount = $this->band->songs()->count();
-        $isSubscribed = $this->band->isInTrial();
-
-        // If on trial, limit total songs to 10
-        $maxNewSongs = $isSubscribed ? 200 : (10 - $currentSongCount);
-
         return [
-            'songs' => ['required', 'array', 'min:1', "max:{$maxNewSongs}"],
+            'songs' => ['required', 'array', 'min:1', "max:200"],
             'songs.*.name' => ['required', 'string', 'max:255'],
             'songs.*.duration_seconds' => ['required', 'integer', 'min:1', 'max:7200'], // max 2 hours
             'songs.*.url' => ['nullable', 'url', 'max:2048'],
@@ -46,9 +38,7 @@ class BulkStoreSongRequest extends FormRequest
     {
         return [
             'songs.required' => 'At least one song is required.',
-            'songs.max' => $this->band->isInTrial()
-                ? 'You can only add up to 200 songs at once.'
-                : 'Free trial allows maximum 10 songs total. Please subscribe to add more songs.',
+            'songs.max' => 'You can only add up to 200 songs at once.',
             'songs.*.name.required' => 'Each song must have a name.',
             'songs.*.name.max' => 'Song names cannot be longer than 255 characters.',
             'songs.*.duration_seconds.required' => 'Each song must have a duration.',

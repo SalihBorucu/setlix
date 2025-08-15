@@ -31,13 +31,12 @@ class BandAccessControlMiddleware
         }
 
         // Allow access during trial period
-        if ($request->user()->is_trial) {
+        if ($request->user()->is_trial || $band->isInTrial()) {
             return $next($request);
         }
 
         // Get active subscription
         $subscription = $band->subscription;
-
         // If no active subscription, redirect to checkout
         if (!$subscription) {
             return redirect()->route('subscription.checkout', $band)

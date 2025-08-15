@@ -167,7 +167,8 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!$this->trial_ends_at) {
             return 0;
         }
-        return max(0, now()->diffInDays($this->trial_ends_at));
+
+        return max(0, round(now()->diffInDays($this->trial_ends_at)));
     }
 
     public function canCreateMoreBands(): bool
@@ -194,5 +195,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerifyEmail);
+    }
+
+    public function songs(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('songs')->get()->pluck('songs')->flatten();
+    }
+
+    public function setlists(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('setlists')->get()->pluck('setlists')->flatten();
+    }
+
+    public function bandMembers(): \Illuminate\Support\Collection
+    {
+        return $this->bands()->with('members')->get()->pluck('members')->flatten();
     }
 }

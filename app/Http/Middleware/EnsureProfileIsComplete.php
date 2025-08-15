@@ -17,9 +17,9 @@ class EnsureProfileIsComplete
             return redirect()->route('profile.complete');
         }
 
-        if (auth()->check() && !auth()->user()->email_verified_at && !$request->routeIs('profile.complete*')) {
-            return redirect()->route('profile.complete');
-        }
+//        if (auth()->check() && !auth()->user()->email_verified_at && !$request->routeIs('profile.complete*') && auth()->user()->created_at > now()->addDays(3)) {
+//            return redirect()->route('profile.complete');
+//        }
 
         return $next($request);
     }

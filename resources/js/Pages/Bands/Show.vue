@@ -184,15 +184,15 @@ const leaveBand = () => {
                                         </DSButton>
                                     </Link>
                                     <template v-if="isAdmin">
-                                        <DSTooltip v-if="!canAddSongs">
-                                            <DSButton variant="primary" size="sm" disabled>
-                                                Add New Song
-                                            </DSButton>
-                                            <template #content>
-                                                Free trial allows maximum 10 songs. Please subscribe to add more.
-                                            </template>
-                                        </DSTooltip>
-                                        <Link v-else :href="route('songs.create', { band: band.id })">
+<!--                                        <DSTooltip v-if="!canAddSongs">-->
+<!--                                            <DSButton variant="primary" size="sm" disabled>-->
+<!--                                                Add New Song-->
+<!--                                            </DSButton>-->
+<!--                                            <template #content>-->
+<!--                                                Free trial allows maximum 10 songs. Please subscribe to add more.-->
+<!--                                            </template>-->
+<!--                                        </DSTooltip>-->
+                                        <Link :href="route('songs.create', { band: band.id })">
                                             <DSButton variant="primary" size="sm">
                                                 Add New Song
                                             </DSButton>

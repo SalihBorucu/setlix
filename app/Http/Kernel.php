@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -50,18 +51,18 @@ class Kernel extends HttpKernel
      * @var array<string, class-string|string>
      */
     protected $middlewareAliases = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'trial.limits' => \App\Http\Middleware\EnforceTrialLimits::class,
-        'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
-        'subscription.page.access' => \App\Http\Middleware\SubscriptionPageAccessMiddleware::class,
+//        'auth' => \App\Http\Middleware\Authenticate::class,
+//        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+//        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
+//        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+//        'can' => \Illuminate\Auth\Middleware\Authorize::class,
+//        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+//        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
+//        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+//        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+//        'verified' => EnsureEmailIsVerified::class,
+//        'trial.limits' => \App\Http\Middleware\EnforceTrialLimits::class,
+//        'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+//        'subscription.page.access' => \App\Http\Middleware\SubscriptionPageAccessMiddleware::class,
     ];
-} 
+}

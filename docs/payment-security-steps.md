@@ -24,7 +24,7 @@
 - [ ] Implement proper payment failure recovery
 
 ## 4. Trial Period Controls
-- [ ] Enforce strict trial period limits (14 days)
+- [ ] Enforce strict trial period limits (30 days)
 - [ ] Prevent trial extension attempts
 - [ ] Implement proper trial-to-paid transition
 - [ ] Block feature access when trial expires

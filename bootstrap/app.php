@@ -34,11 +34,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
             'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
             'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-            'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'trial.limits' => \App\Http\Middleware\EnforceTrialLimits::class,
             'subscription.page.access' => \App\Http\Middleware\SubscriptionPageAccessMiddleware::class,
             'band.access' => \App\Http\Middleware\BandAccessControlMiddleware::class,
             'detect.geolocation' => \App\Http\Middleware\DetectGeolocation::class,
+            'onboarding' => \App\Http\Middleware\DirectToOnboarding::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
