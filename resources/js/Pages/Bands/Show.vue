@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { DSButton, DSCard, DSTooltip } from '@/Components/UI'
 import ConfirmModal from '@/Components/UI/ConfirmModal.vue'
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
@@ -27,6 +27,12 @@ const showLeaveModal = ref(false)
 
 const page = usePage()
 const trial = computed(() => page.props.trial || {})
+
+onMounted(() => {
+    if (props.band.setlists_count === 1) {
+        fbq('track', 'CompleteVerification');
+    }
+})
 
 // Trial limit checks
 const canAddSongs = computed(() => {
