@@ -23,11 +23,14 @@
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
               <div>
                 <p class="font-medium text-gray-900">{{ band.name }}</p>
-                <p class="text-sm text-gray-500">Monthly Subscription</p>
+                <p class="text-sm text-gray-500">Yearly Subscription</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-gray-900">{{ formattedPrice }}</p>
-                <p class="text-sm text-gray-500">per month</p>
+                <p class="text-lg">
+                  <span class="text-red-400 line-through mr-2">{{ pricing.symbol }}{{ pricing.amount * 2 }}</span>
+                  <span class="font-bold text-gray-900">{{ formattedPrice }}</span>
+                </p>
+                <p class="text-sm text-gray-500">per year <span class="text-green-600 font-medium">50% OFF</span></p>
               </div>
             </div>
 
@@ -82,7 +85,7 @@
               :disabled="isLoading"
             >
               <span v-if="isLoading">Processing...</span>
-              <span v-else>Subscribe Now • {{ formattedPrice }}/month</span>
+              <span v-else>Subscribe Now • {{ formattedPrice }}/year</span>
             </DSButton>
           </form>
 

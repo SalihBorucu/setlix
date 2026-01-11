@@ -8,7 +8,8 @@
                 One Simple Price, No Surprises
             </h2>
             <p class="mt-4 text-lg text-gray-500">
-                {{ $formattedPrice }}/month per band. One flat fee covers your whole band—no extra costs.
+                <span class="line-through text-red-400">{{ $pricing['symbol'] }}{{ $pricing['amount'] * 2 }}</span>
+                <span class="font-semibold text-gray-900">{{ $formattedPrice }}</span>/year per band. One flat fee covers your whole band—no extra costs.
             </p>
         </div>
 
@@ -18,9 +19,11 @@
                     <div class="text-center">
                         <h3 class="text-2xl font-bold text-gray-900">Band Plan</h3>
                         <div class="mt-4 flex items-center justify-center">
+                            <span class="text-2xl font-medium text-red-400 line-through mr-2">{{ $pricing['symbol'] }}{{ $pricing['amount'] * 2 }}</span>
                             <span class="text-4xl font-extrabold text-gray-900">{{ $formattedPrice }}</span>
-                            <span class="ml-1 text-xl font-medium text-gray-500">/month</span>
+                            <span class="ml-1 text-xl font-medium text-gray-500">/year</span>
                         </div>
+                        <p class="mt-2 text-sm font-medium text-green-600">50% OFF - Limited Time!</p>
                         <p class="mt-4 text-sm text-gray-500">Per band, unlimited members</p>
                     </div>
                     <div class="mt-8">
