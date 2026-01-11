@@ -42,12 +42,12 @@ class SubscriptionController extends Controller
                     ->with('error', 'You do not have permission to subscribe this band.');
             }
 
-            // Get pricing based on user's location
+            // Get pricing based on user's location (for display)
             $countryCode = $user->country_code ?? session('country_code');
             $pricing = $this->pricingService->getPricing($countryCode);
 
-            // Get the appropriate Stripe Price ID based on currency
-            $priceId = config("subscription.stripe_prices.{$pricing['currency']}");
+            // Use single yearly price ID (Stripe handles multi-currency)
+            $priceId = config('subscription.stripe_price_id');
 
             // Create or get Stripe customer
             if (!$user->stripe_id) {
@@ -252,8 +252,8 @@ class SubscriptionController extends Controller
         $countryCode = $user->country_code ?? session('country_code');
         $pricing = $this->pricingService->getPricing($countryCode);
 
-        // Get the appropriate Stripe Price ID based on currency
-        $priceId = config("subscription.stripe_prices.{$pricing['currency']}");
+        // Use single yearly price ID (Stripe handles multi-currency)
+        $priceId = config('subscription.stripe_price_id');
 
         try {
             // Create the subscription

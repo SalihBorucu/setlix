@@ -23,7 +23,7 @@ defineProps({
 
 // Computed properties for subscription data
 const computed = {
-    totalMonthlyFee: (subscriptions) => {
+    totalYearlyFee: (subscriptions) => {
         return subscriptions
             .filter(band => band.subscription?.status === 'active' && band.subscription?.is_owner)
             .reduce((total, band) => total + (band.subscription?.price || 0), 0)
@@ -75,11 +75,11 @@ const formatDate = (dateString) => {
             </h2>
         </template>
 
-        <!-- Total Monthly Fee - Only show if user has any subscriptions they're paying for -->
+        <!-- Total Yearly Fee - Only show if user has any subscriptions they're paying for -->
         <div v-if="subscriptions.some(band => band.subscription?.is_owner)"
              class="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 class="text-lg font-medium text-neutral-900 mb-2">Your Total Monthly Fee</h3>
-            <p class="text-2xl font-bold text-primary-600">{{ pricing.symbol }}{{ computed.totalMonthlyFee(subscriptions).toFixed(2) }}/month</p>
+            <h3 class="text-lg font-medium text-neutral-900 mb-2">Your Total Yearly Fee</h3>
+            <p class="text-2xl font-bold text-primary-600">{{ pricing.symbol }}{{ computed.totalYearlyFee(subscriptions).toFixed(2) }}/year</p>
         </div>
 
         <!-- Subscriptions List -->
@@ -105,7 +105,7 @@ const formatDate = (dateString) => {
                             <template v-if="band.subscription">
                                 <p v-if="band.subscription.is_owner"
                                    class="text-sm text-neutral-500">
-                                    You are paying {{ band.subscription.formatted_price }}/month
+                                    You are paying {{ band.subscription.formatted_price }}/year
                                 </p>
                                 <p v-else class="text-sm text-neutral-500">
                                     Subscription managed by {{ band.subscription.owner_name }}
