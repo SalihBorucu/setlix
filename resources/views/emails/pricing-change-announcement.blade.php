@@ -116,10 +116,10 @@
 
             <p>We've switched from monthly to <strong>yearly pricing</strong> - and slashed the price while we were at it.</p>
 
-            <div class="highlight-box">
-                <span class="old-price">Was: {{ $symbol }}{{ $oldMonthlyPrice }}/month</span>
-                <span class="new-price">Now: {{ $symbol }}{{ $price }}/year</span>
-                <span class="savings">50% OFF Launch Price!</span>
+            <div class="highlight-box" style="background-color: #0ea5e9; color: #ffffff; padding: 1.5rem; border-radius: 0.5rem; text-align: center; margin: 1.5rem 0;">
+                <span class="old-price" style="font-size: 1.25rem; text-decoration: line-through; opacity: 0.7;">Was: {{ $symbol }}{{ $oldMonthlyPrice }}/month</span>
+                <span class="new-price" style="font-size: 2rem; font-weight: bold; display: block; margin: 0.5rem 0;">Now: {{ $symbol }}{{ $price }}/year</span>
+                <span class="savings" style="background-color: #22c55e; color: #ffffff; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600; display: inline-block; margin-top: 0.5rem;">50% OFF Launch Price!</span>
             </div>
 
             <div class="benefits">
