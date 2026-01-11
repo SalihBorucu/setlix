@@ -11,6 +11,7 @@ use App\Http\Controllers\SpotifyController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\UnsubscribeController;
 use App\Http\Middleware\EnforceTrialLimits;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use Illuminate\Support\Facades\Auth;
@@ -127,6 +128,9 @@ Route::get('/invitations/{token}', [BandMemberController::class, 'acceptInvitati
 // Public routes for setlist access
 Route::get('/setlist/{slug}', [PublicSetlistController::class, 'show'])->name('public.setlist.show');
 Route::post('/setlist/{slug}/submit', [PublicSetlistController::class, 'submit'])->name('public.setlist.submit');
+
+// Email unsubscribe (signed URL)
+Route::get('/unsubscribe/{user}', [UnsubscribeController::class, 'unsubscribe'])->name('unsubscribe');
 
 // Stripe webhook
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('cashier.webhook');
