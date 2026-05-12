@@ -119,6 +119,7 @@ Route::middleware([
     // Group all routes that need trial limits
     Route::post('/bands/{band}/songs', [SongController::class, 'store'])->name('songs.store');
     Route::post('/bands/{band}/setlists', [SetlistController::class, 'store'])->name('setlists.store');
+    Route::post('/bands/{band}/setlists/{setlist}/duplicate', [SetlistController::class, 'duplicate'])->name('setlists.duplicate');
     // ... other routes that need trial limits ...
 });
 
