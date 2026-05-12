@@ -26,11 +26,12 @@ class SetlistController extends Controller
     public function index(Band $band): Response
     {
         $this->authorize('view', $band);
-        $band->setlists->load('items');
+
+        $setlists = $band->setlists()->latest()->with('items')->get();
 
         return Inertia::render('Setlists/Index', [
             'band' => $band->load('members'),
-            'setlists' => $band->setlists,
+            'setlists' => $setlists,
             'isAdmin' => $band->isAdmin(auth()->user())
         ]);
     }
@@ -155,6 +156,38 @@ class SetlistController extends Controller
         return redirect()->route('setlists.show', [
             'band' => $band->id,
             'setlist' => $setlist->id
+        ]);
+    }
+
+    /**
+     * Duplicate the specified setlist.
+     */
+    public function duplicate(Band $band, Setlist $setlist): RedirectResponse
+    {
+        $this->authorize('update', $band);
+
+        $copy = Setlist::create([
+            'band_id' => $setlist->band_id,
+            'name' => $setlist->name . ' (Copied)',
+            'description' => $setlist->description,
+            'target_duration' => $setlist->target_duration,
+            'total_duration' => $setlist->total_duration,
+        ]);
+
+        foreach ($setlist->items()->orderBy('order')->get() as $item) {
+            $copy->items()->create([
+                'type' => $item->type,
+                'song_id' => $item->song_id,
+                'title' => $item->title,
+                'duration_seconds' => $item->duration_seconds,
+                'notes' => $item->notes,
+                'order' => $item->order,
+            ]);
+        }
+
+        return redirect()->route('setlists.show', [
+            'band' => $band->id,
+            'setlist' => $copy->id,
         ]);
     }
 
